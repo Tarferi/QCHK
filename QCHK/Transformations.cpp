@@ -577,7 +577,7 @@ bool fix9_RemapLocations(CHK* v2, CHK* v3, EUDSettings* settings) {
 	GET_SECT(Section_STR_, v3STR, v3, "STR ");
 
 	unsigned int freeLocationRangesBegs[] = { 43,  66, 122, 164 };
-	unsigned int freeLocationRangesEnds[] = { 63, 118, 135, 237 };
+	unsigned int freeLocationRangesEnds[] = { 62, 118, 135, 237 };
 
 
 	unsigned int freeLocationRangesLength = 4;
@@ -598,6 +598,10 @@ bool fix9_RemapLocations(CHK* v2, CHK* v3, EUDSettings* settings) {
 
 	Array<unsigned int> remapedLocations;
 	unsigned int nextRemapLocationIndex = freeLocationRangesBegs[0];
+
+	remapedLocations.append(63);
+	remapedLocations.append(63);
+
 
 	// Collect triggers that use locations and remap those locations
 	for (unsigned int i = 0; i < v3TRIG->triggers.getSize(); i++) {

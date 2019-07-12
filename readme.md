@@ -17,4 +17,4 @@ This source contains unreleased features, with some bugs created, removed, or wo
 * Slot 7 must be a computer slot (has the EUD stuff). Slot 8 doesn't get abilities (work in progress, migrating triggers from slot 7 to 8 produces errors)
 * Condition "Elapsed time is at least 3 seconds" will be added to all your triggers, so if there is a trigger with 16 conditions, expect a crash
 * Barrier always restores health to 12 HP (see [report of memory analysis of STR section EUD part](https://pastebin.com/XAGtMzrD)) and this is unlikely to ever change 
-* Touch revive not working for some reason, locations get damaged for some reason, map crashes sometimes for some reason
+* Touch revive ~~not~~ working for ~~some reason~~, ~~~locations get damaged for some reason~~~, map crashes sometimes for some reason
