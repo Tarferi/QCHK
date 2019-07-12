@@ -4,7 +4,7 @@
 #include <stdarg.h>
 #include "string.h"
 
-#define TRIG_PRINT
+//#define TRIG_PRINT
 
 #define MALLOC(target, type, size, failBlock) target = (type*) malloc(sizeof(type)*(size)); if(!target){failBlock};
 
@@ -29,7 +29,10 @@
 
 static int initValue = ARRAY_DEFAULT_SIZE;
 
-#ifdef _DEBUG
+//#define DEBUG_LOG
+
+
+#ifdef DEBUG_LOG
 
 #define LOG_R(section, fmt, ...) \
 	if(!strcmp(section, "TRIGGERS")) { do {fprintf(stderr, fmt, __VA_ARGS__); } while (0); } else {\

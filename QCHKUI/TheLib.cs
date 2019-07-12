@@ -91,8 +91,8 @@ namespace WpfApplication1 {
         [MarshalAs(UnmanagedType.U2), FieldOffset(44)]
         public unsafe short EMPDamage;
 
-        [MarshalAs(UnmanagedType.U1), FieldOffset(46)]
-        public unsafe bool verbose;
+        [MarshalAs(UnmanagedType.U4), FieldOffset(46)]
+        public unsafe int result;
     }
 
     enum Slot {
@@ -237,7 +237,7 @@ namespace WpfApplication1 {
 
                 rawSettings->EMPDamage = settings->EMPDamage;
 
-                rawSettings->verbose = settings->verbose;
+                rawSettings->result = 0;
 
                 // Process
                 IntPtr ms = (IntPtr)rawSettings;
@@ -267,7 +267,7 @@ namespace WpfApplication1 {
 
                 settings->EMPDamage = rawSettings->EMPDamage;
 
-                settings->verbose = rawSettings->verbose;
+                settings->result = rawSettings->result;
 
                 Marshal.FreeHGlobal(ptr);
             }
@@ -386,7 +386,7 @@ namespace WpfApplication1 {
             es.inputFilePath = toByteArray(settings.inpuPath);
             es.outputFilePath = toByteArray(settings.outputPath);
 
-            es.verbose = false;
+            es.result = 0;
             es.EMPDamage = (short) settings.EMPDamage;
 
             run(&es);
@@ -400,6 +400,8 @@ namespace WpfApplication1 {
             killByteArray(es.TimeLockTo);
             killByteArray(es.inputFilePath);
             killByteArray(es.outputFilePath);
+
+            settings.result = es.result;
 
         }
 

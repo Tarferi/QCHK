@@ -527,7 +527,7 @@ class FIELDTYPE;
 class TriggerContents {
 
 public:
-	bool print(Section_STR_* STR);
+	void print(Section_STR_* STR, WriteBuffer* wb, bool* error);
 
 	virtual ~TriggerContents();
 
@@ -555,21 +555,26 @@ public:
 
 	COMMON_CONSTR_SEC(Section_TRIG)
 
-	virtual ~Section_TRIG();
+		virtual ~Section_TRIG();
 
 	Array<Trigger*> triggers;
 
 #ifdef TRIG_PRINT
 #ifdef _DEBUG
-	void print(unsigned int from, unsigned int length, Section_STR_* STR) {
+	bool print(unsigned int from, unsigned int length, Section_STR_* STR, WriteBuffer* wb) {
 		unsigned int limit = from + length > this->triggers.getSize() ? this->triggers.getSize() : from + length;
+		bool error = false;
 		for (unsigned int i = from; i < limit; i++) {
-			this->printTrigger(i, STR);
+			this->printTrigger(i, STR, wb, &error);
+			if (error) {
+				return false;
+			}
 		}
+		return true;
 	}
 
-	void print(Section_STR_* STR) {
-		print(0, this->triggers.getSize(), STR);
+	bool print(Section_STR_* STR, WriteBuffer* wb) {
+		return print(0, this->triggers.getSize(), STR, wb);
 	}
 #endif
 #endif
@@ -604,44 +609,52 @@ protected:
 
 #ifdef TRIG_PRINT
 #ifdef _DEBUG
-	void printAction(Action* action, Section_STR_* STR);
 
-	void printCondition(Condition* condition, Section_STR_* STR);
+#define PRINT_R(ignore, format, ...) {char buffer[1024]; sprintf_s(buffer, format, __VA_ARGS__); wb->writeFixedLengthString((unsigned char*) buffer, error); if(*error) {return;}}
 
-	void printPlayers(Trigger* trigger, Section_STR_* STR);
+	void printAction(Action* action, Section_STR_* STR, WriteBuffer* wb, bool* error);
+
+	void printCondition(Condition* condition, Section_STR_* STR, WriteBuffer* wb, bool* error);
+
+	void printPlayers(Trigger* trigger, Section_STR_* STR, WriteBuffer* wb, bool* error);
 	
-	void printTrigger(unsigned int triggerIndex, Section_STR_* STR) {
+	void printTrigger(unsigned int triggerIndex, Section_STR_* STR, WriteBuffer* wb, bool* error) {
 		Trigger* trigger = this->triggers[triggerIndex];
 
-		LOG_R("TRIGGERS", "Trigger[%d] {Flags: %d} (", triggerIndex, trigger->flags);
-		this->printPlayers(trigger, STR);
-		LOG_R("TRIGGERS", ")\r\n");
-		LOG_R("TRIGGERS", "\tConditions:\r\n");
+		
+		PRINT_R("TRIGGERS", "Trigger[%d] {Flags: %d} (", triggerIndex, trigger->flags);
+		this->printPlayers(trigger, STR, wb, error);
+		if (*error) {
+			return; 
+		}
+		PRINT_R("TRIGGERS", ")\r\n");
+		PRINT_R("TRIGGERS", "\tConditions:\r\n");
 		for (unsigned int conditionIndex = 0; conditionIndex < 16; conditionIndex++) {
 			Condition* condition = &(trigger->conditions[conditionIndex]);
 			if (condition->ConditionType != 0) {
-				LOG_R("TRIGGERS", "\t\t");
-				if ((condition->Flags & 2) > 0) {
-					LOG_R("TRIGGERS", "(disabled) ");
+				PRINT_R("TRIGGERS", "\t\t%s", (condition->Flags & 2) > 0 ? "(disabled)" : "");
+				printCondition(condition, STR, wb, error);
+				if (*error) {
+					return;
 				}
-				printCondition(condition, STR);
-				LOG_R("TRIGGERS", "\r\n");
+				PRINT_R("TRIGGERS", "\r\n");
 			}
 		}
-		LOG_R("TRIGGERS", "\r\n\tActions:\r\n");
+		PRINT_R("TRIGGERS", "\r\n");
+		PRINT_R("TRIGGERS", "\tActions:\r\n");
 		for (unsigned int actionIndex = 0; actionIndex < 64; actionIndex++) {
 			Action* action = &(trigger->actions[actionIndex]);
 			if (action->ActionType != 0) {
-				LOG_R("TRIGGERS", "\t\t");
-				if ((action->Flags & 2) > 0) {
-					LOG_R("TRIGGERS", "(disabled) ");
+				PRINT_R("TRIGGERS", "\t\t%s", (action->Flags & 2) > 0 ? "(disabled)" : "");
+				printAction(action, STR, wb, error);
+				if (*error) {
+					return;
 				}
-				printAction(action, STR);
-				LOG_R("TRIGGERS", "\r\n");
+				PRINT_R("TRIGGERS", "\r\n");
 			}
 		}
-		LOG_R("TRIGGERS", "\r\n");
-		LOG_R("TRIGGERS", "\r\n");
+		PRINT_R("TRIGGERS", "\r\n");
+		PRINT_R("TRIGGERS", "\r\n");
 	}
 
 #endif
@@ -879,27 +892,27 @@ public:
 	}
 	unsigned int value;
 
-	virtual void print(Section_STR_* STR) = 0;
+	virtual void print(Section_STR_* STR, WriteBuffer* wb, bool* error) = 0;
 
-	void printArray(unsigned int valuesSize, char** values) {
+	void printArray(WriteBuffer* wb, bool* error, unsigned int valuesSize, char** values) {
 		if (this->value < valuesSize) {
-			LOG_R("TRIGGERS", "%s", values[this->value]);
+			PRINT_R("TRIGGERS", "%s", values[this->value]);
 		}
 		else {
-			LOG_R("TRIGGERS", "Invalid value: %d", this->value);
+			PRINT_R("TRIGGERS", "Invalid value: %d", this->value);
 		}
 	}
 
-	void printAssoc(unsigned int valuesSize, char** values) {
+	void printAssoc(WriteBuffer* wb, bool* error, unsigned int valuesSize, char** values) {
 		for (unsigned int i = 0; i < valuesSize; i++) {
 			char* index = values[i * 2];
 			if ((int)index == this->value) {
 				char* value = values[(i * 2) + 1];
-				LOG_R("TRIGGERS", "%s", value);
+				PRINT_R("TRIGGERS", "%s", value);
 				return;
 			}
 		}
-		LOG_R("TRIGGERS", "Invalid value: %d", this->value);
+		PRINT_R("TRIGGERS", "Invalid value: %d", this->value);
 	}
 
 };
@@ -909,8 +922,8 @@ public:
 
 	FIELDTYPE_NUMBER(unsigned int value) : FIELDTYPE(value) {}
 
-	void print(Section_STR_* STR) {
-		LOG_R("TRIGGERS", "%u", this->value);
+	void print(Section_STR_* STR, WriteBuffer* wb, bool* error) {
+		PRINT_R("TRIGGERS", "%u", this->value);
 	}
 };
 
@@ -918,9 +931,9 @@ class FIELDTYPE_ALLYSTATUS : public FIELDTYPE {
 public:
 
 	FIELDTYPE_ALLYSTATUS(unsigned int value) : FIELDTYPE(value) {}
-	void print(Section_STR_* STR) {
+	void print(Section_STR_* STR, WriteBuffer* wb, bool* error) {
 		char* values[] = { "Enemy", "Ally", "Allied Victory" };
-		this->printArray(3, (char**)values);
+		this->printArray(wb, error, 3, (char**)values);
 	}
 };
 
@@ -928,9 +941,9 @@ class FIELDTYPE_COMPARISON : public FIELDTYPE {
 public:
 
 	FIELDTYPE_COMPARISON(unsigned int value) : FIELDTYPE(value) {}
-	void print(Section_STR_* STR) {
+	void print(Section_STR_* STR, WriteBuffer* wb, bool* error) {
 		char* values[] = { (char*)0, "at least", (char*)1, "at most", (char*)10, "exactly" };
-		this->printAssoc(3, (char**)values);
+		this->printAssoc(wb, error, 3, (char**)values);
 	}
 };
 
@@ -938,9 +951,9 @@ class FIELDTYPE_MODIFIER : public FIELDTYPE {
 public:
 
 	FIELDTYPE_MODIFIER(unsigned int value) : FIELDTYPE(value) {}
-	void print(Section_STR_* STR) {
+	void print(Section_STR_* STR, WriteBuffer* wb, bool* error) {
 		char* values[] = { (char*)7, "set to", (char*)8, "add", (char*)9, "subtract" };
-		this->printAssoc(3, (char**)values);
+		this->printAssoc(wb, error, 3, (char**)values);
 	}
 };
 
@@ -948,9 +961,9 @@ class FIELDTYPE_ORDER : public FIELDTYPE {
 public:
 
 	FIELDTYPE_ORDER(unsigned int value) : FIELDTYPE(value) {}
-	void print(Section_STR_* STR) {
+	void print(Section_STR_* STR, WriteBuffer* wb, bool* error) {
 		char* values[] = { "Move", "Patrol", "Attack" };
-		this->printArray(3, (char**)values);
+		this->printArray(wb, error, 3, (char**)values);
 	}
 };
 
@@ -958,9 +971,9 @@ class FIELDTYPE_PLAYER : public FIELDTYPE {
 public:
 
 	FIELDTYPE_PLAYER(unsigned int value) : FIELDTYPE(value) {}
-	void print(Section_STR_* STR) {
+	void print(Section_STR_* STR, WriteBuffer* wb, bool* error) {
 		char* values[] = { (char*)0, "Player 1", (char*)1, "Player 2", (char*)2, "Player 3", (char*)3, "Player 4", (char*)4, "Player 5", (char*)5, "Player 6", (char*)6, "Player 7", (char*)7, "Player 8", (char*)8, "Player 9", (char*)9, "Player 10", (char*)10, "Player 11", (char*)11, "Player 12", (char*)13, "CurrentPlayer", (char*)14, "Foes", (char*)15, "Allies", (char*)16, "NeutralPlayers", (char*)17, "AllPlayers", (char*)18, "Force1", (char*)19, "Force2", (char*)20, "Force3", (char*)21, "Force4", (char*)26, "NonAlliedVictoryPlayers" };
-		this->printAssoc(22, (char**)values);
+		this->printAssoc(wb, error, 22, (char**)values);
 	}
 };
 
@@ -968,9 +981,9 @@ class FIELDTYPE_PROPSTATE : public FIELDTYPE {
 public:
 
 	FIELDTYPE_PROPSTATE(unsigned int value) : FIELDTYPE(value) {}
-	void print(Section_STR_* STR) {
+	void print(Section_STR_* STR, WriteBuffer* wb, bool* error) {
 		char* values[] = { (char*)4, "Enable", (char*)5, "Disable", (char*)6, "Toggle" };
-		this->printAssoc(3, (char**)values);
+		this->printAssoc(wb, error, 3, (char**)values);
 	}
 };
 
@@ -978,9 +991,9 @@ class FIELDTYPE_RESOURCE : public FIELDTYPE {
 public:
 
 	FIELDTYPE_RESOURCE(unsigned int value) : FIELDTYPE(value) {}
-	void print(Section_STR_* STR) {
+	void print(Section_STR_* STR, WriteBuffer* wb, bool* error) {
 		char* values[] = { "Ore", "Gas", "Ore and Gas" };
-		this->printArray(3, (char**)values);
+		this->printArray(wb, error, 3, (char**)values);
 	}
 };
 
@@ -988,9 +1001,9 @@ class FIELDTYPE_SCORE : public FIELDTYPE {
 public:
 
 	FIELDTYPE_SCORE(unsigned int value) : FIELDTYPE(value) {}
-	void print(Section_STR_* STR) {
+	void print(Section_STR_* STR, WriteBuffer* wb, bool* error) {
 		char* values[] = { "Total", "Units", "Buildings", "UnitsAndBuildings", "Kills", "Razings", "KillsAndRazings", "Custom" };
-		this->printArray(8, (char**)values);
+		this->printArray(wb, error, 8, (char**)values);
 	}
 };
 
@@ -998,9 +1011,9 @@ class FIELDTYPE_SWITCHACTION : public FIELDTYPE {
 public:
 
 	FIELDTYPE_SWITCHACTION(unsigned int value) : FIELDTYPE(value) {}
-	void print(Section_STR_* STR) {
+	void print(Section_STR_* STR, WriteBuffer* wb, bool* error) {
 		char* values[] = { (char*)4, "Set", (char*)5, "Clear", (char*)6, "Toggle", (char*)11, "Random" };
-		this->printAssoc(4, (char**)values);
+		this->printAssoc(wb, error, 4, (char**)values);
 	}
 };
 
@@ -1008,9 +1021,9 @@ class FIELDTYPE_SWITCHSTATE : public FIELDTYPE {
 public:
 
 	FIELDTYPE_SWITCHSTATE(unsigned int value) : FIELDTYPE(value) {}
-	void print(Section_STR_* STR) {
+	void print(Section_STR_* STR, WriteBuffer* wb, bool* error) {
 		char* values[] = { (char*)2, "Set", (char*)3, "Cleared" };
-		this->printAssoc(2, (char**)values);
+		this->printAssoc(wb, error, 2, (char**)values);
 	}
 };
 
@@ -1018,8 +1031,8 @@ class FIELDTYPE_AISCRIPT : public FIELDTYPE {
 public:
 
 	FIELDTYPE_AISCRIPT(unsigned int value) : FIELDTYPE(value) {}
-	void print(Section_STR_* STR) {
-		LOG_R("TRIGGERS", "%d", this->value);
+	void print(Section_STR_* STR, WriteBuffer* wb, bool* error) {
+		PRINT_R("TRIGGERS", "%d", this->value);
 	}
 };
 
@@ -1027,12 +1040,12 @@ class FIELDTYPE_COUNT : public FIELDTYPE {
 public:
 
 	FIELDTYPE_COUNT(unsigned int value) : FIELDTYPE(value) {}
-	void print(Section_STR_* STR) {
+	void print(Section_STR_* STR, WriteBuffer* wb, bool* error) {
 		if (this->value == 0) {
-			LOG_R("TRIGGERS", "All");
+			PRINT_R("TRIGGERS", "All");
 		}
 		else {
-			LOG_R("TRIGGERS", "%d", this->value);
+			PRINT_R("TRIGGERS", "%d", this->value);
 		}
 	}
 };
@@ -1041,9 +1054,9 @@ class FIELDTYPE_UNIT : public FIELDTYPE {
 public:
 
 	FIELDTYPE_UNIT(unsigned int value) : FIELDTYPE(value) {}
-	void print(Section_STR_* STR) {
+	void print(Section_STR_* STR, WriteBuffer* wb, bool* error) {
 		char* values[] = { "Terran Marine", "Terran Ghost", "Terran Vulture", "Terran Goliath", "Goliath Turret", "Terran Siege Tank (Tank Mode)", "Tank Turret(Tank Mode)", "Terran SCV", "Terran Wraith", "Terran Science Vessel", "Gui Montang (Firebat)", "Terran Dropship", "Terran Battlecruiser", "Vulture Spider Mine", "Nuclear Missile", "Terran Civilian", "Sarah Kerrigan (Ghost)", "Alan Schezar (Goliath)", "Alan Schezar Turret", "Jim Raynor (Vulture)", "Jim Raynor (Marine)", "Tom Kazansky (Wraith)", "Magellan (Science Vessel)", "Edmund Duke (Siege Tank)", "Edmund Duke Turret", "Edmund Duke (Siege Mode)", "Edmund Duke Turret", "Arcturus Mengsk (Battlecruiser)", "Hyperion (Battlecruiser)", "Norad II (Battlecruiser)", "Terran Siege Tank (Siege Mode)", "Tank Turret (Siege Mode)", "Firebat", "Scanner Sweep", "Terran Medic", "Zerg Larva", "Zerg Egg", "Zerg Zergling", "Zerg Hydralisk", "Zerg Ultralisk", "Zerg Broodling", "Zerg Drone", "Zerg Overlord", "Zerg Mutalisk", "Zerg Guardian", "Zerg Queen", "Zerg Defiler", "Zerg Scourge", "Torrarsque (Ultralisk)", "Matriarch (Queen)", "Infested Terran", "Infested Kerrigan", "Unclean One (Defiler)", "Hunter Killer (Hydralisk)", "Devouring One (Zergling)", "Kukulza (Mutalisk)", "Kukulza (Guardian)", "Yggdrasill (Overlord)", "Terran Valkyrie Frigate", "Mutalisk/Guardian Cocoon", "Protoss Corsair", "Protoss Dark Templar(Unit)", "Zerg Devourer", "Protoss Dark Archon", "Protoss Probe", "Protoss Zealot", "Protoss Dragoon", "Protoss High Templar", "Protoss Archon", "Protoss Shuttle", "Protoss Scout", "Protoss Arbiter", "Protoss Carrier", "Protoss Interceptor", "Dark Templar(Hero)", "Zeratul (Dark Templar)", "Tassadar/Zeratul (Archon)", "Fenix (Zealot)", "Fenix (Dragoon)", "Tassadar (Templar)", "Mojo (Scout)", "Warbringer (Reaver)", "Gantrithor (Carrier)", "Protoss Reaver", "Protoss Observer", "Protoss Scarab", "Danimoth (Arbiter)", "Aldaris (Templar)", "Artanis (Scout)", "Rhynadon (Badlands Critter)", "Bengalaas (Jungle Critter)", "Unused - Was Cargo Ship", "Unused - Was Mercenary Gunship", "Scantid (Desert Critter)", "Kakaru (Twilight Critter)", "Ragnasaur (Ashworld Critter)", "Ursadon (Ice World Critter)", "Lurker Egg", "Raszagal", "Samir Duran (Ghost)", "Alexei Stukov (Ghost)", "Map Revealer", "Gerard DuGalle", "Zerg Lurker", "Infested Duran", "Disruption Web", "Terran Command Center", "Terran Comsat Station", "Terran Nuclear Silo", "Terran Supply Depot", "Terran Refinery", "Terran Barracks", "Terran Academy", "Terran Factory", "Terran Starport", "Terran Control Tower", "Terran Science Facility", "Terran Covert Ops", "Terran Physics Lab", "Unused - Was Starbase?", "Terran Machine Shop", "Unused - Was Repair Bay?", "Terran Engineering Bay", "Terran Armory", "Terran Missile Turret", "Terran Bunker", "Norad II", "Ion Cannon", "Uraj Crystal", "Khalis Crystal", "Infested Command Center", "Zerg Hatchery", "Zerg Lair", "Zerg Hive", "Zerg Nydus Canal", "Zerg Hydralisk Den", "Zerg Defiler Mound", "Zerg Greater Spire", "Zerg Queen's Nest", "Zerg Evolution Chamber", "Zerg Ultralisk Cavern", "Zerg Spire", "Zerg Spawning Pool", "Zerg Creep Colony", "Zerg Spore Colony", "Unused Zerg Building", "Zerg Sunken Colony", "Zerg Overmind (With Shell)", "Zerg Overmind", "Zerg Extractor", "Mature Chrysalis", "Zerg Cerebrate", "Zerg Cerebrate Daggoth", "Unused Zerg Building 5", "Protoss Nexus", "Protoss Robotics Facility", "Protoss Pylon", "Protoss Assimilator", "Unused Protoss Building", "Protoss Observatory", "Protoss Gateway", "Unused Protoss Building", "Protoss Photon Cannon", "Protoss Citadel of Adun", "Protoss Cybernetics Core", "Protoss Templar Archives", "Protoss Forge", "Protoss Stargate", "Stasis Cell/Prison", "Protoss Fleet Beacon", "Protoss Arbiter Tribunal", "Protoss Robotics Support Bay", "Protoss Shield Battery", "Khaydarin Crystal Formation", "Protoss Temple", "Xel'Naga Temple", "Mineral Field (Type 1)", "Mineral Field (Type 2)", "Mineral Field (Type 3)", "Cave", "Cave-in", "Cantina", "Mining Platform", "Independant Command Center", "Independant Starport", "Independant Jump Gate", "Ruins", "Kyadarin Crystal Formation", "Vespene Geyser", "Warp Gate", "PSI Disruptor", "Zerg Marker", "Terran Marker", "Protoss Marker", "Zerg Beacon", "Terran Beacon", "Protoss Beacon", "Zerg Flag Beacon", "Terran Flag Beacon", "Protoss Flag Beacon", "Power Generator", "Overmind Cocoon", "Dark Swarm", "Floor Missile Trap", "Floor Hatch", "Left Upper Level Door", "Right Upper Level Door", "Left Pit Door", "Right Pit Door", "Floor Gun Trap", "Left Wall Missile Trap", "Left Wall Flame Trap", "Right Wall Missile Trap", "Right Wall Flame Trap", "Start Location", "Flag", "Young Chrysalis", "Psi Emitter", "Data Disc", "Khaydarin Crystal", "Mineral Cluster Type 1", "Mineral Cluster Type 2", "Protoss Vespene Gas Orb Type 1", "Protoss Vespene Gas Orb Type 2", "Zerg Vespene Gas Sac Type 1", "Zerg Vespene Gas Sac Type 2", "Terran Vespene Gas Tank Type 1", "Terran Vespene Gas Tank Type 2", "None", "Any Unit", "Men", "Building", "Factories" };
-		this->printArray(229, (char**)values);
+		this->printArray(wb, error, 229, (char**)values);
 	}
 };
 
@@ -1051,12 +1064,12 @@ class FIELDTYPE_LOCATION : public FIELDTYPE {
 public:
 
 	FIELDTYPE_LOCATION(unsigned int value) : FIELDTYPE(value) {}
-	void print(Section_STR_* STR) {
+	void print(Section_STR_* STR, WriteBuffer* wb, bool* error) {
 		if (this->value == 64) {
-			LOG_R("TRIGGERS", "Anywhere");
+			PRINT_R("TRIGGERS", "Anywhere");
 		}
 		else {
-			LOG_R("TRIGGERS", "Location %d \"%s\"", this->value, STR->getRawString(this->value));
+			PRINT_R("TRIGGERS", "Location %d \"%s\"", this->value, STR->getRawString(this->value));
 		}
 	}
 };
@@ -1065,12 +1078,12 @@ class FIELDTYPE_STRING : public FIELDTYPE {
 public:
 
 	FIELDTYPE_STRING(unsigned int value) : FIELDTYPE(value) {}
-	void print(Section_STR_* STR) {
+	void print(Section_STR_* STR, WriteBuffer* wb, bool* error) {
 		if (this->value == 0) {
-			LOG_R("TRIGGERS", "No string");
+			PRINT_R("TRIGGERS", "No string");
 		}
 		else {
-			LOG_R("TRIGGERS", "String %d \"%s\"", this->value, STR->getRawString(this->value));
+			PRINT_R("TRIGGERS", "String %d \"%s\"", this->value, STR->getRawString(this->value));
 		}
 	}
 };
@@ -1079,8 +1092,8 @@ class FIELDTYPE_SWITCHNAME : public FIELDTYPE {
 public:
 
 	FIELDTYPE_SWITCHNAME(unsigned int value) : FIELDTYPE(value) {}
-	void print(Section_STR_* STR) {
-		LOG_R("TRIGGERS", "Switch %d \"%s\"", this->value, STR->getRawString(this->value));
+	void print(Section_STR_* STR, WriteBuffer* wb, bool* error) {
+		PRINT_R("TRIGGERS", "Switch %d \"%s\"", this->value, STR->getRawString(this->value));
 	}
 };
 
@@ -1088,8 +1101,8 @@ class FIELDTYPE_UNITPROPERTY : public FIELDTYPE {
 public:
 
 	FIELDTYPE_UNITPROPERTY(unsigned int value) : FIELDTYPE(value) {}
-	void print(Section_STR_* STR) {
-		LOG_R("TRIGGERS", "Unit properties %d", this->value);
+	void print(Section_STR_* STR, WriteBuffer* wb, bool* error) {
+		PRINT_R("TRIGGERS", "Unit properties %d", this->value);
 	}
 };
 

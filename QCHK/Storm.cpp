@@ -145,7 +145,7 @@ bool Storm::writeSCX(char* file, CHK* chk, SoundCollection* sounds) {
 		delete wb;
 		return false;
 	}
-	if (SFileWriteFile(fh, contents, fileSize, 0)) {
+	if (!SFileWriteFile(fh, contents, fileSize, 0)) {
 		SFileFinishFile(fh);
 		SFileCloseArchive(fl);
 		delete wb;

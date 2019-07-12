@@ -1165,7 +1165,7 @@ BOOL MemoryModuleTestsuite() {
 		const uintptr_t* tests = AlignValueDownTests[idx];
 		uintptr_t value = AlignValueDown(tests[0], tests[1]);
 		if (value != tests[2]) {
-			LOG_R("MEM", "AlignValueDown failed for 0x%" PRIxPTR "/0x%" PRIxPTR ": expected 0x%" PRIxPTR ", got 0x%" PRIxPTR "\n",
+			LOG("MEM", "AlignValueDown failed for 0x%" PRIxPTR "/0x%" PRIxPTR ": expected 0x%" PRIxPTR ", got 0x%" PRIxPTR ,
 				tests[0], tests[1], tests[2], value);
 			success = FALSE;
 		}
@@ -1174,13 +1174,13 @@ BOOL MemoryModuleTestsuite() {
 		const uintptr_t* tests = AlignValueUpTests[idx];
 		uintptr_t value = AlignValueUp(tests[0], tests[1]);
 		if (value != tests[2]) {
-			LOG_R("MEM", "AlignValueUp failed for 0x%" PRIxPTR "/0x%" PRIxPTR ": expected 0x%" PRIxPTR ", got 0x%" PRIxPTR "\n",
+			LOG("MEM", "AlignValueUp failed for 0x%" PRIxPTR "/0x%" PRIxPTR ": expected 0x%" PRIxPTR ", got 0x%" PRIxPTR,
 				tests[0], tests[1], tests[2], value);
 			success = FALSE;
 		}
 	}
 	if (success) {
-		LOG_R("MEM", "OK\n");
+		LOG("MEM", "OK");
 	}
 	return success;
 }

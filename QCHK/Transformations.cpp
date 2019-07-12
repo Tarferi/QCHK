@@ -1021,8 +1021,8 @@ bool fix16_CopyTriggersAndBriefing(CHK* v2, CHK* v3, EUDSettings* settings) {
 	GET_SECT(Section_MBRF, v3MBRF, v3, "MBRF");
 
 	for (unsigned int type = 0; type < 2; type++) {
-		Section_TRIG* SRC = type == 0 ? v2TRIG : v2MBRF;
-		Section_TRIG* DST = type == 0 ? v3TRIG : v3MBRF;
+		Section_TRIG* SRC = type == 0 ? v3TRIG : v3MBRF;
+		Section_TRIG* DST = type == 0 ? v2TRIG : v2MBRF;
 
 		for (unsigned int triggerIndex = 0; triggerIndex < SRC->triggers.getSize(); triggerIndex++) {
 			Trigger* srcTrigger = SRC->triggers[triggerIndex];
@@ -1064,9 +1064,7 @@ bool fix17_CopyUnitSettings(CHK* v2, CHK* v3, EUDSettings* settings) {
 		if (unitNameIndex != 0) {
 			char* unitName = v3STR->getRawString(unitNameIndex);
 			v2UNIX->data->str_unit_name[unitIndex] = v2STR->getNewStringIndex(unitName);
-			if (settings->verbose) {
-				LOG("UNITS", "Copying \"%s\" as units %d name", unitName, unitIndex);
-			}
+			LOG("UNITS", "Copying \"%s\" as units %d name", unitName, unitIndex);
 		}
 	}
 	return true;

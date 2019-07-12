@@ -31,6 +31,8 @@ namespace WpfApplication1 {
         public String timeLockRangeFrom;
         public String timeLockRangeTo;
 
+        public int result;
+
         private Settings() {
 
         }

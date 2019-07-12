@@ -42,60 +42,69 @@ void processMap(EUDSettings* settings) {
 	}
 
 
-	error |= fix0_disableDefaultAlliances(v2, v3, settings);
-	error |= fix0_relocateStrings(v2, v3, settings);
+	error |= !fix0_disableDefaultAlliances(v2, v3, settings);
+	error |= !fix0_relocateStrings(v2, v3, settings);
 
 	if (!settings->useSanctuaryColors) {
-		error |= fix0_fixColors(v2, v3, settings);
+		error |= !fix0_fixColors(v2, v3, settings);
 	}
 
 	if (settings->addLeaderboard) {
-		error |= fix1_FixDeathsLabel(v2, v3, settings);
+		error |= !fix1_FixDeathsLabel(v2, v3, settings);
 	}
 	else {
-		error |= fix1_DisableLeaderboard(v2, v3, settings);
+		error |= !fix1_DisableLeaderboard(v2, v3, settings);
 	}
 
-	error |= fix2_FixCenteringViewAtBeginning(v2, v3, settings);
+	error |= !fix2_FixCenteringViewAtBeginning(v2, v3, settings);
 	if (!settings->enableVisor) {
-		error |= fix3_DisableVisor(v2, v3, settings);
+		error |= !fix3_DisableVisor(v2, v3, settings);
 	}
 	if (!settings->enableBarrier) {
-		error |= fix8_DisableBarrier(v2, v3, settings);
+		error |= !fix8_DisableBarrier(v2, v3, settings);
 	}
-	error |= fix12_DisableEndGames(v2, v3, settings);
+	error |= !fix12_DisableEndGames(v2, v3, settings);
 	if (!settings->addTouchRevive) {
-		error |= fix4_DisableTouchRevive(v2, v3, settings);
+		error |= !fix4_DisableTouchRevive(v2, v3, settings);
 	}
 	if (settings->addTimeLock) {
-		error |= fix5_AddTimeLockTriggers(v2, v3, settings);
+		error |= !fix5_AddTimeLockTriggers(v2, v3, settings);
 	}
-	error |= fix6_CopyForceNames(v2, v3, settings);
-	error |= fix7_CopyUnitProperties(v2, v3, settings);
-	error |= fix9_RemapLocations(v2, v3, settings);
-	error |= fix10_AddElapsedTimeToAllConditions(v2, v3, settings);
-	error |= fix11_ImportWav(v2, v3, settings);
-	error |= fix14_CopySections(v2, v3, settings);
-	error |= fix15_CopyScenarionNameAndDescription(v2, v3, settings);
-	error |= fix16_CopyTriggersAndBriefing(v2, v3, settings);
-	error |= fix17_CopyUnitSettings(v2, v3, settings);
-	error |= fix18_RelocateSTREUDSection(v2, v3, settings);
+	error |= !fix6_CopyForceNames(v2, v3, settings);
+	error |= !fix7_CopyUnitProperties(v2, v3, settings);
+	error |= !fix9_RemapLocations(v2, v3, settings);
+	error |= !fix10_AddElapsedTimeToAllConditions(v2, v3, settings);
+	error |= !fix11_ImportWav(v2, v3, settings);
+	error |= !fix14_CopySections(v2, v3, settings);
+	error |= !fix15_CopyScenarionNameAndDescription(v2, v3, settings);
+	error |= !fix16_CopyTriggersAndBriefing(v2, v3, settings);
+	error |= !fix17_CopyUnitSettings(v2, v3, settings);
+	error |= !fix18_RelocateSTREUDSection(v2, v3, settings);
 
-	//Section_TRIG* TRIG = (Section_TRIG*)v2->getSection("TRIG");
-	//Section_STR_* STR = (Section_STR_*)v2->getSection("STR ");
-	//TRIG->print(223, 250, STR);
+
 	v2F->writeToFile(storm, settings->outputFilePath, &error);
 	
 	if (error) {
 		SET_ERROR_PROCESS
 	}
-
-#ifdef OUTPUT
-	v2->write("C:/Users/Tom/Desktop/Documents/Starcraft/Maps/moje mapy/rep1.chk");
-	v2F->writeToFile(storm, "C:/Users/Tom/Desktop/Documents/Starcraft/Maps/moje mapy/eudrepack.scx");
+	
+#ifdef TRIG_PRINT
+	//v2->write("C:/Users/Tom/Desktop/Documents/Starcraft/Maps/moje mapy/rep1.chk");
+	//v2F->writeToFile(storm, "C:/Users/Tom/Desktop/Documents/Starcraft/Maps/moje mapy/eudrepack.scx");
 	Section_TRIG* T = (Section_TRIG*)v2->getSection("TRIG");
 	Section_STR_* S = (Section_STR_*)v2->getSection("STR ");
-	T->print(S);
+	WriteBuffer wb;
+	if (T->print(S, &wb)) {
+		wb.writeByte(0, &error);
+		if (!error) {
+			unsigned int length;
+			char* data;
+			wb.getWrittenData((unsigned char**) &data, &length);
+			FILE* f = fopen("triggers.txt", "wb");
+			fprintf(f, "%s", data);
+			fclose(f);
+		}
+	}
 #endif
 	delete v2F;
 	delete v3F;

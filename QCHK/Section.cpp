@@ -48,21 +48,21 @@ Section_TRIG::~Section_TRIG()
 #ifdef TRIG_PRINT
 #ifdef _DEBUG
 
-void Section_TRIG::printAction(Action * action, Section_STR_* STR)
+void Section_TRIG::printAction(Action * action, Section_STR_* STR, WriteBuffer* wb, bool* error)
 {
 	TriggerAction* ta = TriggerAction::get(action);
-	ta->print(STR);
+	ta->print(STR, wb, error);
 	delete ta;
 }
 
-void Section_TRIG::printCondition(Condition * condition, Section_STR_* STR)
+void Section_TRIG::printCondition(Condition * condition, Section_STR_* STR, WriteBuffer* wb, bool* error)
 {
 	TriggerCondition* tc = TriggerCondition::get(condition);
-	tc->print(STR);
+	tc->print(STR, wb, error);
 	delete tc;
 }
 
-void Section_TRIG::printPlayers(Trigger * trigger, Section_STR_* STR)
+void Section_TRIG::printPlayers(Trigger * trigger, Section_STR_* STR, WriteBuffer* wb, bool* error)
 {
 	int zeroes = 0;
 	for (unsigned int playerIndex = 0; playerIndex < 28; playerIndex++) {
@@ -76,9 +76,12 @@ void Section_TRIG::printPlayers(Trigger * trigger, Section_STR_* STR)
 		if (trigger->players[playerIndex] == 1) {
 			done++;
 			bool isLast = done == zeroes;
-			FIELDTYPE_PLAYER(playerIndex).print(STR);
+			FIELDTYPE_PLAYER(playerIndex).print(STR, wb, error);
+			if (*error) {
+				return;
+			}
 			if (!isLast) {
-				LOG_R("TRIGGERS", ", ");
+				PRINT_R("TRIGGERS", ", ");
 			}
 		}
 	}
@@ -347,44 +350,60 @@ TriggerAction * TriggerAction::get(Action * rawAction)
 	}
 }
 
-bool TriggerContents::print(Section_STR_* STR) {
+#define PRINT_RR(i) {types[i]->print(STR, &(wbs[i]), error);if(*error) {return;};wbs[i].writeByte(0, error);if(*error) {return;}unsigned char* tmp;unsigned int tmpI;wbs[i].getWrittenData(&tmp, &tmpI);tmps[i] = (char*) tmp;}
+#define PRINT_RRR(i) if(this->dataCount > i) {PRINT_RR(i);}
+#define PRINT_RRRR(i, ...) if(this->dataCount == i+1) {PRINT_R("TRIGGERS", templaes[i], __VA_ARGS__); return;}
+
+void TriggerContents::print(Section_STR_* STR, WriteBuffer* wb, bool* error) {
 	FIELDTYPE* types[] = { data1, data2, data3, data4, data5, data6, data7, data8, data9 };
-
-	GET_CLONED_STRING(strPtr, this->templateStr == nullptr ? this->invalidTemplateStr : this->templateStr, { return false; });
-	char* str = strPtr;
-	unsigned int index = 0;
-	char* lb = strstr(str, "(");
-	unsigned int offset = lb - str;
-	str[offset] = 0;
-	LOG_R("TRIGGERS", "%s(", str);
-	str[offset] = '(';
-	str = str + offset + 1;
-
-	if (this->dataCount == 1) {
-		data1->print(STR);
-		LOG_R("TRIGGERS", ");");
-		free(strPtr);
-		return false;
+	WriteBuffer wbs[9];
+	char* tmps[9];
+	char* templaes[] = {
+		"(%s);",
+		"(%s, %s);",
+		"(%s, %s, %s);",
+		"(%s, %s, %s, %s);",
+		"(%s, %s, %s, %s, %s);",
+		"(%s, %s, %s, %s, %s, %s);",
+		"(%s, %s, %s, %s, %s, %s, %s);",
+		"(%s, %s, %s, %s, %s, %s, %s, %s);",
+		"(%s, %s, %s, %s, %s, %s, %s, %s, %s);"
+	};
+	
+	char* source = (char*)(this->templateStr == nullptr ? this->invalidTemplateStr : this->templateStr);
+	if (this->dataCount == 0) {
+		PRINT_R("TRIGGERS", "%s", source);
+		return;
 	}
+	
 
-	do {
-		char* next = strstr(str, ",");
-		if (next == nullptr) {
-			char* rb = strstr(str, ")");
-			if (index != 0) { // Something written, write last
-				types[index]->print(STR);
-				str = rb;
-			}
-			LOG_R("TRIGGERS", "%s", str);
-			break;
-		}
-		unsigned int offset = next - str;
-		types[index]->print(STR);
-		LOG_R("TRIGGERS", ", ");
-		str = next + 1;
-		index++;
-	} while (true);
-	free(strPtr);
+	unsigned int bpos= (strstr(source, "(") - source);
+	for (unsigned int i = 0; i < bpos; i++) {
+		char c = source[i];
+		PRINT_R("TRIGGERS", "%c", c);
+	}
+	
+	// Print arguments into separate strings
+	PRINT_RRR(0);
+	PRINT_RRR(1);
+	PRINT_RRR(2);
+	PRINT_RRR(3);
+	PRINT_RRR(4);
+	PRINT_RRR(5);
+	PRINT_RRR(6);
+	PRINT_RRR(7);
+	PRINT_RRR(8);
+
+	PRINT_RRRR(0, tmps[0]);
+	PRINT_RRRR(1, tmps[0], tmps[1]);
+	PRINT_RRRR(2, tmps[0], tmps[1], tmps[2]);
+	PRINT_RRRR(3, tmps[0], tmps[1], tmps[2], tmps[3]);
+	PRINT_RRRR(4, tmps[0], tmps[1], tmps[2], tmps[3], tmps[4]);
+	PRINT_RRRR(5, tmps[0], tmps[1], tmps[2], tmps[3], tmps[4], tmps[5]);
+	PRINT_RRRR(6, tmps[0], tmps[1], tmps[2], tmps[3], tmps[4], tmps[5], tmps[6]);
+	PRINT_RRRR(7, tmps[0], tmps[1], tmps[2], tmps[3], tmps[4], tmps[5], tmps[6], tmps[7]);
+	PRINT_RRRR(8, tmps[0], tmps[1], tmps[2], tmps[3], tmps[4], tmps[5], tmps[6], tmps[7], tmps[8]);
+	return;
 }
 
 TriggerContents::~TriggerContents()
