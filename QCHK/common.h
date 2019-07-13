@@ -3,6 +3,7 @@
 #include "stdlib.h"
 #include <stdarg.h>
 #include "string.h"
+#include "miniz.h"
 
 //#define TRIG_PRINT
 
@@ -166,3 +167,7 @@ private:
 };
 
 #define LIBRARY_API __declspec(dllexport)
+
+void compress(char* data, unsigned int length, char** outputData, unsigned int* outputLength, bool* error);
+
+void decompress(char* data, unsigned int dataLength, char** outputData, unsigned int* outputLength, bool* error);

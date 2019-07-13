@@ -153,6 +153,7 @@
     <ClInclude Include="EUDSettings.h" />
     <ClInclude Include="MapFile.h" />
     <ClInclude Include="Mem.h" />
+    <ClInclude Include="miniz.h" />
     <ClInclude Include="ogg.h" />
     <ClInclude Include="QCHK.h" />
     <ClInclude Include="ReadBuffer.h" />
@@ -170,8 +171,13 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="CHK.cpp" />
+    <ClCompile Include="common.cpp" />
     <ClCompile Include="MapFile.cpp" />
     <ClCompile Include="Mem.cpp" />
+    <ClCompile Include="miniz.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">false</ExcludedFromBuild>
+    </ClCompile>
     <ClCompile Include="QCHK.cpp" />
     <ClCompile Include="ReadBuffer.cpp" />
     <ClCompile Include="Section.cpp" />

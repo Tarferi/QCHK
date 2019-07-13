@@ -17,8 +17,6 @@ public:
 	Array<unsigned int>* dataLengths;
 	Array<char*>* fileNames;
 
-	void dump();
-
 private:
 	CHK* chk;
 	SoundCollection* sounds = nullptr;

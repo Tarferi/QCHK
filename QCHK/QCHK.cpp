@@ -5,28 +5,21 @@
 #include "QCHK.h"
 
 void processMap(EUDSettings* settings) {
-
-	Storm* storm = new Storm();
 	bool error = false;
+	Storm* storm = new Storm(&error);
+
 	MapFile* v2F = storm->readSanc(&error);
 	MapFile* v3F = storm->readSCX(settings->inputFilePath, &error);
-	if (error) {
-		settings->outputFilePath = nullptr;
-		delete v2F;
-		delete v3F;
-		delete storm;
-		return;
-	}
-
-	if (v2F == nullptr || v3F == nullptr) {
+	if (error || v2F == nullptr || v3F == nullptr) {
 		SET_ERROR_LOAD_FILE
-			delete storm;
+			settings->outputFilePath = nullptr;
 		if (v2F != nullptr) {
 			delete v2F;
 		}
 		if (v3F != nullptr) {
 			delete v3F;
 		}
+		delete storm;
 		return;
 	}
 
@@ -190,30 +183,22 @@ void freeWavs(EUDSettings* settings) {
 
 void loadWavs(EUDSettings* settings) {
 	SET_NO_ERROR
-	Storm* storm = new Storm();
+	bool error = false;
+	Storm* storm = new Storm(&error);
 	settings->outputFilePath = nullptr;
 
-	bool error = false;
 	MapFile* v2F = storm->readSanc(&error);
 	MapFile* v3F = storm->readSCX(settings->inputFilePath, &error);
-	if (error) {
+	if (error || v2F == nullptr || v3F == nullptr) {
 		SET_ERROR_LOAD_SECTION
 		settings->outputFilePath = nullptr;
-		delete v2F;
-		delete v3F;
-		delete storm;
-		return;
-	}
-
-	if (v2F == nullptr || v3F == nullptr) {
-		SET_ERROR_LOAD_FILE
-		delete storm;
 		if (v2F != nullptr) {
 			delete v2F;
 		}
 		if (v3F != nullptr) {
 			delete v3F;
 		}
+		delete storm;
 		return;
 	}
 
@@ -298,11 +283,14 @@ void getSoundLength(EUDSettings* settings) {
 }
 
 void getForces(EUDSettings* settings) {
-	SET_NO_ERROR
-	Storm* storm = new Storm();
-	settings->outputFilePath = nullptr;
+
 
 	bool error = false;
+	Storm* storm = new Storm(&error);
+
+	SET_NO_ERROR
+	settings->outputFilePath = nullptr;
+
 	MapFile* v3F = storm->readSCX(settings->inputFilePath, &error);
 	if (error) {
 		SET_ERROR_LOAD_FILE

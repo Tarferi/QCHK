@@ -3,10 +3,25 @@
 #include "SancData.h"
 #endif
 
+bool decompressLib(char** data, unsigned int* size) {
+	bool error = false;
+	char* newData;
+	unsigned int newSize;
+	decompress((char*) _acStormLib, _acStormLibLen, &newData, &newSize, &error);
+	*data = newData;
+	*size = newSize;
+	return !error;
+}
 
-Storm::Storm() {
+Storm::Storm(bool* error) {
 	this->lib = nullptr;
-	this->lib = MemoryLoadLibrary(_acStormLib, _acStormLibLen);
+	unsigned int libSize;
+	if (!decompressLib(&this->decompressedLib, &libSize)) {
+		*error = true;
+		return;
+	}
+
+	this->lib = MemoryLoadLibrary(this->decompressedLib, libSize);
 	if (!this->lib) {
 		throw 1;
 	}
@@ -26,6 +41,10 @@ Storm::Storm() {
 }
 
 Storm::~Storm() {
+	if (this->decompressedLib != nullptr) {
+		free(this->decompressedLib);
+		this->decompressedLib = nullptr;
+	}
 	if (this->lib != nullptr) {
 		MemoryFreeLibrary(this->lib);
 		this->lib = nullptr;
@@ -81,6 +100,7 @@ MapFile * Storm::readSCX(char * filePath, bool* error)
 
 #define HEXDIGIT(d) (d - 'A')
 
+
 void process(char* fileName, unsigned int fileSize, char* data, unsigned int *position, Array<char*>* fileNames, Array<unsigned int>* fileSizes, Array<char*>* filesContents, bool* error) {
 	unsigned int begin = *position;
 	fileSizes->append(fileSize);
@@ -97,18 +117,28 @@ void process(char* fileName, unsigned int fileSize, char* data, unsigned int *po
 }
 
 MapFile * Storm::readSanc(bool* error) {
+	char* decompressedSancData;
+	unsigned int decompressedSancDataLength;
+	decompress((char*) _acdata, 3279744UL + 1, &decompressedSancData, &decompressedSancDataLength, error);
+	if (*error) {
+		return nullptr;
+	}
+
+
 	Array<char*>* fileNames = new Array<char*>();
 	Array<unsigned int>* fileSizes = new Array<unsigned int>();
 	Array<char*>* filesContents = new Array<char*>();
 	unsigned int pos = 0;
-	process((char*)_acfile_0_name, _acfile_0_length, (char*)_acdata, &pos, fileNames, fileSizes, filesContents, error);
-	process((char*)_acfile_1_name, _acfile_1_length, (char*)_acdata, &pos, fileNames, fileSizes, filesContents, error);
-	process((char*)_acfile_2_name, _acfile_2_length, (char*)_acdata, &pos, fileNames, fileSizes, filesContents, error);
-	process((char*)_acfile_3_name, _acfile_3_length, (char*)_acdata, &pos, fileNames, fileSizes, filesContents, error);
-	process((char*)_acfile_4_name, _acfile_4_length, (char*)_acdata, &pos, fileNames, fileSizes, filesContents, error);
-	process((char*)_acfile_5_name, _acfile_5_length, (char*)_acdata, &pos, fileNames, fileSizes, filesContents, error);
-	process((char*)_acfile_6_name, _acfile_6_length, (char*)_acdata, &pos, fileNames, fileSizes, filesContents, error);
-	process((char*)_acfile_7_name, _acfile_7_length, (char*)_acdata, &pos, fileNames, fileSizes, filesContents, error);
+	process((char*)_acfile_0_name, _acfile_0_length, (char*)decompressedSancData, &pos, fileNames, fileSizes, filesContents, error);
+	process((char*)_acfile_1_name, _acfile_1_length, (char*)decompressedSancData, &pos, fileNames, fileSizes, filesContents, error);
+	process((char*)_acfile_2_name, _acfile_2_length, (char*)decompressedSancData, &pos, fileNames, fileSizes, filesContents, error);
+	process((char*)_acfile_3_name, _acfile_3_length, (char*)decompressedSancData, &pos, fileNames, fileSizes, filesContents, error);
+	process((char*)_acfile_4_name, _acfile_4_length, (char*)decompressedSancData, &pos, fileNames, fileSizes, filesContents, error);
+	process((char*)_acfile_5_name, _acfile_5_length, (char*)decompressedSancData, &pos, fileNames, fileSizes, filesContents, error);
+	process((char*)_acfile_6_name, _acfile_6_length, (char*)decompressedSancData, &pos, fileNames, fileSizes, filesContents, error);
+	process((char*)_acfile_7_name, _acfile_7_length, (char*)decompressedSancData, &pos, fileNames, fileSizes, filesContents, error);
+
+	free(decompressedSancData);
 
 	MapFile* mf = new MapFile(filesContents, fileSizes, fileNames, error);
 	return mf;

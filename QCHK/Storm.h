@@ -53,7 +53,7 @@ typedef bool (WINAPI *SFileCloseArchiveF) (HANDLE hMpq);
 class Storm
 {
 public:
-	Storm();
+	Storm(bool* error);
 
 	~Storm();
 
@@ -64,7 +64,9 @@ public:
 	bool writeSCX(char* file, CHK* chk, SoundCollection* sounds);
 
 private:
-	HMEMORYMODULE lib;
+	char* decompressedLib = nullptr;
+
+	HMEMORYMODULE lib = nullptr;
 	SFileOpenArchiveF SFileOpenArchive;
 	SFileFindNextFileF SFileFindNextFile;
 	SFileFindFirstFileF SFileFindFirstFile;
