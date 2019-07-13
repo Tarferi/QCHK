@@ -100,7 +100,6 @@ MapFile * Storm::readSCX(char * filePath, bool* error)
 
 #define HEXDIGIT(d) (d - 'A')
 
-
 void process(char* fileName, unsigned int fileSize, char* data, unsigned int *position, Array<char*>* fileNames, Array<unsigned int>* fileSizes, Array<char*>* filesContents, bool* error) {
 	unsigned int begin = *position;
 	fileSizes->append(fileSize);
@@ -158,49 +157,50 @@ bool Storm::writeSCX(char* file, CHK* chk, SoundCollection* sounds) {
 		return false;
 	}
 	
-	// Write CHK first
-	char* chkFile = "staredit\\scenario.chk";
-	char* contents;
-	unsigned int fileSize;
-	WriteBuffer* wb = new WriteBuffer();
-	if (!chk->write(wb)) {
-		SFileCloseArchive(fl);
+	{
+		// Write CHK first
+		char* chkFile = "staredit\\scenario.chk";
+		char* contents;
+		unsigned int fileSize;
+		WriteBuffer* wb = new WriteBuffer();
+		if (!chk->write(wb)) {
+			SFileCloseArchive(fl);
+			delete wb;
+			return false;
+		}
+		wb->getWrittenData((unsigned char**)(&contents), &fileSize);
+		HANDLE fh;
+		if (!SFileCreateFile(fl, chkFile, 0, fileSize, 0, 0, &fh)) {
+			SFileCloseArchive(fl);
+			delete wb;
+			return false;
+		}
+		if (!SFileWriteFile(fh, contents, fileSize, 0)) {
+			SFileFinishFile(fh);
+			SFileCloseArchive(fl);
+			delete wb;
+			return false;
+		}
+		if (!SFileFinishFile(fh)) {
+			SFileCloseArchive(fl);
+			delete wb;
+			return false;
+		}
 		delete wb;
+	}
+	Section_STR_* STR = (Section_STR_*)chk->getSection("STR ");
+	if (STR == nullptr) { // Should never happen tho
+		LOG("STORM", "STR section not found");
+		SFileCloseArchive(fl);
 		return false;
 	}
-	wb->getWrittenData((unsigned char**) (&contents), &fileSize);
-	HANDLE fh;
-	if (!SFileCreateFile(fl, chkFile, 0, fileSize, 0, 0, &fh)) {
-		SFileCloseArchive(fl);
-		delete wb;
-		return false;
-	}
-	if (!SFileWriteFile(fh, contents, fileSize, 0)) {
-		SFileFinishFile(fh);
-		SFileCloseArchive(fl);
-		delete wb;
-		return false;
-	}
-	if (!SFileFinishFile(fh)) {
-		SFileCloseArchive(fl);
-		delete wb;
-		return false;
-	}
-	delete wb;
-
 
 	// Write every other files
 	for (unsigned int fileIndex = 0; fileIndex < sounds->files.getSize(); fileIndex++) {
 		SoundFile* file = sounds->files[fileIndex];
 		if (file->v2Index != 0) {
-			LOG("STORM", "Found file \"%s\" with index, exporting", file->fileName)
-			Section_STR_* STR = (Section_STR_*)chk->getSection("STR ");
-			if (STR == nullptr) { // Should never happen tho
-				LOG("STORM", "STR section not found while saving \"%s\"", file->fileName);
-				SFileCloseArchive(fl);
-				return false;
-			}
-
+			LOG("STORM", "Found file \"%s\" with index %d, exporting as \"%s\"", file->fileName, file->v2Index, STR->getRawString(file->v2Index));
+			
 			char* fileName = STR->getRawString(file->v2Index);
 			char* contents = file->contents;
 			unsigned int fileSize = file->contentsSize;

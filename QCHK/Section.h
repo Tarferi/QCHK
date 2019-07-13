@@ -341,6 +341,7 @@ public:
 
 	COMMON_CONSTR_SEC_BS(Section_UNIT)
 
+
 };
 
 class Section_ISOM : public BasicSection {
@@ -744,12 +745,48 @@ public:
 
 };
 
-class Section_UNIS : public BasicSection {
+struct Section_UNIS_STRUCTURE {
+
+	unsigned char used[228]; // : 1 byte for each unit, in order of Unit ID
+	unsigned int HP[228]; // : Hit points for unit(Note the displayed value is this value / 256, with the low byte being a fractional HP value)
+	unsigned short shield[228]; // : Shield points, in order of Unit ID
+	unsigned char armor[228]; //: Armor points, in order of Unit ID
+	unsigned short build_time[228]; // : Build time(1 / 60 seconds), in order of Unit ID
+	unsigned short mineral_cost[228]; // : Mineral cost, in order of Unit ID
+	unsigned short gas_cost[228]; // : Gas cost, in order of Unit ID
+	unsigned short name[228]; // : String number, in order of Unit ID
+	unsigned short damage[100]; // : Base weapon damage the weapon does, in weapon ID order(#List of Unit Weapon IDs)
+	unsigned short damage_bonus[100]; // : Upgrade bonus weapon damage, in weapon ID order
+
+};
+
+class Section_UNIS : public Section {
 
 public:
 
-	COMMON_CONSTR_SEC_BS(Section_UNIS)
+	COMMON_CONSTR_SEC(Section_UNIS)
 
+	Section_UNIS_STRUCTURE* data = nullptr;
+
+	virtual ~Section_UNIS() {
+		if (this->data != nullptr) {
+			free(this->data);
+			this->data = nullptr;
+		}
+	}
+
+protected:
+	bool parse() {
+		bool error = false;
+		this->data = (Section_UNIS_STRUCTURE*) this->buffer->readArray(sizeof(Section_UNIS_STRUCTURE), &error);
+		return !error;
+	}
+
+	bool write(WriteBuffer* buffer) {
+		bool error = false;
+		buffer->writeArray((unsigned char*) this->data, sizeof(Section_UNIS_STRUCTURE), &error);
+		return !error;
+	}
 };
 
 class Section_UPGS : public BasicSection {

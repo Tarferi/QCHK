@@ -73,6 +73,8 @@ namespace WpfApplication1 {
                 txtToM.IsEnabled = true;
                 txtToD.IsEnabled = true;
                 txtToH.IsEnabled = true;
+                checkMuteUnits.IsEnabled = true;
+                checkAdjustHP.IsEnabled = true;
                 txtTom.IsEnabled = true;
                 txtToS.IsEnabled = true;
                 txtGunfire2.IsEnabled = true;
@@ -120,6 +122,8 @@ namespace WpfApplication1 {
             txtToY.IsEnabled = false;
             txtToM.IsEnabled = false;
             txtToD.IsEnabled = false;
+            checkAdjustHP.IsEnabled = false;
+            checkMuteUnits.IsEnabled = false;
             txtToH.IsEnabled = false;
             txtTom.IsEnabled = false;
             txtToS.IsEnabled = false;
@@ -226,6 +230,8 @@ namespace WpfApplication1 {
             checkLeaderboard.IsChecked = settings.addLeaderboard;
             checkColors.IsChecked = settings.addSancColors;
             checkRevive.IsChecked = settings.addTouchRevive;
+            checkAdjustHP.IsChecked = settings.adjustHPAndWeapons;
+            checkMuteUnits.IsChecked = settings.muteUnits;
 
             checkTimeLock.IsChecked = settings.addTimelock;
             txtTimeLockMessage.Text = settings.timeLockMessage;
@@ -269,7 +275,9 @@ namespace WpfApplication1 {
             settings.EMPDamage = getInt(txtEmpDamage.Text);
             settings.addLeaderboard = (bool) checkLeaderboard.IsChecked;
             settings.addSancColors = (bool) checkColors.IsChecked;
-            settings.addTouchRevive = (bool) checkRevive.IsChecked;
+            settings.addTouchRevive = (bool)checkRevive.IsChecked;
+            settings.adjustHPAndWeapons = (bool)checkAdjustHP.IsChecked;
+            settings.muteUnits = (bool)checkMuteUnits.IsChecked;
 
             getSelectedFile(lstBackgroundSound, checkBackground, ref settings.useDefaultBackgroundSound, ref settings.backgroundSound);
             getSelectedFile(lstVisorSound, checkVisor1, ref settings.useDefaultVisorSound, ref settings.visorSound);
@@ -580,7 +588,13 @@ namespace WpfApplication1 {
             if (file != null) {
                 int index = __getSoundIndex(file);
                 if(index == -1) { // No such thing
-                    SoundFile sndFile = new SoundFile("ORIGIN", file, null, 0, false, false, true);
+                    SoundFile sndFile;
+                    try {
+                        sndFile = new SoundFile("ORIGIN", file, null, 0, false, false, true);
+                    } catch (InvalidSoundException) {
+                        showErrorMessageBox("Sound Manager", "Unsupported sound file");
+                        return;
+                    }
                     lstBackgroundSound.Items.Add(sndFile);
                     lstGunSound.Items.Add(sndFile);
                     lstVisorSound.Items.Add(sndFile);

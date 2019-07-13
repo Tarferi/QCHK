@@ -33,11 +33,13 @@ static int initValue = ARRAY_DEFAULT_SIZE;
 //#define DEBUG_LOG
 
 
+#define LOG_Q(section, fmt, ...) \
+	do { fprintf(stderr, "[" section "] " fmt "\n" , __VA_ARGS__); } while (0);
+
 #ifdef DEBUG_LOG
 
 #define LOG_R(section, fmt, ...) \
-	if(!strcmp(section, "TRIGGERS")) { do {fprintf(stderr, fmt, __VA_ARGS__); } while (0); } else {\
-	do { fprintf(stderr, "[" section "] " fmt , __VA_ARGS__); } while (0);}
+	do { fprintf(stderr, "[" section "] " fmt , __VA_ARGS__); } while (0);
 
 #define LOG(section, fmt, ...) \
 		LOG_R(section, fmt "\n", __VA_ARGS__)

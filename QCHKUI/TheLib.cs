@@ -69,6 +69,10 @@ namespace WpfApplication1 {
         public unsafe bool addTimeLock;
         [MarshalAs(UnmanagedType.U1), FieldOffset(8)]
         public unsafe bool useSanctuaryColors;
+        [MarshalAs(UnmanagedType.U1), FieldOffset(9)]
+        public unsafe bool recalculateHPAndDamage;
+        [MarshalAs(UnmanagedType.U1), FieldOffset(10)]
+        public unsafe bool muteUnits;
 
         [FieldOffset(12)]
         public unsafe byte* GunShotWavFilePath;
@@ -145,6 +149,8 @@ namespace WpfApplication1 {
                     try {
                         duration = TheLib.getFileDurationInMs(fileName);
                         this.duration = duration;
+                    } catch (InvalidSoundException) {
+                        throw;
                     } catch (Exception) {
                         this.isSystem = false;
                         return;
@@ -192,7 +198,7 @@ namespace WpfApplication1 {
             } else if (isMapFile) {
                 return "C:" + fileName;
             } else if (isSystem) {
-                return "F:" + sourceName;
+                return "F:" + fileName;
             } else { // Storage string
                 return fileName;
             }
@@ -222,12 +228,14 @@ namespace WpfApplication1 {
                 rawSettings->enableBarrier = settings->enableBarrier;
                 rawSettings->addLeaderboard = settings->addLeaderboard;
                 rawSettings->addTimeLock = settings->addTimeLock;
+                rawSettings->muteUnits = settings->muteUnits;
 
                 rawSettings->useSanctuaryColors = settings->useSanctuaryColors;
 
                 rawSettings->GunShotWavFilePath = settings->GunShotWavFilePath;
                 rawSettings->VisorUsageFilePath = settings->VisorUsageFilePath;
                 rawSettings->BackgroundWavFilePath = settings->BackgroundWavFilePath;
+                rawSettings->recalculateHPAndDamage = settings->recalculateHPAndDamage;
 
                 rawSettings->TimeLockMessage = settings->TimeLockMessage;
                 rawSettings->TimeLockFrom = settings->TimeLockFrom;
@@ -254,10 +262,12 @@ namespace WpfApplication1 {
                 settings->addTimeLock = rawSettings->addTimeLock;
 
                 settings->useSanctuaryColors = rawSettings->useSanctuaryColors;
+                settings->recalculateHPAndDamage = rawSettings->recalculateHPAndDamage;
 
                 settings->GunShotWavFilePath = rawSettings->GunShotWavFilePath;
                 settings->VisorUsageFilePath = rawSettings->VisorUsageFilePath;
                 settings->BackgroundWavFilePath = rawSettings->BackgroundWavFilePath;
+                settings->muteUnits = rawSettings->muteUnits;
 
                 settings->TimeLockMessage = rawSettings->TimeLockMessage;
                 settings->TimeLockFrom = rawSettings->TimeLockFrom;
@@ -373,6 +383,8 @@ namespace WpfApplication1 {
             es.enableBarrier = settings.enableBarrier;
             es.addLeaderboard = settings.addLeaderboard;
             es.addTimeLock = settings.addTimelock;
+            es.recalculateHPAndDamage = settings.adjustHPAndWeapons;
+            es.muteUnits = settings.muteUnits;
 
             es.useSanctuaryColors = settings.addSancColors;
 
@@ -417,6 +429,9 @@ namespace WpfApplication1 {
             }
             int duration = (int) es.outputFilePath;
             killByteArray(es.inputFilePath);
+            if(es.result != 0) {
+                throw new InvalidSoundException();
+            }
             return duration;
           }
 
@@ -447,4 +462,8 @@ namespace WpfApplication1 {
             return null;
         }
     }
+  
+}
+  class InvalidSoundException : Exception {
+
 }

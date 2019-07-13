@@ -740,7 +740,7 @@ unsigned short importSound(Section_STR_* v2STR, SoundCollection* v2S, SoundColle
 	if (path[0] == 'S') { // Native sound from v2S
 		SoundFile* sf;
 		if (v2S->getSound(filePath, &sf)) {
-			*length = IS_OGG(filePath) ? getOggLengthMs(sf->contents, sf->contentsSize) / 1000 : getWavLengthMs(sf->contents) / 1000; // Sound length
+			*length = IS_OGG(filePath) ? getOggLengthMs(sf->contents, sf->contentsSize, error) / 1000 : getWavLengthMs(sf->contents, error) / 1000; // Sound length
 			unsigned short index = S->addOrRewriteSound(v2STR, path, sf->contents, sf->contentsSize, sf->isOgg, error);
 			if (*error) {
 				return 0;
@@ -752,7 +752,7 @@ unsigned short importSound(Section_STR_* v2STR, SoundCollection* v2S, SoundColle
 	else if (path[0] == 'C') { // V3S sound
 		SoundFile* sf;
 		if (v3S->getSound(filePath, &sf)) {
-			*length = IS_OGG(filePath) ? getOggLengthMs(sf->contents, sf->contentsSize) / 1000 : getWavLengthMs(sf->contents) / 1000; // Sound length
+			*length = IS_OGG(filePath) ? getOggLengthMs(sf->contents, sf->contentsSize, error) / 1000 : getWavLengthMs(sf->contents, error) / 1000; // Sound length
 			unsigned short index = S->addOrRewriteSound(v2STR, path, sf->contents, sf->contentsSize, sf->isOgg, error);
 			if (*error) {
 				return 0;
@@ -775,13 +775,13 @@ unsigned short importSound(Section_STR_* v2STR, SoundCollection* v2S, SoundColle
 				fclose(f);
 				return 0;
 			}
-			unsigned short index = S->addOrRewriteSound(v2STR, path, data, size, ENDS_WIDTH(data, ".ogg"), error);
+			unsigned short index = S->addOrRewriteSound(v2STR, path, data, size, ENDS_WIDTH(filePath, ".ogg"), error);
 			if (*error) {
 				free(data);
 				fclose(f);
 				return 0;
 			}
-			*length = IS_OGG(filePath) ? getOggLengthMs(data, size) / 1000 : getWavLengthMs(data) / 1000; // Sound length
+			*length = IS_OGG(filePath) ? getOggLengthMs(data, size, error) / 1000 : getWavLengthMs(data, error) / 1000; // Sound length
 			free(data);
 			fclose(f);
 			LOG("SOUND REMAPPING", "Remapping sound \"%s\" another map data to index %d", path, index);
@@ -964,8 +964,6 @@ bool fix12_DisableEndGames(CHK* v2, CHK* v3, EUDSettings* settings) {
 
 	v2TRIG->triggers.get(241)->actions[0].Flags |= 2; // Disable victory text
 	v2TRIG->triggers.get(242)->actions[0].Flags |= 2; // Disable display defeat text
-	v2TRIG->triggers.get(235)->actions[25].Group = settings->EMPDamage;
-
 
 	for (unsigned int i = 0; i < v2TRIG->triggers.getSize(); i++) {
 		Trigger* trigger = v2TRIG->triggers[i];
@@ -977,6 +975,37 @@ bool fix12_DisableEndGames(CHK* v2, CHK* v3, EUDSettings* settings) {
 			}
 		}
 	}
+	return true;
+}
+
+bool fix13_RecalculateHPAndDamage(CHK* v2, CHK* v3, EUDSettings* settings) {
+	GET_SECT(Section_UNIx, v3UNIx, v3, "UNIx");
+	GET_SECT(Section_TRIG, v2TRIG, v2, "TRIG");
+
+	unsigned int ghostHP = v3UNIx->data->hp[1];
+	unsigned int ghostArmor = v3UNIx->data->armor[1];
+
+	double factor = ((double) 11.0 * 256) / ((double)ghostHP);
+	for (unsigned int i = 0; i < 130; i++) {
+		unsigned int damage = v3UNIx->data->weapon_damage[i]; // Damage intended for <ghostHP>
+		unsigned int newDamage = (unsigned int) ceil(damage * factor);
+		LOG("DAMAGE REMAPPER", "Changing damage of weapon id %d from %d to %d", i, damage, newDamage);
+		v3UNIx->data->weapon_damage[i] = newDamage;
+	}
+
+	for (unsigned int i = 0; i < 228; i++) {
+		unsigned int HP = v3UNIx->data->hp[i]; // Damage intended for <ghostHP>
+		unsigned int newHP = (unsigned int)ceil(HP * factor);
+		unsigned int armor = v3UNIx->data->armor[i]; // Damage intended for <ghostHP>
+		unsigned int newArmor = (unsigned int)ceil(armor * factor);
+		LOG("HP REMAPPER", "Changing HP of unit id %d from %d to %d and armor from %d to %d", i, HP/256, newHP/256, armor, newArmor);
+		v3UNIx->data->hp[i] = newHP;
+		v3UNIx->data->armor[i] = newArmor;
+	}
+	unsigned int originalEMP = settings->EMPDamage;
+	settings->EMPDamage = (unsigned int)ceil(settings->EMPDamage * factor);
+	LOG("DAMAGE REMAPPER", "Changing damage of EMP from %d to %d", originalEMPe, settings->EMPDamage);
+	v2TRIG->triggers.get(235)->actions[25].Group = settings->EMPDamage;
 	return true;
 }
 
@@ -1076,15 +1105,19 @@ bool fix17_CopyUnitSettings(CHK* v2, CHK* v3, EUDSettings* settings) {
 
 bool fix18_RelocateSTREUDSection(CHK * v2, CHK * v3, EUDSettings * settings) {
 
-	/* Experiments
+	/* Experiments 
 	Section_STR_* STR = (Section_STR_*)v2->getSection("STR ");
-	Section_MRGN* MRGN = (Section_MRGN*)v2->getSection("MRGN");
-	GET_SECT(Section_TRIG, v2TRIG, v2, "TRIG");
-	
-	unsigned char* data = STR->data;
-	unsigned int rawDataLength = STR->size - 32;
 
-	data = MRGN->data;
+	WriteBuffer wb;
+	v2->write(&wb);
+
+	
+	
+	unsigned char* data;
+	unsigned int rawDataLength;
+	wb.getWrittenData(&data, &rawDataLength);
+
+	rawDataLength -= 2400;
 
 	unsigned int lookUp = 11;
 
@@ -1093,12 +1126,13 @@ bool fix18_RelocateSTREUDSection(CHK * v2, CHK * v3, EUDSettings * settings) {
 		Action* action = (Action*)(&(data[index]));
 		if (action->ActionType == 45 && action->UnitsNumber == 7) {
 			if ((action->Group >> 24) & 0xff == lookUp || (action->Group >> 16) & 0xff == lookUp || (action->Group >> 8) & 0xff == lookUp || (action->Group >> 0) & 0xff == lookUp) {
-				
 				unsigned char unit = STR->data[index + 7];
 				LOG("STR ANALYZER", "Found 12 at %d for PID %d", index, action->Player);
 			}
 		}
 	}
+
+	/*
 	
 	STR->data[176244] = 51; // Barrier restore HP
 	v2TRIG->triggers.get(313)->actions[3].Group = 51;

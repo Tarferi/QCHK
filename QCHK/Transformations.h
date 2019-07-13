@@ -5,6 +5,7 @@
 #include "EUDSettings.h"
 #include "SoundCollection.h"
 #include "wav.h"
+#include "math.h"
 
 bool fix0_disableDefaultAlliances(CHK* v2, CHK* v3, EUDSettings* settings);
 
@@ -37,6 +38,8 @@ bool fix10_AddElapsedTimeToAllConditions(CHK* v2, CHK* v3, EUDSettings* settings
 bool fix11_ImportWav(CHK* v2, CHK* v3, EUDSettings* settings);
 
 bool fix12_DisableEndGames(CHK* v2, CHK* v3, EUDSettings* settings);
+
+bool fix13_RecalculateHPAndDamage(CHK* v2, CHK* v3, EUDSettings* settings);
 
 bool fix14_CopySections(CHK* v2, CHK* v3, EUDSettings* settings);
 

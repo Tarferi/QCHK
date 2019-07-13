@@ -1,6 +1,5 @@
 ﻿using System;
 using System.IO;
-using System.Text;
 
 namespace WpfApplication1 {
     class Settings {
@@ -17,6 +16,9 @@ namespace WpfApplication1 {
         public bool addLeaderboard;
         public bool addTouchRevive;
         public bool addSancColors;
+
+        public bool adjustHPAndWeapons;
+        public bool muteUnits;
 
         public bool useDefaultGunfireSound;
         public bool useDefaultVisorSound;
@@ -63,6 +65,13 @@ namespace WpfApplication1 {
                 s.timeLockRangeFrom = rb.readString();
                 s.timeLockRangeTo = rb.readString();
 
+                try {
+                    s.adjustHPAndWeapons = rb.readBool();
+                    s.muteUnits = rb.readBool();
+                } catch (Exception) {
+                    s.adjustHPAndWeapons = s.enableBarrier;
+                    s.muteUnits = false;
+                }
                 
             } catch (Exception) {
                 return null;
@@ -91,6 +100,10 @@ namespace WpfApplication1 {
                 wb.writeString(this.timeLockMessage);
                 wb.writeString(this.timeLockRangeFrom);
                 wb.writeString(this.timeLockRangeTo);
+
+                wb.writeBool(this.adjustHPAndWeapons);
+                wb.writeBool(this.muteUnits);
+
                 File.WriteAllBytes(file, wb.ToArray());
                 return true;
             } catch (Exception) {
@@ -120,6 +133,9 @@ namespace WpfApplication1 {
             s.timeLockMessage = "";
             s.timeLockRangeFrom = "0:0:1:0:0:0";
             s.timeLockRangeTo = "0:0:1:0:0:0";
+
+            s.adjustHPAndWeapons = s.enableBarrier;
+            s.muteUnits = false;
             return s;
         }
     }

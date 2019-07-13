@@ -141,8 +141,8 @@ extern "C" {
 	static _wav_alwaysinline wav_u64_t wav_htol64(wav_u64_t v) { return v; }
 #endif
 
-	static int wav_parse(struct wav_info *info, const void *data) _wav_unused;
-	static int wav_parse(struct wav_info *info, const void *data);
+	static int wav_parse(struct wav_info *info, const void *data, bool* error) _wav_unused;
+	static int wav_parse(struct wav_info *info, const void *data, bool* error);
 
 	static int wav_write(void *buffer, const struct wav_info *info) _wav_unused;
 	static int wav_write(void *buffer, const struct wav_info *info);
@@ -190,26 +190,24 @@ static int wav_write(void *buffer, const struct wav_info *info) {
 	return 0;
 }
 
-unsigned int getWavLengthMs(char* data) {
-	wav_info info;
-	wav_parse(&info, data);
-	unsigned int bps = info.bits_per_sample;
-	unsigned int time =(unsigned int) ((info.size * 1000) / (info.sample_rate *info.channel_count*  (bps / 8)));
-	return time;
-}
 
-static int wav_parse(struct wav_info *info, const void *data) {
+static int wav_parse(struct wav_info *info, const void *data, bool* error) {
 	const struct wav_chunk *chunk = (const struct wav_chunk *) data;
 	const struct wav_riff *riff = (const struct wav_riff *) &chunk[1];
 	const struct wav_format *format;
 	wav_u32_t chunk_id;
 	wav_u32_t chunk_size;
 
-	if (wav_btoh32(chunk->id) != wav_fourcc('R', 'I', 'F', 'F'))
-		return -1;
+	if (wav_btoh32(chunk->id) != wav_fourcc('R', 'I', 'F', 'F')) {
+		*error = true;
+		return 0;
+	}
 
 	if (wav_btoh32(riff->format) != wav_fourcc('W', 'A', 'V', 'E'))
-		return -2;
+	{
+		*error = true;
+		return 0;
+	}
 
 	chunk = (const struct wav_chunk *) &riff[1];
 
@@ -236,7 +234,19 @@ static int wav_parse(struct wav_info *info, const void *data) {
 	return 0;
 }
 
-unsigned int getOggLengthMs(char* data, unsigned int dataLength) {
+
+unsigned int getWavLengthMs(char* data, bool* error) {
+	wav_info info;
+	wav_parse(&info, data, error);
+	if (*error) {
+		return 0;
+	}
+	unsigned int bps = info.bits_per_sample;
+	unsigned int time =(unsigned int) ((info.size * 1000) / (info.sample_rate *info.channel_count*  (bps / 8)));
+	return time;
+}
+
+unsigned int getOggLengthMs(char* data, unsigned int dataLength, bool* error) {
 	size_t memlen = dataLength;
 	unsigned char* mem = (unsigned char*)data;
 	int err;
@@ -247,7 +257,8 @@ unsigned int getOggLengthMs(char* data, unsigned int dataLength) {
 		return len * 1000;
 	}
 	else {
-		throw 1;
+		*error = true;
+		return 0;
 	}
 }
 

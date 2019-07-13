@@ -63,6 +63,9 @@ void processMap(EUDSettings* settings) {
 	if (settings->addTimeLock) {
 		error |= !fix5_AddTimeLockTriggers(v2, v3, settings);
 	}
+	if (settings->recalculateHPAndDamage) {
+		error |= !fix13_RecalculateHPAndDamage(v2, v3, settings);
+	}
 	error |= !fix6_CopyForceNames(v2, v3, settings);
 	error |= !fix7_CopyUnitProperties(v2, v3, settings);
 	error |= !fix9_RemapLocations(v2, v3, settings);
@@ -154,13 +157,13 @@ void insertSoundsIntoBuffer(SoundCollection* snd, WriteBuffer* wb, bool* error) 
 		}
 
 		if (ENDS_WIDTH(file->fileName, ".wav")) {
-			wb->writeInt(getWavLengthMs(file->contents), error);
+			wb->writeInt(getWavLengthMs(file->contents, error), error);
 			if (*error) {
 				return;
 			}
 		}
 		else if (ENDS_WIDTH(file->fileName, ".ogg")) {
-			wb->writeInt(getOggLengthMs(file->contents, file->contentsSize), error);
+			wb->writeInt(getOggLengthMs(file->contents, file->contentsSize, error), error);
 			if (*error) {
 				return;
 			}
@@ -272,10 +275,13 @@ void getSoundLength(EUDSettings* settings) {
 	}
 
 	if (ENDS_WIDTH(settings->inputFilePath, ".wav")) {
-		duration = getWavLengthMs((char*) data);
+		duration = getWavLengthMs((char*) data, &error);
 	}
 	else if (ENDS_WIDTH(settings->inputFilePath, ".ogg")) {
-		duration = getOggLengthMs((char*) data, size);
+		duration = getOggLengthMs((char*) data, size, &error);
+	}
+	if (error) {
+		SET_ERROR_LOAD_FILE
 	}
 
 	free(data);

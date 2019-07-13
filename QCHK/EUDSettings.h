@@ -26,6 +26,9 @@ typedef struct EUDSettings {
 	
 	bool useSanctuaryColors;
 
+	bool recalculateHPAndDamage;
+	bool muteUnits;
+
 	char* GunShotWavFilePath;
 	char* VisorUsageFilePath;
 	char* BackgroundWavFilePath;

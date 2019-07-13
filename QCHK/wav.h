@@ -23,6 +23,6 @@ THE SOFTWARE.
 */
 
 
-unsigned int getWavLengthMs(char* data);
+unsigned int getWavLengthMs(char* data, bool* error);
 
-unsigned int getOggLengthMs(char* data, unsigned int dataLength);
+unsigned int getOggLengthMs(char* data, unsigned int dataLength, bool* error);
