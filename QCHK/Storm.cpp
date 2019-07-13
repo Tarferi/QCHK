@@ -7,7 +7,7 @@ bool decompressLib(char** data, unsigned int* size) {
 	bool error = false;
 	char* newData;
 	unsigned int newSize;
-	decompress((char*) _acStormLib, _acStormLibLen, &newData, &newSize, &error);
+	decompress((char*)_acStormLib, _acStormLibLen, &newData, &newSize, &error);
 	*data = newData;
 	*size = newSize;
 	return !error;
