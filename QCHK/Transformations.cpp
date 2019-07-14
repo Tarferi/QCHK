@@ -25,31 +25,11 @@ bool fix0_fixColors(CHK* v2, CHK* v3, EUDSettings* settings) {
 	GET_SECT(Section_COLR, v3COLR, v3, "COLR");
 	GET_SECT(Section_TRIG, v2TRIG, v2, "TRIG");
 	MALLOC_N(newTrig, Trigger, 1, {return false; });
-	memset(newTrig, 0, sizeof(Trigger));
-	newTrig->flags = 0;
-	newTrig->players[17] = 1; // All players
-	newTrig->conditions[0].ConditionType = 22; // Ellapsed time
-	newTrig->conditions[0].Comparision = 0; // At least
-	newTrig->conditions[0].Quantifier = 1; // 1 second
 
-	int base = -8572;
-	unsigned char remapIndexes[] = { 111, 165, 159, 164, 156, 19, 84, 135, 185, 136, 134, 51 };
-	unsigned int remapSize = 12;
-	unsigned int actionIndex = 0;
-	for (unsigned int i = 0; i < 8; i++) {
-		unsigned char color = v3COLR->playerColors[i];
-		if (color < remapSize) { // Remappable color
-			unsigned int newColor = remapIndexes[color] << 16;
-			int locOffset = base + (i * 2); // Offset of player color
-			newTrig->actions[actionIndex].ActionType = 45; // Set deaths
-			newTrig->actions[actionIndex].Player = (unsigned int)locOffset; // offset of player color
-			newTrig->actions[actionIndex].UnitType = 0; // offset by marine
-			newTrig->actions[actionIndex].UnitsNumber = 7; // Set to
-			newTrig->actions[actionIndex].Group = newColor;
-			actionIndex++;
-		}
+	Trigger* trigger = v2TRIG->triggers.get(237);
+	for (unsigned int i = 4; i < 22; i++) { // Disable color remapping actions
+		trigger->actions[i].Flags |= 2;
 	}
-	v2TRIG->triggers.append(newTrig);
 	return true;
 }
 
