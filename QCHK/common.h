@@ -32,10 +32,6 @@ static int initValue = ARRAY_DEFAULT_SIZE;
 
 //#define DEBUG_LOG
 
-
-#define LOG_Q(section, fmt, ...) \
-	do { fprintf(stderr, "[" section "] " fmt "\n" , __VA_ARGS__); } while (0);
-
 #ifdef DEBUG_LOG
 
 #define LOG_R(section, fmt, ...) \

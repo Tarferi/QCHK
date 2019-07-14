@@ -440,23 +440,28 @@ bool fix7_CopyUnitProperties(CHK * v2, CHK * v3, EUDSettings * settings) {
 	unsigned char* v2PropRawData = v2Prop->data;
 	unsigned char* v3PropRawData = v3Prop->data;
 
-	bool usedStructures[64];
+	bool usedV2Structures[64];
+	char v3StructureRemapping[64];
 	for (unsigned int structIndex = 0; structIndex < 64; structIndex++) {
-		usedStructures[structIndex] = false;
+		usedV2Structures[structIndex] = false;
+		v3StructureRemapping[structIndex] = -1;
 	}
 
-	// Find used slots in triggers
-	for (unsigned int triggerIndex = 0; triggerIndex < v3TRIG->triggers.getSize(); triggerIndex++) {
-		Trigger* trigger = v3TRIG->triggers[triggerIndex];
+	// Find used slots in native triggers
+	for (unsigned int triggerIndex = 0; triggerIndex < v2TRIG->triggers.getSize(); triggerIndex++) {
+		Trigger* trigger = v2TRIG->triggers[triggerIndex];
 		for (unsigned int actionIndex = 0; actionIndex < 64; actionIndex++) {
 			Action* act = &(trigger->actions[actionIndex]);
 			if (act->ActionType == 11) { // Create units with properties
 				unsigned int propID = act->Group;
 				if (propID >= 64) {
-					LOG("PROPERTIES REMAPPER", "Action %d of trigger %d uses properties of index %d", actionIndex, triggerIndex, propID);
+					LOG("PROPERTIES REMAPPER", "Action %d of trigger %d uses properties of index %d, which is invalid (>= 64)", actionIndex, triggerIndex, propID);
 				}
 				else {
-					usedStructures[propID] = true;
+					if (!usedV2Structures[propID]) {
+						LOG("PROPERTIES REMAPPER", "Native uses properties at index %d", propID);
+						usedV2Structures[propID] = true;
+					}
 				}
 			}
 		}
@@ -465,10 +470,11 @@ bool fix7_CopyUnitProperties(CHK * v2, CHK * v3, EUDSettings * settings) {
 	// Count free slots
 	unsigned int availableSlots = 0;
 	for (unsigned int structIndex = 0; structIndex < 64; structIndex++) {
-		if (usedStructures[structIndex]) {
+		if (usedV2Structures[structIndex]) {
 			availableSlots++;
 		}
 	}
+	LOG("PROPERTIES REMAPPER", "Native uses %d slots of total 64", 64 - availableSlots);
 
 	// Remap v3 actions to free slots
 	int lastUsedSlot = 0;
@@ -482,22 +488,32 @@ bool fix7_CopyUnitProperties(CHK * v2, CHK * v3, EUDSettings * settings) {
 					LOG("PROPERTIES REMAPPER", "Action %d of trigger %d in imported map uses properties of index %d", actionIndex, triggerIndex, propID);
 				}
 				else { // Find free slot to use
-					while (lastUsedSlot < 64) {
-						if (!usedStructures[lastUsedSlot]) {
-							break;
+					char remappingIndex = v3StructureRemapping[propID];
+					if (remappingIndex == -1) { // Not remapped yet
+						while (lastUsedSlot < 64) {
+							if (!usedV2Structures[lastUsedSlot]) {
+								break;
+							}
+							lastUsedSlot++;
+						};
+						if (lastUsedSlot >= 64) {
+							LOG("PROPERTIES REMAPPER", "Not enough properties slots available");
+							return false;
 						}
-						lastUsedSlot++;
-					};
-					if (lastUsedSlot >= 64) {
-						LOG("PROPERTIES REMAPPER","Not enough properties slots available");
-						return false;
+
+						// Set remapping
+						v3StructureRemapping[propID] = lastUsedSlot;
+						usedV2Structures[lastUsedSlot] = true;
+						act->Group = lastUsedSlot;
+
+						// Copy raw data to that slot
+						memcpy(v2PropRawData + (64 * lastUsedSlot), v3PropRawData + (64 * propID), 64);
+						LOG("PROPERTIES REMAPPER", "Remapping properties used in action %d of trigger %d in imported map uses properties of index %d to new index %d and copying data", actionIndex, triggerIndex, propID, lastUsedSlot);
 					}
-					usedStructures[lastUsedSlot] = true;
-					LOG("PROPERTIES REMAPPER", "Remapping properties used in action %d of trigger %d in imported map uses properties of index %d to new index %d", actionIndex, triggerIndex, propID, lastUsedSlot);
-					act->Group = lastUsedSlot;
-					
-					// Copy raw data to that slot
-					memcpy(v2PropRawData + (64 * lastUsedSlot), v3PropRawData + (64 * propID), 64);
+					else { // Remapping is known from before
+						act->Group = remappingIndex;
+						LOG("PROPERTIES REMAPPER", "Remapping properties used in action %d of trigger %d in imported map uses properties of index %d to new index %d", actionIndex, triggerIndex, propID, remappingIndex);
+					}
 				}
 			}
 		}
@@ -1014,7 +1030,7 @@ bool fix13_RecalculateHPAndDamage(CHK* v2, CHK* v3, EUDSettings* settings) {
 	}
 	unsigned int originalEMP = settings->EMPDamage;
 	settings->EMPDamage = (unsigned int)ceil(settings->EMPDamage * factor);
-	LOG("DAMAGE REMAPPER", "Changing damage of EMP from %d to %d", originalEMPe, settings->EMPDamage);
+	LOG("DAMAGE REMAPPER", "Changing damage of EMP from %d to %d", originalEMP, settings->EMPDamage);
 	v2TRIG->triggers.get(235)->actions[25].Group = settings->EMPDamage;
 	return true;
 }
