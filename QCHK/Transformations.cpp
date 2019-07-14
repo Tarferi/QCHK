@@ -1025,9 +1025,13 @@ bool fix13_RecalculateHPAndDamage(CHK* v2, CHK* v3, EUDSettings* settings) {
 		unsigned int newHP = (unsigned int)ceil(HP * factor);
 		unsigned int armor = v3UNIx->data->armor[i]; // Damage intended for <ghostHP>
 		unsigned int newArmor = (unsigned int)ceil(armor * factor);
-		LOG("HP REMAPPER", "Changing HP of unit id %d from %d to %d and armor from %d to %d", i, HP/256, newHP/256, armor, newArmor);
+		unsigned int shield = v3UNIx->data->shield[i];
+		unsigned int newShield = (unsigned int)ceil(shield * factor);
+
+		LOG("HP REMAPPER", "Changing HP of unit id %d from %d to %d, armor from %d to %d and shields from %d to %d", i, HP/256, newHP/256, armor, newArmor, shield, newShield);
 		v3UNIx->data->hp[i] = newHP;
 		v3UNIx->data->armor[i] = newArmor;
+		v3UNIx->data->shield[i] = newShield;
 	}
 	unsigned int originalEMP = settings->EMPDamage;
 	settings->EMPDamage = (unsigned int)ceil(settings->EMPDamage * factor);
