@@ -430,7 +430,6 @@ bool fix6_CopyForceNames(CHK* v2, CHK* v3, EUDSettings* settings) {
 }
 
 bool fix7_CopyUnitProperties(CHK * v2, CHK * v3, EUDSettings * settings) {
-
 	GET_SECT(Section_UPRP, v2Prop, v2, "UPRP");
 	GET_SECT(Section_UPRP, v3Prop, v3, "UPRP");
 
@@ -454,10 +453,11 @@ bool fix7_CopyUnitProperties(CHK * v2, CHK * v3, EUDSettings * settings) {
 			Action* act = &(trigger->actions[actionIndex]);
 			if (act->ActionType == 11) { // Create units with properties
 				unsigned int propID = act->Group;
-				if (propID >= 64) {
+				if (propID != 0 && propID >= 64) {
 					LOG("PROPERTIES REMAPPER", "Action %d of trigger %d uses properties of index %d, which is invalid (>= 64)", actionIndex, triggerIndex, propID);
 				}
 				else {
+					propID--; // 1 based
 					if (!usedV2Structures[propID]) {
 						LOG("PROPERTIES REMAPPER", "Native uses properties at index %d", propID);
 						usedV2Structures[propID] = true;
@@ -478,16 +478,17 @@ bool fix7_CopyUnitProperties(CHK * v2, CHK * v3, EUDSettings * settings) {
 
 	// Remap v3 actions to free slots
 	int lastUsedSlot = 0;
-	for (unsigned int triggerIndex = 0; triggerIndex < v2TRIG->triggers.getSize(); triggerIndex++) {
-		Trigger* trigger = v2TRIG->triggers[triggerIndex];
+	for (unsigned int triggerIndex = 0; triggerIndex < v3TRIG->triggers.getSize(); triggerIndex++) {
+		Trigger* trigger = v3TRIG->triggers[triggerIndex];
 		for (unsigned int actionIndex = 0; actionIndex < 64; actionIndex++) {
 			Action* act = &(trigger->actions[actionIndex]);
 			if (act->ActionType == 11) { // Create units with properties
 				unsigned int propID = act->Group;
-				if (propID >= 64) {
+				if (propID != 0 && propID >= 64) {
 					LOG("PROPERTIES REMAPPER", "Action %d of trigger %d in imported map uses properties of index %d", actionIndex, triggerIndex, propID);
 				}
 				else { // Find free slot to use
+					propID--;
 					char remappingIndex = v3StructureRemapping[propID];
 					if (remappingIndex == -1) { // Not remapped yet
 						while (lastUsedSlot < 64) {
@@ -504,14 +505,14 @@ bool fix7_CopyUnitProperties(CHK * v2, CHK * v3, EUDSettings * settings) {
 						// Set remapping
 						v3StructureRemapping[propID] = lastUsedSlot;
 						usedV2Structures[lastUsedSlot] = true;
-						act->Group = lastUsedSlot;
+						act->Group = lastUsedSlot + 1;
 
 						// Copy raw data to that slot
 						memcpy(v2PropRawData + (64 * lastUsedSlot), v3PropRawData + (64 * propID), 64);
 						LOG("PROPERTIES REMAPPER", "Remapping properties used in action %d of trigger %d in imported map uses properties of index %d to new index %d and copying data", actionIndex, triggerIndex, propID, lastUsedSlot);
 					}
 					else { // Remapping is known from before
-						act->Group = remappingIndex;
+						act->Group = remappingIndex + 1;
 						LOG("PROPERTIES REMAPPER", "Remapping properties used in action %d of trigger %d in imported map uses properties of index %d to new index %d", actionIndex, triggerIndex, propID, remappingIndex);
 					}
 				}
