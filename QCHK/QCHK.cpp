@@ -85,8 +85,6 @@ void processMap(EUDSettings* settings) {
 	}
 	
 #ifdef TRIG_PRINT
-	//v2->write("C:/Users/Tom/Desktop/Documents/Starcraft/Maps/moje mapy/rep1.chk");
-	//v2F->writeToFile(storm, "C:/Users/Tom/Desktop/Documents/Starcraft/Maps/moje mapy/eudrepack.scx");
 	Section_TRIG* T = (Section_TRIG*)v2->getSection("TRIG");
 	Section_STR_* S = (Section_STR_*)v2->getSection("STR ");
 	WriteBuffer wb;

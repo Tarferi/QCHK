@@ -632,23 +632,35 @@ bool fix9_RemapLocations(CHK* v2, CHK* v3, EUDSettings* settings) {
 	}
 
 	// Calculate triggers
-	unsigned int locationsPerTrigger = 10;
+	unsigned int locationsPerTrigger = 3; // Reserve 1 slot for counter operation, (5 * 12) + 1 actions per trigger
 	unsigned int totalRemappedLocations = remapedLocations.getSize() / 2;
 	unsigned int totalTriggers = totalRemappedLocations / locationsPerTrigger;
 	totalTriggers += totalTriggers*locationsPerTrigger == totalRemappedLocations ? 0 : 1;
 	
 	LOG("LOCATION REMAPPER", "Remapping %d locations in %d triggers (%d locations per trigger", remapedLocations.getSize()/2, totalTriggers, locationsPerTrigger);
 
+	unsigned int remapCounterUnitID = 220;
+
 	// Make the triggers
 	for (unsigned int triggerIndex = 0; triggerIndex < totalTriggers; triggerIndex++) {
 		MALLOC_N(trigger, Trigger, 1, { return false; });
+		bool isFirstTrigger = triggerIndex == 0;
 		memset(trigger, 0, sizeof(Trigger));
 
 		trigger->players[17] = 1;  // All players
 
-		trigger->conditions[0].ConditionType = 12; // Elapsed time
-		trigger->conditions[0].Comparision = 0; // At least
-		trigger->conditions[0].Quantifier = 1; // 1 Second
+		if (isFirstTrigger) { // First trigger begind link of remapping
+			trigger->conditions[0].ConditionType = 12; // Elapsed time
+			trigger->conditions[0].Comparision = 0; // At least
+			trigger->conditions[0].Quantifier = 1; // 1 Second
+		}
+		else { // Every other trigger expects > 1 counter value
+			trigger->conditions[0].ConditionType = 15; // Deaths
+			trigger->conditions[0].groupNumber = 6; // Player 7
+			trigger->conditions[0].Comparision = 0; // At least
+			trigger->conditions[0].Quantifier = 2; // Total (totalTriggers - 1) + 1 non-first triggers, first makes the first value high
+			trigger->conditions[0].UnitID = remapCounterUnitID; // Mineral Cluster Type 1
+		}
 
 		unsigned int firstLocation = triggerIndex * locationsPerTrigger;
 		unsigned int lastLocation = firstLocation + locationsPerTrigger;
@@ -663,7 +675,8 @@ bool fix9_RemapLocations(CHK* v2, CHK* v3, EUDSettings* settings) {
 			Location* location = v3MRGN->locations[originalLocationIndex];
 			unsigned int locOffset = base + (remapedLocationIndex * 5);
 			unsigned int writeData[] = { location->left, location->top, location->right, location->bottom,(unsigned int)location->elevation << 16 };
-			for (unsigned int actIndex = 0; actIndex < sizeof(writeData) / sizeof(unsigned int); actIndex++) {
+			unsigned int writeDataLength = sizeof(writeData) / sizeof(unsigned int);
+			for (unsigned int actIndex = 0; actIndex < writeDataLength; actIndex++) {
 
 				Action* act = &(trigger->actions[locationIndexWithinActions]);
 
@@ -676,6 +689,21 @@ bool fix9_RemapLocations(CHK* v2, CHK* v3, EUDSettings* settings) {
 			}
 			LOG("LOCATION RELOCATOR", "Location %d to location %d (%d, %d, %d, %d) at PID %d - %d in trigger %d", originalLocationIndex, remapedLocationIndex, location->left, location->top, location->right, location->bottom, locOffset, locOffset + 4, triggerIndex);
 		}
+		Action* act = &(trigger->actions[locationIndexWithinActions]);
+		if (isFirstTrigger) { // First trigger sets the high avlue
+			act->ActionType = 45;  // Set deaths
+			act->Player = 6;  // Player 7
+			act->UnitType = remapCounterUnitID;  // Mineral Cluster Type 1
+			act->UnitsNumber = 7;  // Set to
+			act->Group = 1 + (totalTriggers - 1); // High value, this many triggers and 1 will decrease it, last leaving it at 1
+		} else { // Non-first trigger decreases the value, last decreasing to 1 begins origin triggers
+			act->ActionType = 45;  // Set deaths
+			act->Player = 6;  // Player 7
+			act->UnitType = remapCounterUnitID;  // Mineral Cluster Type 1
+			act->UnitsNumber = 9;  // Subtract
+			act->Group = 1; // 1
+		}
+		locationIndexWithinActions++; // For further modders
 		v2TRIG->triggers.append(trigger);
 	}
 	return true;
@@ -707,9 +735,11 @@ bool fix10_AddElapsedTimeToAllConditions(CHK* v2, CHK* v3, EUDSettings* settings
 			memcpy(c1, c2, sizeof(Condition));
 			memcpy(c2, &tmp, sizeof(Condition));
 		}
-		trigger->conditions[0].ConditionType = 12; // Elapsed time
-		trigger->conditions[0].Comparision = 0; // At least
-		trigger->conditions[0].Quantifier = 3; // 3 seconds
+		trigger->conditions[0].ConditionType = 15; // Deaths
+		trigger->conditions[0].groupNumber = 6; // Player 7
+		trigger->conditions[0].Comparision = 10; // Exactly
+		trigger->conditions[0].Quantifier = 1; // Bool switch that is off by default
+		trigger->conditions[0].UnitID = 220; // Mineral Cluster Type 1
 	}
 	return true;
 }
