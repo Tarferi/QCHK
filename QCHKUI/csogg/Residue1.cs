@@ -24,11 +24,9 @@
 
 
 using System;
-using csogg;
 
-namespace csvorbis 
-{
-	class Residue1 : Residue0
+namespace csvorbis {
+    class Residue1 : Residue0
 	{
 		new int forward(Block vb,Object vl, float[][] fin, int ch)
 		{

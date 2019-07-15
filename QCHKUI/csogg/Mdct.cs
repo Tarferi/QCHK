@@ -25,11 +25,9 @@
 
 using System;
 using System.Runtime.CompilerServices;
-using csogg;
 
-namespace csvorbis 
-{
-	class Mdct
+namespace csvorbis {
+    class Mdct
 	{
 
 		//static private float cPI3_8=0.38268343236508977175f;

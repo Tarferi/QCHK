@@ -1,44 +1,28 @@
-﻿using System;
-using System.IO;
+﻿using WpfApplication1;
 
-namespace WpfApplication1 {
-    class WriteBuffer {
+namespace QChkUI {
+    public unsafe class UnsafeWriteBuffer {
 
-        private MemoryStream me;
+        private unsafe byte* data;
+        private int position = 0;
+
+        public unsafe UnsafeWriteBuffer(byte* data) {
+            this.data = data;
+        }
 
         public void writeByte(int value) {
-            me.WriteByte((byte)(value & 0xff));
+            data[position] = (byte) value;
+            position++;
         }
 
         public void writeShort(int value) {
-            writeByte((value >> 8) & 0xff);
             writeByte((value >> 0) & 0xff);
+            writeByte((value >> 8) & 0xff);
         }
 
         public void writeInt(int value) {
-            writeShort((value >> 16) & 0xffff);
             writeShort((value >> 0) & 0xffff);
-        }
-
-        public void writeBool(bool value) {
-            writeByte(value ? 1 : 0);
-        }
-
-        public void writeString(String value) {
-            value = value == null ? "" : value;
-            writeInt(value.Length);
-            for (int i = 0; i < value.Length; i++) {
-                char chr = value[i];
-                writeByte((byte)chr);
-            }
-        }
-
-        public WriteBuffer() {
-            this.me = new MemoryStream();
-        }
-
-        public byte[] ToArray() {
-            return me.ToArray();
+            writeShort((value >> 16) & 0xffff);
         }
 
         public void writeArray(byte[] ba) {
@@ -59,14 +43,7 @@ namespace WpfApplication1 {
             }
         }
 
-        internal void writeIntAt(int index, int value) {
-            long cp = me.Position;
-            me.Position = index;
-            writeInt(value);
-            me.Position = cp + 4;
-        }
-
-        internal void writeData(UnitSettings data) {
+        public void writeData(UnitSettings data) {
             this.writeArray(data.used);
             this.writeArray(data.hp);
             this.writeArray(data.shield);
@@ -78,5 +55,6 @@ namespace WpfApplication1 {
             this.writeArray(data.weapon_damage);
             this.writeArray(data.upgrade_bonus);
         }
+
     }
 }

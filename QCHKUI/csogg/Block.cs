@@ -23,12 +23,10 @@
  */
 
 
-using System;
 using csogg;
 
-namespace csvorbis 
-{
-	public class Block
+namespace csvorbis {
+    public class Block
 	{
 		///necessary stream state for linking to the framing abstraction
 		internal float[][] pcm=new float[0][]; // this is a pointer into local storage

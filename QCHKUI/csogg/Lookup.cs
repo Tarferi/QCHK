@@ -23,12 +23,9 @@
  */
 
 
-using System;
-using csogg;
 
-namespace csvorbis 
-{
-	class Lookup
+namespace csvorbis {
+    class Lookup
 	{
 		static int COS_LOOKUP_SZ=128;
 		static float[] COS_LOOKUP={

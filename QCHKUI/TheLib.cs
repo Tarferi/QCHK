@@ -1,11 +1,10 @@
-﻿using System;
+﻿using QChkUI;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
-using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
-using System.Threading.Tasks;
 
 namespace WpfApplication1 {
 
@@ -97,7 +96,23 @@ namespace WpfApplication1 {
 
         [MarshalAs(UnmanagedType.U4), FieldOffset(46)]
         public unsafe int result;
+
+        [MarshalAs(UnmanagedType.U4), FieldOffset(52)]
+        public unsafe byte* preferredUnitSettings;
     }
+
+    public struct UnitSettings {
+        public byte[] used;
+        public int[] hp;
+        public short[] shield;
+        public byte[] armor;
+        public short[] build_time;
+        public short[] mineral_cost;
+        public short[] gas_cost;
+        public short[] str_unit_name;
+        public short[] weapon_damage;
+        public short[] upgrade_bonus;
+    };
 
     enum Slot {
         Inactive = 0,
@@ -246,6 +261,7 @@ namespace WpfApplication1 {
                 rawSettings->EMPDamage = settings->EMPDamage;
 
                 rawSettings->result = 0;
+                rawSettings->preferredUnitSettings = settings->preferredUnitSettings;
 
                 // Process
                 IntPtr ms = (IntPtr)rawSettings;
@@ -278,6 +294,7 @@ namespace WpfApplication1 {
                 settings->EMPDamage = rawSettings->EMPDamage;
 
                 settings->result = rawSettings->result;
+                settings->preferredUnitSettings = rawSettings->preferredUnitSettings;
 
                 Marshal.FreeHGlobal(ptr);
             }
@@ -344,20 +361,32 @@ namespace WpfApplication1 {
         }
 
         private static unsafe byte* toByteArray(String str) {
-            if(str == null) {
-                return (byte*) 0;
+            if (str == null) {
+                return (byte*)0;
             }
-            if(str == "") {
-                return (byte*) 0;
+            if (str == "") {
+                return (byte*)0;
             }
-            IntPtr ptr = Marshal.AllocHGlobal(str.Length+1);
+            IntPtr ptr = Marshal.AllocHGlobal(str.Length + 1);
             byte* bytes = (byte*)ptr;
             for (int i = 0; i < str.Length; i++) {
-                bytes[i] = (byte) str[i];
+                bytes[i] = (byte)str[i];
             }
-            bytes[str.Length] = (byte) 0;
+            bytes[str.Length] = (byte)0;
 #if DEBUG
-            Debug.WriteLine("Allocating "+(str.Length+1)+" bytes at "+(ptr)+ " stored at " +((int)bytes));
+            Debug.WriteLine("Allocating " + (str.Length + 1) + " bytes at " + (ptr) + " stored at " + ((int)bytes));
+#endif
+            return bytes;
+        }
+
+        private static unsafe byte* toByteArray(UnitSettings data) {
+            int dataSize = 4168;
+            IntPtr ptr = Marshal.AllocHGlobal(dataSize);
+            byte* bytes = (byte*)ptr;
+            UnsafeWriteBuffer wb = new UnsafeWriteBuffer(bytes);
+            wb.writeData(data);
+#if DEBUG
+            Debug.WriteLine("Allocating " + (dataSize) + " bytes at " + (ptr) + " stored at " + ((int)bytes));
 #endif
             return bytes;
         }
@@ -399,6 +428,7 @@ namespace WpfApplication1 {
             es.outputFilePath = toByteArray(settings.outputPath);
 
             es.result = 0;
+            es.preferredUnitSettings = toByteArray(settings.preferredSettings);
             es.EMPDamage = (short) settings.EMPDamage;
 
             run(&es);
@@ -414,6 +444,8 @@ namespace WpfApplication1 {
             killByteArray(es.outputFilePath);
 
             settings.result = es.result;
+
+            killByteArray(es.preferredUnitSettings);
 
         }
 
@@ -461,8 +493,37 @@ namespace WpfApplication1 {
             }
             return null;
         }
+
+        public unsafe static UnitSettings[] getUnitSettings(String filePath) {
+            EUDSettings es = new EUDSettings();
+            es.action = (char)6;
+            es.outputFilePath = (byte*)0;
+            es.inputFilePath = toByteArray(filePath);
+            try {
+                run(&es); // Run extraction
+                UnsafeReadBuffer rb = new UnsafeReadBuffer(es.outputFilePath);
+                UnitSettings[] ret = new UnitSettings[2];
+                for (int i = 0; i < 2; i++) {
+                    ret[i].used = rb.readByteArray(228);
+                    ret[i].hp = rb.readIntArray(228);
+                    ret[i].shield = rb.readShortArray(228);
+                    ret[i].armor = rb.readByteArray(228);
+                    ret[i].build_time = rb.readShortArray(228);
+                    ret[i].mineral_cost = rb.readShortArray(228);
+                    ret[i].gas_cost = rb.readShortArray(228);
+                    ret[i].str_unit_name = rb.readShortArray(228);
+                    ret[i].weapon_damage = rb.readShortArray(130);
+                    ret[i].upgrade_bonus = rb.readShortArray(130);
+                }
+                es.action = (char)3;
+                run(&es); // Free the array data string
+                return ret;
+            } catch (Exception) {
+
+            }
+            return null;
+        }
     }
-  
 }
   class InvalidSoundException : Exception {
 

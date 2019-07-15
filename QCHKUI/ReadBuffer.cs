@@ -1,9 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
 
 namespace WpfApplication1 {
     class ReadBuffer {
@@ -49,6 +46,30 @@ namespace WpfApplication1 {
                 bData[i] = (byte) data[i];
             }
             this.me = new MemoryStream(bData);
+        }
+
+        public byte[] readByteArray(int length) {
+            byte[] data = new byte[length];
+            for (int i = 0; i < length; i++) {
+                data[i] = (byte)readByte();
+            }
+            return data;
+        }
+
+        public short[] readShortArray(int length) {
+            short[] data = new short[length];
+            for (int i = 0; i < length; i++) {
+                data[i] = (short)readShort();
+            }
+            return data;
+        }
+
+        public int[] readIntArray(int length) {
+            int[] data = new int[length];
+            for (int i = 0; i < length; i++) {
+                data[i] = (int)readInt();
+            }
+            return data;
         }
     }
 }

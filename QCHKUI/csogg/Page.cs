@@ -22,14 +22,12 @@
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
-using System;
 
-namespace csogg
-{
-	/// <summary>
-	/// Summary description for Page.
-	/// </summary>
-	public class Page	
+namespace csogg {
+    /// <summary>
+    /// Summary description for Page.
+    /// </summary>
+    public class Page	
 	{
 		private static uint[] crc_lookup=new uint[256];
 		

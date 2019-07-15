@@ -23,13 +23,10 @@
 */
 
 
-using System;
-using csogg;
 
-namespace csvorbis 
-{
-	// psychoacoustic setup
-	class PsyInfo
+namespace csvorbis {
+    // psychoacoustic setup
+    class PsyInfo
 	{ 
 		//int    athp;
 		//int    decayp;

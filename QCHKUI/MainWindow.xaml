@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:WpfApplication1"
         mc:Ignorable="d"
-        Title="EUD Snipers Power Tool (alpha)" Height="704.975" Width="728.263">
+        Title="EUD Snipers Power Tool (alpha 3)" Height="706.475" Width="728.263">
     <Window.Resources>
         <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter"/>
         <local:InvertedBooleanToVisibilityConverter x:Key="InvertedBooleanToVisibilityConverter"/>
@@ -33,106 +33,236 @@
 
         </GroupBox>
 
-        <GroupBox Margin="10,140,0,0" Grid.ColumnSpan="2" VerticalAlignment="Top" Height="129" HorizontalAlignment="Left" Width="235">
-            <GroupBox.Header>Abilities</GroupBox.Header>
-            <Grid HorizontalAlignment="Left" VerticalAlignment="Top" Height="107">
-                <TextBlock TextWrapping="Wrap" VerticalAlignment="Top" FontSize="14" Margin="10,10,65,0" HorizontalAlignment="Right"><Run Text="Enable Automatic Visor:"/></TextBlock>
-                <TextBlock HorizontalAlignment="Right" TextWrapping="Wrap" VerticalAlignment="Top" FontSize="14" Margin="0,34,65,0" Text="Enable Barrier:"/>
-                <CheckBox x:Name="checkVisor" Content="" Margin="162,13,0,0" Width="25" Height="16" VerticalAlignment="Top" HorizontalAlignment="Left"/>
-                <CheckBox x:Name="checkBarrier" Content="" Margin="162,37,0,0" Width="25" Height="16" VerticalAlignment="Top" HorizontalAlignment="Left" IsChecked="True"/>
-                <TextBlock HorizontalAlignment="Right" TextWrapping="Wrap" VerticalAlignment="Top" FontSize="14" Margin="0,58,65,0" Text="EMP Damage:"/>
-                <TextBox MaxLength="4" PreviewTextInput="NumericInput" x:Name="txtEmpDamage" Height="20" Margin="162,60,10,0" TextWrapping="Wrap" VerticalAlignment="Top" FontSize="14" Text="7" HorizontalAlignment="Left" Width="49"/>
-                <TextBlock HorizontalAlignment="Right" TextWrapping="Wrap" VerticalAlignment="Top" FontSize="14" Margin="0,82,65,0" Text="Adjust HP and weapons:"/>
-                <CheckBox x:Name="checkAdjustHP" Content="" Margin="162,85,0,0" Width="25" Height="16" VerticalAlignment="Top" HorizontalAlignment="Left" IsChecked="True"/>
-            </Grid>
-        </GroupBox>
-        <GroupBox Margin="250,140,0,0" Grid.ColumnSpan="2" VerticalAlignment="Top" Height="129" HorizontalAlignment="Left" Width="208">
-            <GroupBox.Header>Gameplay</GroupBox.Header>
-            <Grid Margin="0" HorizontalAlignment="Left" VerticalAlignment="Top">
-                <TextBlock HorizontalAlignment="Right" TextWrapping="Wrap" VerticalAlignment="Top" FontSize="14" Margin="10,10,50,0" Text="Add Leaderboard:"/>
-                <TextBlock HorizontalAlignment="Right" TextWrapping="Wrap" VerticalAlignment="Top" FontSize="14" Margin="10,34,50,0" Text="Add Touch Revive:"/>
-                <CheckBox x:Name="checkLeaderboard" Content="" Margin="0,13,20,0" Width="25" Height="16" VerticalAlignment="Top" HorizontalAlignment="Right" IsChecked="True"/>
-                <CheckBox x:Name="checkRevive" Content="" Margin="0,37,20,30" Width="25" HorizontalAlignment="Right" RenderTransformOrigin="0.14,0.625"/>
-                <TextBlock HorizontalAlignment="Right" TextWrapping="Wrap" VerticalAlignment="Top" FontSize="14" Margin="10,58,50,0" Text="Use Sanctuary Colors:"/>
-                <CheckBox x:Name="checkColors" Content="" Margin="0,61,20,0" Width="25" Height="16" VerticalAlignment="Top" HorizontalAlignment="Right" RenderTransformOrigin="0.14,0.625"/>
-            </Grid>
-        </GroupBox>
-        <GroupBox Margin="463,140,0,0" Grid.ColumnSpan="2" VerticalAlignment="Top" Height="129" HorizontalAlignment="Left">
-            <GroupBox.Header>Sounds Settings</GroupBox.Header>
-            <Grid Margin="0" HorizontalAlignment="Left" VerticalAlignment="Top">
-                <TextBlock HorizontalAlignment="Right" TextWrapping="Wrap" VerticalAlignment="Top" FontSize="14" Margin="0,10,50,0" Text="Add Gunfire Sound:"/>
-                <TextBlock HorizontalAlignment="Right" TextWrapping="Wrap" VerticalAlignment="Top" FontSize="14" Margin="10,34,50,0" Text="Add Background Music:"/>
-                <CheckBox x:Name="checkGunfire" Content="" Margin="0,13,20,0" Width="25" Height="16" VerticalAlignment="Top" HorizontalAlignment="Right" IsChecked="True"/>
-                <CheckBox x:Name="checkBackground" Content="" Margin="0,37,20,0" Width="25" Height="16" VerticalAlignment="Top" HorizontalAlignment="Right" RenderTransformOrigin="0.14,0.625" IsChecked="True"/>
-                <TextBlock HorizontalAlignment="Right" TextWrapping="Wrap" VerticalAlignment="Top" FontSize="14" Margin="10,58,50,0" Text="Add Visor Activation Sound:"/>
-                <CheckBox x:Name="checkVisor1" Content="" Margin="0,61,20,0" Width="25" Height="16" VerticalAlignment="Top" HorizontalAlignment="Right" RenderTransformOrigin="0.14,0.625" IsChecked="True"/>
-                <TextBlock HorizontalAlignment="Right" TextWrapping="Wrap" VerticalAlignment="Top" FontSize="14" Margin="0,82,50,-23" Text="Mute unit sounds:"/>
-                <CheckBox x:Name="checkMuteUnits" Content="" Margin="0,84,20,-22" Width="25" Height="16" VerticalAlignment="Top" HorizontalAlignment="Right" RenderTransformOrigin="0.14,0.625" IsChecked="True"/>
-            </Grid>
-        </GroupBox>
-        <GroupBox Margin="10,274,10,0" Grid.ColumnSpan="2" VerticalAlignment="Top" Height="120">
-            <GroupBox.Header>Sounds</GroupBox.Header>
-            <Grid Margin="0">
-                <TextBlock IsEnabled="{Binding IsChecked, ElementName=checkGunfire}" HorizontalAlignment="Left" TextWrapping="Wrap" VerticalAlignment="Top" FontSize="14" Margin="92,10,0,0" Text="Gunfire sound:"/>
-                <TextBlock IsEnabled="{Binding IsChecked, ElementName=checkBackground}" HorizontalAlignment="Left" TextWrapping="Wrap" VerticalAlignment="Top" FontSize="14" Margin="36,41,0,0" Text="Add Background Music:"/>
-                <TextBlock IsEnabled="{Binding IsChecked, ElementName=checkGunfire}" HorizontalAlignment="Left" TextWrapping="Wrap" VerticalAlignment="Top" FontSize="14" Margin="10,71,0,0" Text="Add Visor Activation Sound:"/>
-                <Button Visibility="{Binding IsChecked, ElementName=checkGunfire, Converter={StaticResource BooleanToVisibilityConverter}}" x:Name="brwsBtnVisorSnd" Content="Browse" HorizontalAlignment="Right" Margin="0,7,10,0" VerticalAlignment="Top" Width="80" RenderTransformOrigin="-0.093,-0.612" Height="25" FontSize="14" Click="brwsBtnVisorSnd_Click"/>
-                <Button Visibility="{Binding IsChecked, ElementName=checkGunfire, Converter={StaticResource InvertedBooleanToVisibilityConverter}}" IsEnabled="False" x:Name="brwsBtnVisorSnd_fake" Content="Browse" HorizontalAlignment="Right" Margin="0,7,10,0" VerticalAlignment="Top" Width="80" RenderTransformOrigin="-0.093,-0.612" Height="25" FontSize="14"/>
-                <Button Visibility="{Binding IsChecked, ElementName=checkBackground, Converter={StaticResource BooleanToVisibilityConverter}}" x:Name="brwsBtnBackgroundSound" Content="Browse" HorizontalAlignment="Right" Margin="0,38,10,0" VerticalAlignment="Top" Width="80" RenderTransformOrigin="-0.093,-0.612" Height="25" FontSize="14" Click="brwsBtnBackgroundSound_Click"/>
-                <Button Visibility="{Binding IsChecked, ElementName=checkBackground, Converter={StaticResource InvertedBooleanToVisibilityConverter}}" IsEnabled="False" x:Name="brwsBtnBackgroundSound_fake" Content="Browse" HorizontalAlignment="Right" Margin="0,38,10,0" VerticalAlignment="Top" Width="80" RenderTransformOrigin="-0.093,-0.612" Height="25" FontSize="14"/>
-                <Button Visibility="{Binding IsChecked, ElementName=checkVisor1, Converter={StaticResource BooleanToVisibilityConverter}}" x:Name="brwsBtnAdvisorSound" Content="Browse" HorizontalAlignment="Right" Margin="0,68,10,0" VerticalAlignment="Top" Width="80" RenderTransformOrigin="-0.093,-0.612" Height="25" FontSize="14" Click="brwsBtnAdvisorSound_Click"/>
-                <Button Visibility="{Binding IsChecked, ElementName=checkVisor1, Converter={StaticResource InvertedBooleanToVisibilityConverter}}" IsEnabled="False" x:Name="brwsBtnAdvisorSound_fake" Content="Browse" HorizontalAlignment="Right" Margin="0,68,10,0" VerticalAlignment="Top" Width="80" RenderTransformOrigin="-0.093,-0.612" Height="25" FontSize="14"/>
-                <ComboBox Visibility="{Binding IsChecked, ElementName=checkGunfire, Converter={StaticResource BooleanToVisibilityConverter}}" x:Name="lstGunSound" Height="25" Margin="189,7,180,0" VerticalAlignment="Top" IsEditable="True"/>
-                <ComboBox Visibility="{Binding IsChecked, ElementName=checkGunfire, Converter={StaticResource InvertedBooleanToVisibilityConverter}}" IsEnabled="False" Text="{Binding Text, ElementName=lstGunSound}" x:Name="lstGunSound_fake" Height="25" Margin="189,7,95,0" VerticalAlignment="Top" IsEditable="True"/>
-                <ComboBox Visibility="{Binding IsChecked, ElementName=checkBackground, Converter={StaticResource BooleanToVisibilityConverter}}" Text="" x:Name="lstBackgroundSound" Height="25" Margin="189,38,180,0" VerticalAlignment="Top" IsEditable="True"/>
-                <ComboBox Visibility="{Binding IsChecked, ElementName=checkBackground, Converter={StaticResource InvertedBooleanToVisibilityConverter}}" IsEnabled="False" Text="{Binding Text, ElementName=lstBackgroundSound}" x:Name="lstBackgroundSound_fake" Height="25" Margin="189,38,95,0" VerticalAlignment="Top" IsEditable="True"/>
-                <ComboBox Visibility="{Binding IsChecked, ElementName=checkVisor1, Converter={StaticResource BooleanToVisibilityConverter}}" x:Name="lstVisorSound" Height="25" Margin="189,68,180,0" VerticalAlignment="Top" IsEditable="True"/>
-                <ComboBox Visibility="{Binding IsChecked, ElementName=checkVisor1,  Converter={StaticResource InvertedBooleanToVisibilityConverter}}" IsEnabled="False" Text="{Binding Text, ElementName=lstVisorSound}" x:Name="lstVisorSound_fake" Height="25" Margin="189,68,95,0" VerticalAlignment="Top" IsEditable="True"/>
-                <Button Visibility="{Binding IsChecked, ElementName=checkGunfire, Converter={StaticResource BooleanToVisibilityConverter}}" x:Name="brwsBtnPlayGun" Content="Play" HorizontalAlignment="Right" Margin="0,7,137,0" VerticalAlignment="Top" Width="38" RenderTransformOrigin="-0.093,-0.612" Height="25" FontSize="14" Click="brwsBtnPlayGun_Click"/>
-                <Button Visibility="{Binding IsChecked, ElementName=checkBackground, Converter={StaticResource BooleanToVisibilityConverter}}" x:Name="brwsBtnPlayBackground" Content="Play" HorizontalAlignment="Right" Margin="0,38,137,0" VerticalAlignment="Top" Width="38" RenderTransformOrigin="-0.093,-0.612" Height="25" FontSize="14" Click="brwsBtnPlayBackground_Click"/>
-                <Button Visibility="{Binding IsChecked, ElementName=checkVisor1, Converter={StaticResource BooleanToVisibilityConverter}}" x:Name="brwsBtnPlayVisor" Content="Play" HorizontalAlignment="Right" Margin="0,68,137,0" VerticalAlignment="Top" Width="38" RenderTransformOrigin="-0.093,-0.612" Height="25" FontSize="14" Click="brwsBtnPlayVisor_Click"/>
-                <Button Visibility="{Binding IsChecked, Converter={StaticResource BooleanToVisibilityConverter}, ElementName=checkGunfire}" x:Name="brwsBtnGunSoundStop" Content="Stop" HorizontalAlignment="Right" Margin="0,7,95,0" VerticalAlignment="Top" Width="38" RenderTransformOrigin="-0.093,-0.612" Height="25" FontSize="14" Click="brwsBtnGunSoundStop_Click" />
-                <Button Visibility="{Binding IsChecked, Converter={StaticResource BooleanToVisibilityConverter}, ElementName=checkBackground}" x:Name="brwsBtnMusicBtnStop" Content="Stop" HorizontalAlignment="Right" Margin="0,38,95,0" VerticalAlignment="Top" Width="38" RenderTransformOrigin="-0.093,-0.612" Height="25" FontSize="14" Click="brwsBtnMusicBtnStop_Click" />
-                <Button Visibility="{Binding IsChecked, Converter={StaticResource BooleanToVisibilityConverter}, ElementName=checkVisor1}" x:Name="brwsBtnVisorSndStop" Content="Stop" HorizontalAlignment="Right" Margin="0,68,95,0" VerticalAlignment="Top" Width="38" RenderTransformOrigin="-0.093,-0.612" Height="25" FontSize="14" Click="brwsBtnVisorSndStop_Click" />
-            </Grid>
-        </GroupBox>
-        <GroupBox Margin="10,399,10,0" Grid.ColumnSpan="2" VerticalAlignment="Top" Height="199">
-            <GroupBox.Header>Time Lock</GroupBox.Header>
-            <Grid Margin="0">
-                <TextBlock HorizontalAlignment="Left" TextWrapping="Wrap" VerticalAlignment="Top" FontSize="14" Margin="39,11,0,0"><Run Text="Add Time Lock:"/></TextBlock>
-                <TextBox x:Name="txtTimeLockMessage" Height="68" Margin="140,35,10,0" TextWrapping="Wrap" VerticalAlignment="Top" FontSize="14" Text="&lt;02&gt;This map is time-locked from &lt;03&gt;%DDF%.%MMF%.%YYYYF% %HHF%:%mmF% &lt;02&gt;to &lt;03&gt;%DDT%.%MMT%.%YYYYT% %HHT%:%mmT% &lt;02&gt;and therefore unplayable now!"/>
-                <TextBlock HorizontalAlignment="Left" TextWrapping="Wrap" VerticalAlignment="Top" FontSize="14" Margin="10,38,0,0" Text="Time Lock Message:"/>
-                <CheckBox x:Name="checkTimeLock" Content="" Width="25" Height="16" VerticalAlignment="Top" HorizontalAlignment="Left" Margin="139,14,0,0" IsChecked="True"/>
-                <TextBlock HorizontalAlignment="Left" TextWrapping="Wrap" VerticalAlignment="Top" FontSize="14" Margin="98,108,0,0" Text="From:" RenderTransformOrigin="0.381,0.519"/>
-                <TextBox MaxLength="3" PreviewTextInput="NumericInput" x:Name="txtFromY" Height="20" Margin="147,108,0,0" TextWrapping="Wrap" VerticalAlignment="Top" FontSize="14" Width="35" Text="0" HorizontalAlignment="Left"/>
-                <TextBlock HorizontalAlignment="Left" TextWrapping="Wrap" VerticalAlignment="Top" FontSize="14" Margin="139,108,0,0" Text="-" Height="20"/>
-                <TextBlock HorizontalAlignment="Left" TextWrapping="Wrap" VerticalAlignment="Top" FontSize="14" Margin="186,108,0,0" Height="20" Width="42"><Run Text="years"/><Run Text=" -"/></TextBlock>
-                <TextBox MaxLength="3" PreviewTextInput="NumericInput" x:Name="txtFromM" Height="20" Margin="230,108,0,0" TextWrapping="Wrap" VerticalAlignment="Top" FontSize="14" Width="35" Text="0" HorizontalAlignment="Left"/>
-                <TextBlock HorizontalAlignment="Left" TextWrapping="Wrap" VerticalAlignment="Top" FontSize="14" Margin="268,108,0,0" Height="20" Width="59"><Run Text="months"/><Run Text=" -"/></TextBlock>
-                <TextBox MaxLength="3" PreviewTextInput="NumericInput" x:Name="txtFromD" Height="20" Margin="326,108,0,0" TextWrapping="Wrap" VerticalAlignment="Top" FontSize="14" Width="35" Text="1" HorizontalAlignment="Left"/>
-                <TextBlock HorizontalAlignment="Left" TextWrapping="Wrap" VerticalAlignment="Top" FontSize="14" Margin="364,108,0,0" Text="days -" Height="20"/>
-                <TextBox MaxLength="3" PreviewTextInput="NumericInput" x:Name="txtFromH" Height="20" Margin="404,108,0,0" TextWrapping="Wrap" VerticalAlignment="Top" FontSize="14" Width="35" Text="0" HorizontalAlignment="Left"/>
-                <TextBlock HorizontalAlignment="Left" TextWrapping="Wrap" VerticalAlignment="Top" FontSize="14" Margin="442,108,0,0" Text="hours -" Height="20"/>
-                <TextBox MaxLength="3" PreviewTextInput="NumericInput" x:Name="txtFromm" Height="20" Margin="488,108,0,0" TextWrapping="Wrap" VerticalAlignment="Top" FontSize="14" Width="35" Text="0" HorizontalAlignment="Left"/>
-                <TextBlock HorizontalAlignment="Left" TextWrapping="Wrap" VerticalAlignment="Top" FontSize="14" Margin="526,108,0,0" Text="minutes -" Height="20"/>
-                <TextBox MaxLength="3" PreviewTextInput="NumericInput" x:Name="txtFromS" Height="20" Margin="587,108,0,0" TextWrapping="Wrap" VerticalAlignment="Top" FontSize="14" Width="35" Text="0" HorizontalAlignment="Left"/>
-                <TextBlock HorizontalAlignment="Left" TextWrapping="Wrap" VerticalAlignment="Top" FontSize="14" Margin="625,108,0,0" Text="seconds" Height="20"/>
-                <TextBox MaxLength="3" PreviewTextInput="NumericInput" x:Name="txtToY" Height="20" Margin="147,133,0,0" TextWrapping="Wrap" VerticalAlignment="Top" FontSize="14" Width="35" Text="0" HorizontalAlignment="Left"/>
-                <TextBlock HorizontalAlignment="Left" TextWrapping="Wrap" VerticalAlignment="Top" FontSize="14" Margin="186,133,0,0" Height="20" Width="42" Text="years"/>
-                <TextBox MaxLength="3" PreviewTextInput="NumericInput" x:Name="txtToM" Height="20" Margin="230,133,0,0" TextWrapping="Wrap" VerticalAlignment="Top" FontSize="14" Width="35" Text="0" HorizontalAlignment="Left"/>
-                <TextBlock HorizontalAlignment="Left" TextWrapping="Wrap" VerticalAlignment="Top" FontSize="14" Margin="268,133,0,0" Height="20" Width="59" Text="months"/>
-                <TextBox MaxLength="3" PreviewTextInput="NumericInput" x:Name="txtToD" Height="20" Margin="326,133,0,0" TextWrapping="Wrap" VerticalAlignment="Top" FontSize="14" Width="35" Text="1" HorizontalAlignment="Left"/>
-                <TextBlock HorizontalAlignment="Left" TextWrapping="Wrap" VerticalAlignment="Top" FontSize="14" Margin="364,133,0,0" Text="days" Height="20"/>
-                <TextBox MaxLength="3" PreviewTextInput="NumericInput" x:Name="txtToH" Height="20" Margin="404,133,0,0" TextWrapping="Wrap" VerticalAlignment="Top" FontSize="14" Width="35" Text="0" HorizontalAlignment="Left"/>
-                <TextBlock HorizontalAlignment="Left" TextWrapping="Wrap" VerticalAlignment="Top" FontSize="14" Margin="442,133,0,0" Text="hours" Height="20"/>
-                <TextBox MaxLength="3" PreviewTextInput="NumericInput" x:Name="txtTom" Height="20" Margin="488,133,0,0" TextWrapping="Wrap" VerticalAlignment="Top" FontSize="14" Width="35" Text="0" HorizontalAlignment="Left"/>
-                <TextBlock HorizontalAlignment="Left" TextWrapping="Wrap" VerticalAlignment="Top" FontSize="14" Margin="526,133,0,0" Text="minutes" Height="20"/>
-                <TextBox MaxLength="3" PreviewTextInput="NumericInput" x:Name="txtToS" Height="20" Margin="587,133,0,0" TextWrapping="Wrap" VerticalAlignment="Top" FontSize="14" Width="35" Text="0" HorizontalAlignment="Left"/>
-                <TextBlock HorizontalAlignment="Left" TextWrapping="Wrap" VerticalAlignment="Top" FontSize="14" Margin="625,133,0,0" Text="seconds" Height="20"/>
-                <TextBlock HorizontalAlignment="Left" TextWrapping="Wrap" VerticalAlignment="Top" FontSize="14" Margin="116,133,0,0" Text="To:" RenderTransformOrigin="0.381,0.519"/>
-            </Grid>
-        </GroupBox>
-        <GroupBox Margin="10,603,10,0" Grid.ColumnSpan="2" VerticalAlignment="Top">
+        <TabControl Grid.ColumnSpan="2" Margin="10,140,10,71">
+            <TabItem Header="Game Settings">
+                <Grid>
+                    <GroupBox VerticalAlignment="Top" Height="129" HorizontalAlignment="Left" Width="235">
+                        <GroupBox.Header>Abilities</GroupBox.Header>
+                        <Grid HorizontalAlignment="Left" VerticalAlignment="Top" Height="107">
+                            <TextBlock TextWrapping="Wrap" VerticalAlignment="Top" FontSize="14" Margin="10,10,65,0" HorizontalAlignment="Right"><Run Text="Enable Automatic Visor:"/></TextBlock>
+                            <TextBlock HorizontalAlignment="Right" TextWrapping="Wrap" VerticalAlignment="Top" FontSize="14" Margin="0,34,65,0" Text="Enable Barrier:"/>
+                            <CheckBox x:Name="checkVisor" Content="" Margin="162,13,0,0" Width="25" Height="16" VerticalAlignment="Top" HorizontalAlignment="Left"/>
+                            <CheckBox x:Name="checkBarrier" Content="" Margin="162,37,0,0" Width="25" Height="16" VerticalAlignment="Top" HorizontalAlignment="Left" IsChecked="True"/>
+                            <TextBlock HorizontalAlignment="Right" TextWrapping="Wrap" VerticalAlignment="Top" FontSize="14" Margin="0,58,65,0" Text="EMP Damage:"/>
+                            <TextBox MaxLength="4" PreviewTextInput="NumericInput" x:Name="txtEmpDamage" Height="20" Margin="162,60,10,0" TextWrapping="Wrap" VerticalAlignment="Top" FontSize="14" Text="7" HorizontalAlignment="Left" Width="49"/>
+                            <TextBlock HorizontalAlignment="Right" TextWrapping="Wrap" VerticalAlignment="Top" FontSize="14" Margin="0,82,65,0" Text="Adjust HP and weapons:"/>
+                            <CheckBox x:Name="checkAdjustHP" Content="" Margin="162,85,0,0" Width="25" Height="16" VerticalAlignment="Top" HorizontalAlignment="Left" IsChecked="True"/>
+                        </Grid>
+                    </GroupBox>
+
+                    <GroupBox Margin="240,0,0,0" VerticalAlignment="Top" Height="129" HorizontalAlignment="Left" Width="191">
+                        <GroupBox.Header>Gameplay</GroupBox.Header>
+                        <Grid Margin="0" HorizontalAlignment="Left" VerticalAlignment="Top">
+                            <TextBlock HorizontalAlignment="Right" TextWrapping="Wrap" VerticalAlignment="Top" FontSize="14" Margin="10,10,35,0" Text="Add Leaderboard:"/>
+                            <TextBlock HorizontalAlignment="Right" TextWrapping="Wrap" VerticalAlignment="Top" FontSize="14" Margin="10,34,35,0" Text="Add Touch Revive:"/>
+                            <CheckBox x:Name="checkLeaderboard" Content="" Margin="0,13,5,0" Width="25" Height="16" VerticalAlignment="Top" HorizontalAlignment="Right" IsChecked="True"/>
+                            <CheckBox x:Name="checkRevive" Content="" Margin="0,37,5,30" Width="25" HorizontalAlignment="Right" RenderTransformOrigin="0.14,0.625"/>
+                            <TextBlock HorizontalAlignment="Right" TextWrapping="Wrap" VerticalAlignment="Top" FontSize="14" Margin="10,58,35,0" Text="Use Sanctuary Colors:"/>
+                            <CheckBox x:Name="checkColors" Content="" Margin="0,61,5,0" Width="25" Height="16" VerticalAlignment="Top" HorizontalAlignment="Right" RenderTransformOrigin="0.14,0.625"/>
+                        </Grid>
+                    </GroupBox>
+                    <GroupBox Margin="436,0,0,0" VerticalAlignment="Top" Height="129" HorizontalAlignment="Left" Width="248">
+                        <GroupBox.Header>Sounds Settings</GroupBox.Header>
+                        <Grid Margin="0">
+                            <TextBlock HorizontalAlignment="Right" TextWrapping="Wrap" VerticalAlignment="Top" FontSize="14" Margin="0,10,50,0" Text="Add Gunfire Sound:"/>
+                            <TextBlock HorizontalAlignment="Right" TextWrapping="Wrap" VerticalAlignment="Top" FontSize="14" Margin="10,34,50,0" Text="Add Background Music:"/>
+                            <CheckBox x:Name="checkGunfire" Content="" Margin="0,13,20,0" Width="25" Height="16" VerticalAlignment="Top" HorizontalAlignment="Right" IsChecked="True"/>
+                            <CheckBox x:Name="checkBackground" Content="" Margin="0,37,20,0" Width="25" Height="16" VerticalAlignment="Top" HorizontalAlignment="Right" RenderTransformOrigin="0.14,0.625" IsChecked="True"/>
+                            <TextBlock HorizontalAlignment="Right" TextWrapping="Wrap" VerticalAlignment="Top" FontSize="14" Margin="0,58,50,0" Text="Add Visor Activation Sound:"/>
+                            <CheckBox x:Name="checkVisor1" Content="" Margin="0,61,20,0" Width="25" Height="16" VerticalAlignment="Top" HorizontalAlignment="Right" RenderTransformOrigin="0.14,0.625" IsChecked="True"/>
+                            <TextBlock HorizontalAlignment="Right" TextWrapping="Wrap" VerticalAlignment="Top" FontSize="14" Margin="0,82,50,-23" Text="Mute unit sounds:"/>
+                            <CheckBox x:Name="checkMuteUnits" Content="" Margin="0,84,20,-22" Width="25" Height="16" VerticalAlignment="Top" HorizontalAlignment="Right" RenderTransformOrigin="0.14,0.625" IsChecked="True"/>
+                        </Grid>
+                    </GroupBox>
+                    <GroupBox Margin="0,134,0,0" VerticalAlignment="Top" Height="120">
+                        <GroupBox.Header>Sounds</GroupBox.Header>
+                        <Grid Margin="0">
+                            <TextBlock IsEnabled="{Binding IsChecked, ElementName=checkGunfire}" HorizontalAlignment="Left" TextWrapping="Wrap" VerticalAlignment="Top" FontSize="14" Margin="92,10,0,0" Text="Gunfire sound:"/>
+                            <TextBlock IsEnabled="{Binding IsChecked, ElementName=checkBackground}" HorizontalAlignment="Left" TextWrapping="Wrap" VerticalAlignment="Top" FontSize="14" Margin="36,41,0,0" Text="Add Background Music:"/>
+                            <TextBlock IsEnabled="{Binding IsChecked, ElementName=checkGunfire}" HorizontalAlignment="Left" TextWrapping="Wrap" VerticalAlignment="Top" FontSize="14" Margin="10,71,0,0" Text="Add Visor Activation Sound:"/>
+                            <Button Visibility="{Binding IsChecked, Converter={StaticResource BooleanToVisibilityConverter}, ElementName=checkGunfire}" x:Name="brwsBtnVisorSnd" Content="Browse" HorizontalAlignment="Right" Margin="0,7,10,0" VerticalAlignment="Top" Width="80" RenderTransformOrigin="-0.093,-0.612" Height="25" FontSize="14" Click="brwsBtnVisorSnd_Click"/>
+                            <Button Visibility="{Binding IsChecked, Converter={StaticResource InvertedBooleanToVisibilityConverter}, ElementName=checkGunfire}" IsEnabled="False" x:Name="brwsBtnVisorSnd_fake" Content="Browse" HorizontalAlignment="Right" Margin="0,7,10,0" VerticalAlignment="Top" Width="80" RenderTransformOrigin="-0.093,-0.612" Height="25" FontSize="14"/>
+                            <Button Visibility="{Binding IsChecked, Converter={StaticResource BooleanToVisibilityConverter}, ElementName=checkBackground}" x:Name="brwsBtnBackgroundSound" Content="Browse" HorizontalAlignment="Right" Margin="0,38,10,0" VerticalAlignment="Top" Width="80" RenderTransformOrigin="-0.093,-0.612" Height="25" FontSize="14" Click="brwsBtnBackgroundSound_Click"/>
+                            <Button Visibility="{Binding IsChecked, Converter={StaticResource InvertedBooleanToVisibilityConverter}, ElementName=checkBackground}" IsEnabled="False" x:Name="brwsBtnBackgroundSound_fake" Content="Browse" HorizontalAlignment="Right" Margin="0,38,10,0" VerticalAlignment="Top" Width="80" RenderTransformOrigin="-0.093,-0.612" Height="25" FontSize="14"/>
+                            <Button Visibility="{Binding IsChecked, Converter={StaticResource BooleanToVisibilityConverter}, ElementName=checkVisor1}" x:Name="brwsBtnAdvisorSound" Content="Browse" HorizontalAlignment="Right" Margin="0,68,10,0" VerticalAlignment="Top" Width="80" RenderTransformOrigin="-0.093,-0.612" Height="25" FontSize="14" Click="brwsBtnAdvisorSound_Click"/>
+                            <Button Visibility="{Binding IsChecked, Converter={StaticResource InvertedBooleanToVisibilityConverter}, ElementName=checkVisor1}" IsEnabled="False" x:Name="brwsBtnAdvisorSound_fake" Content="Browse" HorizontalAlignment="Right" Margin="0,68,10,0" VerticalAlignment="Top" Width="80" RenderTransformOrigin="-0.093,-0.612" Height="25" FontSize="14"/>
+                            <ComboBox Visibility="{Binding IsChecked, Converter={StaticResource BooleanToVisibilityConverter}, ElementName=checkGunfire}" x:Name="lstGunSound" Height="25" Margin="189,7,180,0" VerticalAlignment="Top" IsEditable="True"/>
+                            <ComboBox Visibility="{Binding IsChecked, Converter={StaticResource InvertedBooleanToVisibilityConverter}, ElementName=checkGunfire}" IsEnabled="False" Text="{Binding Text, ElementName=lstGunSound}" x:Name="lstGunSound_fake" Height="25" Margin="189,7,95,0" VerticalAlignment="Top" IsEditable="True"/>
+                            <ComboBox Visibility="{Binding IsChecked, Converter={StaticResource BooleanToVisibilityConverter}, ElementName=checkBackground}" Text="" x:Name="lstBackgroundSound" Height="25" Margin="189,38,180,0" VerticalAlignment="Top" IsEditable="True"/>
+                            <ComboBox Visibility="{Binding IsChecked, Converter={StaticResource InvertedBooleanToVisibilityConverter}, ElementName=checkBackground}" IsEnabled="False" Text="{Binding Text, ElementName=lstBackgroundSound}" x:Name="lstBackgroundSound_fake" Height="25" Margin="189,38,95,0" VerticalAlignment="Top" IsEditable="True"/>
+                            <ComboBox Visibility="{Binding IsChecked, Converter={StaticResource BooleanToVisibilityConverter}, ElementName=checkVisor1}" x:Name="lstVisorSound" Height="25" Margin="189,68,180,0" VerticalAlignment="Top" IsEditable="True"/>
+                            <ComboBox Visibility="{Binding IsChecked, Converter={StaticResource InvertedBooleanToVisibilityConverter}, ElementName=checkVisor1}" IsEnabled="False" Text="{Binding Text, ElementName=lstVisorSound}" x:Name="lstVisorSound_fake" Height="25" Margin="189,68,95,0" VerticalAlignment="Top" IsEditable="True"/>
+                            <Button Visibility="{Binding IsChecked, Converter={StaticResource BooleanToVisibilityConverter}, ElementName=checkGunfire}" x:Name="brwsBtnPlayGun" Content="Play" HorizontalAlignment="Right" Margin="0,7,137,0" VerticalAlignment="Top" Width="38" RenderTransformOrigin="-0.093,-0.612" Height="25" FontSize="14" Click="brwsBtnPlayGun_Click"/>
+                            <Button Visibility="{Binding IsChecked, Converter={StaticResource BooleanToVisibilityConverter}, ElementName=checkBackground}" x:Name="brwsBtnPlayBackground" Content="Play" HorizontalAlignment="Right" Margin="0,38,137,0" VerticalAlignment="Top" Width="38" RenderTransformOrigin="-0.093,-0.612" Height="25" FontSize="14" Click="brwsBtnPlayBackground_Click"/>
+                            <Button Visibility="{Binding IsChecked, Converter={StaticResource BooleanToVisibilityConverter}, ElementName=checkVisor1}" x:Name="brwsBtnPlayVisor" Content="Play" HorizontalAlignment="Right" Margin="0,68,137,0" VerticalAlignment="Top" Width="38" RenderTransformOrigin="-0.093,-0.612" Height="25" FontSize="14" Click="brwsBtnPlayVisor_Click"/>
+                            <Button Visibility="{Binding IsChecked, Converter={StaticResource BooleanToVisibilityConverter}, ElementName=checkGunfire}" x:Name="brwsBtnGunSoundStop" Content="Stop" HorizontalAlignment="Right" Margin="0,7,95,0" VerticalAlignment="Top" Width="38" RenderTransformOrigin="-0.093,-0.612" Height="25" FontSize="14" Click="brwsBtnGunSoundStop_Click" />
+                            <Button Visibility="{Binding IsChecked, Converter={StaticResource BooleanToVisibilityConverter}, ElementName=checkBackground}" x:Name="brwsBtnMusicBtnStop" Content="Stop" HorizontalAlignment="Right" Margin="0,38,95,0" VerticalAlignment="Top" Width="38" RenderTransformOrigin="-0.093,-0.612" Height="25" FontSize="14" Click="brwsBtnMusicBtnStop_Click" />
+                            <Button Visibility="{Binding IsChecked, Converter={StaticResource BooleanToVisibilityConverter}, ElementName=checkVisor1}" x:Name="brwsBtnVisorSndStop" Content="Stop" HorizontalAlignment="Right" Margin="0,68,95,0" VerticalAlignment="Top" Width="38" RenderTransformOrigin="-0.093,-0.612" Height="25" FontSize="14" Click="brwsBtnVisorSndStop_Click" />
+                        </Grid>
+                    </GroupBox>
+                    <GroupBox Margin="0,259,0,0" VerticalAlignment="Top" Height="199">
+                        <GroupBox.Header>Time Lock</GroupBox.Header>
+                        <Grid Margin="0">
+                            <TextBlock HorizontalAlignment="Left" TextWrapping="Wrap" VerticalAlignment="Top" FontSize="14" Margin="39,11,0,0"><Run Text="Add Time Lock:"/></TextBlock>
+                            <TextBox x:Name="txtTimeLockMessage" Height="68" Margin="140,35,10,0" TextWrapping="Wrap" VerticalAlignment="Top" FontSize="14" Text="&lt;02&gt;This map is time-locked from &lt;03&gt;%DDF%.%MMF%.%YYYYF% %HHF%:%mmF% &lt;02&gt;to &lt;03&gt;%DDT%.%MMT%.%YYYYT% %HHT%:%mmT% &lt;02&gt;and therefore unplayable now!"/>
+                            <TextBlock HorizontalAlignment="Left" TextWrapping="Wrap" VerticalAlignment="Top" FontSize="14" Margin="10,38,0,0" Text="Time Lock Message:"/>
+                            <CheckBox x:Name="checkTimeLock" Content="" Width="25" Height="16" VerticalAlignment="Top" HorizontalAlignment="Left" Margin="139,14,0,0" IsChecked="True"/>
+                            <TextBlock HorizontalAlignment="Left" TextWrapping="Wrap" VerticalAlignment="Top" FontSize="14" Margin="98,108,0,0" Text="From:" RenderTransformOrigin="0.381,0.519"/>
+                            <TextBox MaxLength="3" PreviewTextInput="NumericInput" x:Name="txtFromY" Height="20" Margin="147,108,0,0" TextWrapping="Wrap" VerticalAlignment="Top" FontSize="14" Width="35" Text="0" HorizontalAlignment="Left"/>
+                            <TextBlock HorizontalAlignment="Left" TextWrapping="Wrap" VerticalAlignment="Top" FontSize="14" Margin="139,108,0,0" Text="-" Height="20"/>
+                            <TextBlock HorizontalAlignment="Left" TextWrapping="Wrap" VerticalAlignment="Top" FontSize="14" Margin="186,108,0,0" Height="20" Width="42"><Run Text="years"/><Run Text=" -"/></TextBlock>
+                            <TextBox MaxLength="3" PreviewTextInput="NumericInput" x:Name="txtFromM" Height="20" Margin="230,108,0,0" TextWrapping="Wrap" VerticalAlignment="Top" FontSize="14" Width="35" Text="0" HorizontalAlignment="Left"/>
+                            <TextBlock HorizontalAlignment="Left" TextWrapping="Wrap" VerticalAlignment="Top" FontSize="14" Margin="268,108,0,0" Height="20" Width="59"><Run Text="months"/><Run Text=" -"/></TextBlock>
+                            <TextBox MaxLength="3" PreviewTextInput="NumericInput" x:Name="txtFromD" Height="20" Margin="326,108,0,0" TextWrapping="Wrap" VerticalAlignment="Top" FontSize="14" Width="35" Text="1" HorizontalAlignment="Left"/>
+                            <TextBlock HorizontalAlignment="Left" TextWrapping="Wrap" VerticalAlignment="Top" FontSize="14" Margin="364,108,0,0" Text="days -" Height="20"/>
+                            <TextBox MaxLength="3" PreviewTextInput="NumericInput" x:Name="txtFromH" Height="20" Margin="404,108,0,0" TextWrapping="Wrap" VerticalAlignment="Top" FontSize="14" Width="35" Text="0" HorizontalAlignment="Left"/>
+                            <TextBlock HorizontalAlignment="Left" TextWrapping="Wrap" VerticalAlignment="Top" FontSize="14" Margin="442,108,0,0" Text="hours -" Height="20"/>
+                            <TextBox MaxLength="3" PreviewTextInput="NumericInput" x:Name="txtFromm" Height="20" Margin="488,108,0,0" TextWrapping="Wrap" VerticalAlignment="Top" FontSize="14" Width="35" Text="0" HorizontalAlignment="Left"/>
+                            <TextBlock HorizontalAlignment="Left" TextWrapping="Wrap" VerticalAlignment="Top" FontSize="14" Margin="526,108,0,0" Text="minutes -" Height="20"/>
+                            <TextBox MaxLength="3" PreviewTextInput="NumericInput" x:Name="txtFromS" Height="20" Margin="587,108,0,0" TextWrapping="Wrap" VerticalAlignment="Top" FontSize="14" Width="35" Text="0" HorizontalAlignment="Left"/>
+                            <TextBlock HorizontalAlignment="Left" TextWrapping="Wrap" VerticalAlignment="Top" FontSize="14" Margin="625,108,0,0" Text="seconds" Height="20"/>
+                            <TextBox MaxLength="3" PreviewTextInput="NumericInput" x:Name="txtToY" Height="20" Margin="147,133,0,0" TextWrapping="Wrap" VerticalAlignment="Top" FontSize="14" Width="35" Text="0" HorizontalAlignment="Left"/>
+                            <TextBlock HorizontalAlignment="Left" TextWrapping="Wrap" VerticalAlignment="Top" FontSize="14" Margin="186,133,0,0" Height="20" Width="42" Text="years"/>
+                            <TextBox MaxLength="3" PreviewTextInput="NumericInput" x:Name="txtToM" Height="20" Margin="230,133,0,0" TextWrapping="Wrap" VerticalAlignment="Top" FontSize="14" Width="35" Text="0" HorizontalAlignment="Left"/>
+                            <TextBlock HorizontalAlignment="Left" TextWrapping="Wrap" VerticalAlignment="Top" FontSize="14" Margin="268,133,0,0" Height="20" Width="59" Text="months"/>
+                            <TextBox MaxLength="3" PreviewTextInput="NumericInput" x:Name="txtToD" Height="20" Margin="326,133,0,0" TextWrapping="Wrap" VerticalAlignment="Top" FontSize="14" Width="35" Text="1" HorizontalAlignment="Left"/>
+                            <TextBlock HorizontalAlignment="Left" TextWrapping="Wrap" VerticalAlignment="Top" FontSize="14" Margin="364,133,0,0" Text="days" Height="20"/>
+                            <TextBox MaxLength="3" PreviewTextInput="NumericInput" x:Name="txtToH" Height="20" Margin="404,133,0,0" TextWrapping="Wrap" VerticalAlignment="Top" FontSize="14" Width="35" Text="0" HorizontalAlignment="Left"/>
+                            <TextBlock HorizontalAlignment="Left" TextWrapping="Wrap" VerticalAlignment="Top" FontSize="14" Margin="442,133,0,0" Text="hours" Height="20"/>
+                            <TextBox MaxLength="3" PreviewTextInput="NumericInput" x:Name="txtTom" Height="20" Margin="488,133,0,0" TextWrapping="Wrap" VerticalAlignment="Top" FontSize="14" Width="35" Text="0" HorizontalAlignment="Left"/>
+                            <TextBlock HorizontalAlignment="Left" TextWrapping="Wrap" VerticalAlignment="Top" FontSize="14" Margin="526,133,0,0" Text="minutes" Height="20"/>
+                            <TextBox MaxLength="3" PreviewTextInput="NumericInput" x:Name="txtToS" Height="20" Margin="587,133,0,0" TextWrapping="Wrap" VerticalAlignment="Top" FontSize="14" Width="35" Text="0" HorizontalAlignment="Left"/>
+                            <TextBlock HorizontalAlignment="Left" TextWrapping="Wrap" VerticalAlignment="Top" FontSize="14" Margin="625,133,0,0" Text="seconds" Height="20"/>
+                            <TextBlock HorizontalAlignment="Left" TextWrapping="Wrap" VerticalAlignment="Top" FontSize="14" Margin="116,133,0,0" Text="To:" RenderTransformOrigin="0.381,0.519"/>
+                        </Grid>
+                    </GroupBox>
+                </Grid>
+            </TabItem>
+            <TabItem Header="Unit Settings" Margin="-2,-2,0,0">
+                <Grid Margin="0">
+
+
+                    <Grid Margin="0,0,10,74">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="auto"/>
+                            <RowDefinition Height="2*"/>
+                        </Grid.RowDefinitions>
+                        <Grid Grid.Row="0" Margin="0">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="{Binding ElementName=us_Name, Path=ActualWidth}" />
+                                <ColumnDefinition Width="{Binding ElementName=us_rhp, Path=ActualWidth}" />
+                                <ColumnDefinition Width="{Binding ElementName=us_ra, Path=ActualWidth}" />
+                                <ColumnDefinition Width="{Binding ElementName=us_rs, Path=ActualWidth}" />
+                                <ColumnDefinition Width="{Binding ElementName=us_rd, Path=ActualWidth}" />
+
+                                <ColumnDefinition Width="{Binding ElementName=us_ehp, Path=ActualWidth}" />
+                                <ColumnDefinition Width="{Binding ElementName=us_ea, Path=ActualWidth}" />
+                                <ColumnDefinition Width="{Binding ElementName=us_es, Path=ActualWidth}" />
+                                <ColumnDefinition Width="{Binding ElementName=us_ed, Path=ActualWidth}" />
+
+                                <ColumnDefinition Width="{Binding ElementName=us_chp, Path=ActualWidth}" />
+                                <ColumnDefinition Width="{Binding ElementName=us_ca, Path=ActualWidth}" />
+                                <ColumnDefinition Width="{Binding ElementName=us_cs, Path=ActualWidth}" />
+                                <ColumnDefinition Width="{Binding ElementName=us_cd, Path=ActualWidth}" />
+                            </Grid.ColumnDefinitions>
+                            <Border Grid.Column="0" Grid.ColumnSpan="1" BorderBrush="Black" HorizontalAlignment="Stretch" BorderThickness="1,1,1,0" Margin="0,0,-2,0" />
+
+                            <Border Grid.Column="1" Grid.ColumnSpan="4" BorderBrush="Black" HorizontalAlignment="Stretch" BorderThickness="0,1,1,0" Margin="2,0,-2,0">
+                                <Label Margin="0" HorizontalAlignment="Center">Original</Label>
+                            </Border>
+                            <Border Grid.Column="5" Grid.ColumnSpan="4" BorderBrush="Black" HorizontalAlignment="Stretch" BorderThickness="0,1,1,0" Margin="-4,0,-2,0">
+                                <Label Margin="0" HorizontalAlignment="Center">Recalculated</Label>
+                            </Border>
+                            <Border Grid.Column="9" Grid.ColumnSpan="4" BorderBrush="Black" HorizontalAlignment="Stretch" BorderThickness="0,1,1,0" Margin="0,0,-2,0">
+                                <Label Margin="0" HorizontalAlignment="Center">Custom</Label>
+                            </Border>
+                        </Grid>
+                        <DataGrid Grid.Row="1" AutoGenerateColumns="False" x:Name="lstUnitSettings" Margin="0" HeadersVisibility="Column" CanUserReorderColumns="False">
+                            <DataGrid.Columns >
+                                <DataGridTextColumn x:Name="us_Name"  Width="*" Header="Unit name" Binding="{Binding unitName}" IsReadOnly="True" MinWidth="50" />
+
+                                <DataGridTextColumn x:Name="us_rhp" Header="HP" Binding="{Binding rawHP}" MinWidth="40" >
+                                    <DataGridTextColumn.CellStyle>
+                                        <Style TargetType="DataGridCell">
+                                            <Setter Property="BorderBrush" Value="Black" />
+                                            <Setter Property="BorderThickness" Value="2,0,0,0" />
+                                        </Style>
+                                    </DataGridTextColumn.CellStyle>
+                                </DataGridTextColumn>
+                                <local:DataGridNumericColumn x:Name="us_ra" Header="Armor" Binding="{Binding rawArmor}" IsReadOnly="True" MinWidth="30" />
+                                <local:DataGridNumericColumn x:Name="us_rs" Header="Shield" Binding="{Binding rawShield}" IsReadOnly="True" MinWidth="40" />
+                                <local:DataGridNumericColumn x:Name="us_rd" Header="Damage" Binding="{Binding rawDamage}" IsReadOnly="True" MinWidth="40" >
+                                    <DataGridTextColumn.CellStyle>
+                                        <Style TargetType="DataGridCell">
+                                            <Setter Property="BorderBrush" Value="Black" />
+                                            <Setter Property="BorderThickness" Value="0 0 2 0" />
+                                        </Style>
+                                    </DataGridTextColumn.CellStyle>
+                                </local:DataGridNumericColumn>
+
+
+                                <local:DataGridNumericColumn x:Name="us_ehp" Header="HP" Binding="{Binding recalculatedHP}" IsReadOnly="True" MinWidth="30" />
+                                <local:DataGridNumericColumn x:Name="us_ea" Header="Armor" Binding="{Binding recalculatedArmor}" IsReadOnly="True" MinWidth="50" />
+                                <local:DataGridNumericColumn x:Name="us_es" Header="Shield" Binding="{Binding recalculatedShield}" IsReadOnly="True" MinWidth="50" />
+                                <local:DataGridNumericColumn x:Name="us_ed" Header="Damage" Binding="{Binding recalculatedDamage}" IsReadOnly="True" MinWidth="50" >
+                                    <DataGridTextColumn.CellStyle>
+                                        <Style TargetType="DataGridCell">
+                                            <Setter Property="BorderBrush" Value="Black" />
+                                            <Setter Property="BorderThickness" Value="0 0 2 0" />
+                                        </Style>
+                                    </DataGridTextColumn.CellStyle>
+
+                                </local:DataGridNumericColumn>
+
+                                <local:DataGridNumericColumn x:Name="us_chp" Header="HP" Binding="{Binding proposedHP}" MinWidth="30" />
+                                <local:DataGridNumericColumn x:Name="us_ca" Header="Armor" Binding="{Binding proposedArmor}" MinWidth="50" />
+                                <local:DataGridNumericColumn x:Name="us_cs" Header="Shield" Binding="{Binding proposedShield}" MinWidth="50" />
+                                <local:DataGridNumericColumn x:Name="us_cd" Header="Damage" Binding="{Binding proposedDamage}" MinWidth="50" >
+                                    <DataGridTextColumn.CellStyle>
+                                        <Style TargetType="DataGridCell">
+                                            <Setter Property="BorderBrush" Value="Black" />
+                                            <Setter Property="BorderThickness" Value="0 0 2 0" />
+                                        </Style>
+                                    </DataGridTextColumn.CellStyle>
+
+                                </local:DataGridNumericColumn>
+                                <DataGridCheckBoxColumn x:Name="us_used" Header="Used in-game" Binding="{Binding isUsed}" IsReadOnly="True" MinWidth="50" />
+                                <DataGridTemplateColumn x:Name="us_use_my" Header="Use custom" MinWidth="50" >
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <CheckBox IsChecked="{Binding useProposed, UpdateSourceTrigger=PropertyChanged}" />
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+                            </DataGrid.Columns>
+                        </DataGrid>
+                    </Grid>
+
+                    <GroupBox Visibility="Collapsed" Margin="0,0,0,74" VerticalAlignment="Bottom" Height="69">
+                        <GroupBox.Header>With all</GroupBox.Header>
+                        <Grid>
+                            <Button x:Name="btnUSUseOriginal" Content="Copy original to custom" HorizontalAlignment="Left" Margin="10,10,0,0" VerticalAlignment="Top" Width="170" Height="30" Click="btnUSUseOriginal_Click"/>
+                            <Button x:Name="btnUSUseRecalc" Content="Copy recalculated to custom" HorizontalAlignment="Left" Margin="185,10,0,0" VerticalAlignment="Top" Width="170" Height="30" Click="btnUSUseRecalc_Click"/>
+                            <Button x:Name="btnUSUseAll" Content="Use all" HorizontalAlignment="Left" Margin="360,10,0,0" VerticalAlignment="Top" Width="69" Height="30" Click="btnUSUseAll_Click" RenderTransformOrigin="0.159,0"/>
+                            <Button x:Name="btnUSUseNone" Content="Use none" HorizontalAlignment="Left" Margin="434,10,0,0" VerticalAlignment="Top" Width="69" Height="30" Click="btnUSUseNone_Click" RenderTransformOrigin="-0.116,-1.267"/>
+                        </Grid>
+                    </GroupBox>
+                    <GroupBox Margin="0" VerticalAlignment="Bottom" Height="69">
+                        <GroupBox.Header>With selected</GroupBox.Header>
+                        <Grid>
+                            <Button x:Name="btnUSUseOriginalSel" Content="Copy original to custom" HorizontalAlignment="Left" Margin="10,10,0,0" VerticalAlignment="Top" Width="170" Height="30" Click="btnUSUseOriginalSel_Click"/>
+                            <Button x:Name="btnUSUseRecalcSel" Content="Copy recalculated to custom" HorizontalAlignment="Left" Margin="185,10,0,0" VerticalAlignment="Top" Width="170" Height="30" Click="btnUSUseRecalcSel_Click"/>
+                            <Button x:Name="btnUSUseAllSel" Content="Use all" HorizontalAlignment="Left" Margin="360,10,0,0" VerticalAlignment="Top" Width="69" Height="30" RenderTransformOrigin="0.159,0" Click="btnUSUseAllSel_Click"/>
+                            <Button x:Name="btnUSUseNoneSel" Content="Use none" HorizontalAlignment="Left" Margin="434,10,0,0" VerticalAlignment="Top" Width="69" Height="30" RenderTransformOrigin="-0.116,-1.267" Click="btnUSUseNoneSel_Click"/>
+                            <CheckBox x:Name="checkUSShotUnused" Content="Show unused units" HorizontalAlignment="Left" VerticalAlignment="Bottom" Margin="508,0,0,10" Checked="checkUSShotUnused_Checked" Unchecked="checkUSShotUnused_Unchecked" IsChecked="True"/>
+                        </Grid>
+                    </GroupBox>
+
+
+                </Grid>
+            </TabItem>
+        </TabControl>
+        <GroupBox Margin="10,603,10,10" Grid.ColumnSpan="2" VerticalAlignment="Bottom">
             <GroupBox.Header>Status</GroupBox.Header>
             <Grid Margin="0">
                 <TextBlock HorizontalAlignment="Left" TextWrapping="Wrap" VerticalAlignment="Top" FontSize="14" Margin="10,11,0,0" Text="Status:"/>

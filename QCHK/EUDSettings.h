@@ -42,5 +42,6 @@ typedef struct EUDSettings {
 	unsigned short EMPDamage;
 
 	unsigned int result;
+	char* preferredUnitSettings;
 
 } EUDSettings;

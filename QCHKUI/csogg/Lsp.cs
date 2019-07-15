@@ -23,13 +23,10 @@
  */
 
 
-using System;
 using System.Runtime.InteropServices;
-using csogg;
 
-namespace csvorbis 
-{
-	/*
+namespace csvorbis {
+    /*
 	  function: LSP (also called LSF) conversion routines
 
 	  The LSP generation code is taken (with minimal modification) from
@@ -39,7 +36,7 @@ namespace csvorbis
 	  http://www2.xtdl.com/~rothwlr/lsfpaper/lsfpage.html 
 	 ********************************************************************/
 
-	class Lsp
+    class Lsp
 	{
 
 		[StructLayout(LayoutKind.Explicit, Size=32, CharSet=CharSet.Ansi)]

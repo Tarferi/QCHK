@@ -12,12 +12,11 @@ using System.Globalization;
 using System.Media;
 using OggDecoder;
 using QChkUI;
+using System.Collections.ObjectModel;
+using System.ComponentModel;
+using System.Collections;
 
 namespace WpfApplication1 {
-    /// <summary>
-    /// Interaction logic for MainWindow.xaml
-    /// </summary>
-    /// 
 
     enum AppState {
         START,
@@ -26,7 +25,6 @@ namespace WpfApplication1 {
         READY,
         PROCESSING
     }
-
 
     public partial class MainWindow : Window {
 
@@ -40,6 +38,7 @@ namespace WpfApplication1 {
 
         private AppState state = AppState.START;
         private Settings settings = null;
+        ObservableCollection<UniSetting> unitSettingsLst = new ObservableCollection<UniSetting>();
 
         private void setState(AppState state) {
             this.state = state;
@@ -105,6 +104,17 @@ namespace WpfApplication1 {
                 brwsBtnMusicBtnStop.IsEnabled = true;
                 brwsBtnVisorSndStop.IsEnabled = true;
                 brwsBtnGunSoundStop.IsEnabled = true;
+
+                checkUSShotUnused.IsEnabled = true;
+                btnUSUseAll.IsEnabled = true;
+                btnUSUseAllSel.IsEnabled = true;
+                btnUSUseNone.IsEnabled = true;
+                btnUSUseNoneSel.IsEnabled = true;
+                btnUSUseOriginal.IsEnabled = true;
+                btnUSUseOriginalSel.IsEnabled = true;
+                btnUSUseRecalc.IsEnabled = true;
+                btnUSUseRecalcSel.IsEnabled = true;
+                lstUnitSettings.IsEnabled = true;
             }
         }
 
@@ -159,6 +169,18 @@ namespace WpfApplication1 {
             brwsBtnMusicBtnStop.IsEnabled = false;
             brwsBtnVisorSndStop.IsEnabled = false;
             brwsBtnGunSoundStop.IsEnabled = false;
+
+            checkUSShotUnused.IsEnabled = false;
+            btnUSUseAll.IsEnabled = false;
+            btnUSUseAllSel.IsEnabled = false;
+            btnUSUseNone.IsEnabled = false;
+            btnUSUseNoneSel.IsEnabled = false;
+            btnUSUseOriginal.IsEnabled = false;
+            btnUSUseOriginalSel.IsEnabled = false;
+            btnUSUseRecalc.IsEnabled = false;
+            btnUSUseRecalcSel.IsEnabled = false;
+            lstUnitSettings.IsEnabled = false;
+            
         }
 
         private int __getSoundIndex(String name) {
@@ -290,12 +312,22 @@ namespace WpfApplication1 {
             return settings;
         }
 
+        void dgPrimaryGrid_AutoGeneratingColumn(object sender, DataGridAutoGeneratingColumnEventArgs e) {
+            var desc = e.PropertyDescriptor as PropertyDescriptor;
+            var att = desc.Attributes[typeof(ColumnNameAttribute)] as ColumnNameAttribute;
+            if (att != null) {
+                e.Column.Header = att.Name;
+            }
+        }
+
         public MainWindow() {
             InitializeComponent();
             setState(AppState.START);
             History.open(txtSet.Name, txtSet);
             History.open(txtInMap.Name, txtInMap);
             History.open(txtOutMap.Name, txtOutMap);
+            this.lstUnitSettings.AutoGeneratingColumn += dgPrimaryGrid_AutoGeneratingColumn;
+            this.lstUnitSettings.ItemsSource = unitSettingsLst;
         }
 
         private bool tryLoadingGivenMap(Settings set, bool errorOnFail, AppState stateOnError) {
@@ -318,6 +350,29 @@ namespace WpfApplication1 {
                 }
                 return false;
             }
+
+            // Load unit settings
+            try {
+                UnitSettings[] us = TheLib.getUnitSettings(set.inpuPath);
+                if (us == null) {
+                    if (errorOnFail) {
+                        showErrorMessageBox("Map load", "Failed to read unit settings!");
+                        setState(stateOnError);
+                    }
+                    return false;
+                }
+                if(set.preferredSettings.armor == null) {
+                    set.preferredSettings = us[1];
+                }
+                setUnitSettings(us, set);
+            } catch (Exception) {
+                if (errorOnFail) {
+                    showErrorMessageBox("Map load", "Loading map failed.");
+                    setState(stateOnError);
+                }
+                return false;
+            }
+
             foreach (List<SoundFile> snd in new List<SoundFile>[]{ wavs.buildInSounds, wavs.mapSounds }) {
                 foreach (SoundFile str in snd) {
                     if (set.backgroundSound != null) {
@@ -622,6 +677,208 @@ namespace WpfApplication1 {
             TheLib.process(set);
             MessageBox.Show("Finished", "Snipers Power Tool", MessageBoxButton.OK, MessageBoxImage.Information);
         }
+
+        private void setUnitSettings(UnitSettings[] us, Settings set) {
+            UnitSettings raw = us[0];
+            UnitSettings recalculated = us[1];
+
+            IDisposable d = Dispatcher.DisableProcessing();
+            unitSettingsLst.Clear();
+            for (int index = 0; index < 228; index++) {
+                unitSettingsLst.Add(new UniSetting(index, raw, recalculated, set));
+            }
+            d.Dispose();
+        }
+
+        private void US_copyOriginals(int[] firsts, int[] lasts) {
+            IDisposable d = Dispatcher.DisableProcessing();
+            for (int i = 0; i < firsts.Length; i++) {
+                for (int index = firsts[i]; index < lasts[i]; index++) {
+                    unitSettingsLst[index].proposedHP = unitSettingsLst[index].rawHP;
+                    unitSettingsLst[index].proposedArmor = unitSettingsLst[index].rawArmor;
+                    unitSettingsLst[index].proposedShield = unitSettingsLst[index].rawShield;
+                    unitSettingsLst[index].proposedDamage = unitSettingsLst[index].rawDamage;
+                }
+            }
+            lstUnitSettings.ItemsSource = null;
+            lstUnitSettings.ItemsSource = unitSettingsLst;
+            d.Dispose();
+        }
+
+        private void US_copyRecalculated(int[] firsts, int[] lasts) {
+            IDisposable d = Dispatcher.DisableProcessing();
+            for (int i = 0; i < firsts.Length; i++) {
+                for (int index = firsts[i]; index < lasts[i]; index++) {
+                    unitSettingsLst[index].proposedHP = unitSettingsLst[index].recalculatedHP;
+                    unitSettingsLst[index].proposedArmor = unitSettingsLst[index].recalculatedArmor;
+                    unitSettingsLst[index].proposedShield = unitSettingsLst[index].recalculatedShield;
+                    unitSettingsLst[index].proposedDamage = unitSettingsLst[index].recalculatedDamage;
+                }
+            }
+            lstUnitSettings.ItemsSource = null;
+            lstUnitSettings.ItemsSource = unitSettingsLst;
+            d.Dispose();
+        }
+
+        private void US_use(bool all, int[] firsts, int[] lasts) {
+            IDisposable d = Dispatcher.DisableProcessing();
+            for (int i = 0; i < firsts.Length; i++) {
+                for (int index = firsts[i]; index < lasts[i]; index++) {
+                    unitSettingsLst[index].useProposed = all;
+                }
+            }
+            lstUnitSettings.ItemsSource = null;
+            lstUnitSettings.ItemsSource = unitSettingsLst;
+            d.Dispose();
+        }
+
+        private void btnUSUseOriginal_Click(object sender, RoutedEventArgs e) {
+            US_copyOriginals(new int[] { 0 },new int[] { 228 });
+        }
+
+        private void btnUSUseRecalc_Click(object sender, RoutedEventArgs e) {
+            US_copyRecalculated(new int[] { 0 }, new int[] { 228 });
+        }
+
+        private void updateUnitSetingsFilter(bool _checked) {
+            ICollectionView Itemlist = CollectionViewSource.GetDefaultView(unitSettingsLst);
+            Predicate<object> predicate;
+            if (checkUSShotUnused.IsChecked == true) {
+                predicate = new Predicate<object>(item => (true));
+            } else {
+                predicate = new Predicate<object>(item => ((UniSetting)item).isUsed);
+
+            }
+            Itemlist.Filter = predicate;
+            lstUnitSettings.ItemsSource = null;
+            lstUnitSettings.ItemsSource = unitSettingsLst;
+        }
+
+        private void checkUSShotUnused_Checked(object sender, RoutedEventArgs e) {
+            updateUnitSetingsFilter(true);
+        }
+
+        private void checkUSShotUnused_Unchecked(object sender, RoutedEventArgs e) {
+            updateUnitSetingsFilter(false);
+        }
+
+        private void btnUSUseAll_Click(object sender, RoutedEventArgs e) {
+            US_use(true, new int[] { 0 }, new int[] { 228 });
+        }
+
+        private void btnUSUseNone_Click(object sender, RoutedEventArgs e) {
+            US_use(false, new int[] { 0 }, new int[] { 228 });
+        }
+
+        private int[] getSelFirsts() {
+            IList sel = lstUnitSettings.SelectedItems;
+            int[] firsts = new int[sel.Count];
+            for(int i = 0; i < sel.Count; i++) {
+                firsts[i] = ((UniSetting)sel[i]).unitID;
+            }
+            return firsts;
+        }
+
+        private int[] getSelLasts() {
+            IList sel = lstUnitSettings.SelectedItems;
+            int[] lasts = new int[sel.Count];
+            for (int i = 0; i < sel.Count; i++) {
+                lasts[i] = ((UniSetting)sel[i]).unitID + 1;
+            }
+            return lasts;
+        }
+
+        private void setSelecteds(int[] firsts) {
+            lstUnitSettings.SelectedItems.Clear();
+            foreach (int index in firsts) {
+                lstUnitSettings.SelectedItems.Add(unitSettingsLst[index]);
+            }
+            lstUnitSettings.Focus();
+        }
+
+        private void btnUSUseOriginalSel_Click(object sender, RoutedEventArgs e) {
+            int[] firsts = getSelFirsts();
+            US_copyOriginals(firsts, getSelLasts());
+            setSelecteds(firsts);
+        }
+
+        private void btnUSUseRecalcSel_Click(object sender, RoutedEventArgs e) {
+            int[] firsts = getSelFirsts();
+            US_copyRecalculated(firsts, getSelLasts());
+            setSelecteds(firsts);
+        }
+
+        private void btnUSUseAllSel_Click(object sender, RoutedEventArgs e) {
+            int[] firsts = getSelFirsts();
+            US_use(true, firsts, getSelLasts());
+            setSelecteds(firsts);
+        }
+
+        private void btnUSUseNoneSel_Click(object sender, RoutedEventArgs e) {
+            int[] firsts = getSelFirsts();
+            US_use(false, firsts, getSelLasts());
+            setSelecteds(firsts);
+        }
+    }
+
+    public class UniSetting {
+        private Settings settings;
+        public int unitID { get;}
+        private String _name;
+        public String unitName { get { return "[" + unitID + "] " + _name; } set { _name= value; } }
+
+        public int rawHP { get; set; }
+        public byte rawArmor { get; set; }
+        public short rawShield { get; set; }
+        public short rawDamage { get; set; }
+
+        public int recalculatedHP { get; set; }
+        public byte recalculatedArmor { get; set; }
+        public short recalculatedShield { get; set; }
+        public short recalculatedDamage { get; set; }
+
+        public int proposedHP { get { return settings.preferredSettings.hp[unitID] / 256; } set { settings.preferredSettings.hp[unitID] = 256 * value; } }
+        public byte proposedArmor { get { return settings.preferredSettings.armor[unitID]; } set { settings.preferredSettings.armor[unitID] = (byte) value; } }
+        public short proposedShield { get { return settings.preferredSettings.shield[unitID]; } set { settings.preferredSettings.shield[unitID] =(short) value; } }
+        public short proposedDamage { get { return _weaponID < 130 ? settings.preferredSettings.weapon_damage[_weaponID] : (short) 0; } set { if (_weaponID < 130) { settings.preferredSettings.weapon_damage[_weaponID] = value; } } }
+
+        public bool useProposed { get { return settings.preferredSettings.used[unitID] == 1; } set { settings.preferredSettings.used[unitID] =(byte)( value ? 1 : 0); } }
+        public bool isUsed { get; set; }
+
+        private short _weaponID;
+        public bool hasWeapon { get { return _weaponID != 130; } set { } }
+
+        private static int toInt(String value) {
+            try {
+                return Convert.ToInt32(value);
+            } catch {
+                return 0;
+            }
+        }
+
+        private static readonly String[] unitNames = new String[] { "Terran Marine", "Terran Ghost", "Terran Vulture", "Terran Goliath", "Goliath Turret", "Terran Siege Tank (Tank Mode)", "Tank Turret(Tank Mode)", "Terran SCV", "Terran Wraith", "Terran Science Vessel", "Gui Montang (Firebat)", "Terran Dropship", "Terran Battlecruiser", "Vulture Spider Mine", "Nuclear Missile", "Terran Civilian", "Sarah Kerrigan (Ghost)", "Alan Schezar (Goliath)", "Alan Schezar Turret", "Jim Raynor (Vulture)", "Jim Raynor (Marine)", "Tom Kazansky (Wraith)", "Magellan (Science Vessel)", "Edmund Duke (Siege Tank)", "Edmund Duke Turret", "Edmund Duke (Siege Mode)", "Edmund Duke Turret", "Arcturus Mengsk (Battlecruiser)", "Hyperion (Battlecruiser)", "Norad II (Battlecruiser)", "Terran Siege Tank (Siege Mode)", "Tank Turret (Siege Mode)", "Firebat", "Scanner Sweep", "Terran Medic", "Zerg Larva", "Zerg Egg", "Zerg Zergling", "Zerg Hydralisk", "Zerg Ultralisk", "Zerg Broodling", "Zerg Drone", "Zerg Overlord", "Zerg Mutalisk", "Zerg Guardian", "Zerg Queen", "Zerg Defiler", "Zerg Scourge", "Torrarsque (Ultralisk)", "Matriarch (Queen)", "Infested Terran", "Infested Kerrigan", "Unclean One (Defiler)", "Hunter Killer (Hydralisk)", "Devouring One (Zergling)", "Kukulza (Mutalisk)", "Kukulza (Guardian)", "Yggdrasill (Overlord)", "Terran Valkyrie Frigate", "Mutalisk/Guardian Cocoon", "Protoss Corsair", "Protoss Dark Templar(Unit)", "Zerg Devourer", "Protoss Dark Archon", "Protoss Probe", "Protoss Zealot", "Protoss Dragoon", "Protoss High Templar", "Protoss Archon", "Protoss Shuttle", "Protoss Scout", "Protoss Arbiter", "Protoss Carrier", "Protoss Interceptor", "Dark Templar(Hero)", "Zeratul (Dark Templar)", "Tassadar/Zeratul (Archon)", "Fenix (Zealot)", "Fenix (Dragoon)", "Tassadar (Templar)", "Mojo (Scout)", "Warbringer (Reaver)", "Gantrithor (Carrier)", "Protoss Reaver", "Protoss Observer", "Protoss Scarab", "Danimoth (Arbiter)", "Aldaris (Templar)", "Artanis (Scout)", "Rhynadon (Badlands Critter)", "Bengalaas (Jungle Critter)", "Unused - Was Cargo Ship", "Unused - Was Mercenary Gunship", "Scantid (Desert Critter)", "Kakaru (Twilight Critter)", "Ragnasaur (Ashworld Critter)", "Ursadon (Ice World Critter)", "Lurker Egg", "Raszagal", "Samir Duran (Ghost)", "Alexei Stukov (Ghost)", "Map Revealer", "Gerard DuGalle", "Zerg Lurker", "Infested Duran", "Disruption Web", "Terran Command Center", "Terran Comsat Station", "Terran Nuclear Silo", "Terran Supply Depot", "Terran Refinery", "Terran Barracks", "Terran Academy", "Terran Factory", "Terran Starport", "Terran Control Tower", "Terran Science Facility", "Terran Covert Ops", "Terran Physics Lab", "Unused - Was Starbase?", "Terran Machine Shop", "Unused - Was Repair Bay?", "Terran Engineering Bay", "Terran Armory", "Terran Missile Turret", "Terran Bunker", "Norad II", "Ion Cannon", "Uraj Crystal", "Khalis Crystal", "Infested Command Center", "Zerg Hatchery", "Zerg Lair", "Zerg Hive", "Zerg Nydus Canal", "Zerg Hydralisk Den", "Zerg Defiler Mound", "Zerg Greater Spire", "Zerg Queen's Nest", "Zerg Evolution Chamber", "Zerg Ultralisk Cavern", "Zerg Spire", "Zerg Spawning Pool", "Zerg Creep Colony", "Zerg Spore Colony", "Unused Zerg Building", "Zerg Sunken Colony", "Zerg Overmind (With Shell)", "Zerg Overmind", "Zerg Extractor", "Mature Chrysalis", "Zerg Cerebrate", "Zerg Cerebrate Daggoth", "Unused Zerg Building 5", "Protoss Nexus", "Protoss Robotics Facility", "Protoss Pylon", "Protoss Assimilator", "Unused Protoss Building", "Protoss Observatory", "Protoss Gateway", "Unused Protoss Building", "Protoss Photon Cannon", "Protoss Citadel of Adun", "Protoss Cybernetics Core", "Protoss Templar Archives", "Protoss Forge", "Protoss Stargate", "Stasis Cell/Prison", "Protoss Fleet Beacon", "Protoss Arbiter Tribunal", "Protoss Robotics Support Bay", "Protoss Shield Battery", "Khaydarin Crystal Formation", "Protoss Temple", "Xel'Naga Temple", "Mineral Field (Type 1)", "Mineral Field (Type 2)", "Mineral Field (Type 3)", "Cave", "Cave-in", "Cantina", "Mining Platform", "Independant Command Center", "Independant Starport", "Independant Jump Gate", "Ruins", "Kyadarin Crystal Formation", "Vespene Geyser", "Warp Gate", "PSI Disruptor", "Zerg Marker", "Terran Marker", "Protoss Marker", "Zerg Beacon", "Terran Beacon", "Protoss Beacon", "Zerg Flag Beacon", "Terran Flag Beacon", "Protoss Flag Beacon", "Power Generator", "Overmind Cocoon", "Dark Swarm", "Floor Missile Trap", "Floor Hatch", "Left Upper Level Door", "Right Upper Level Door", "Left Pit Door", "Right Pit Door", "Floor Gun Trap", "Left Wall Missile Trap", "Left Wall Flame Trap", "Right Wall Missile Trap", "Right Wall Flame Trap", "Start Location", "Flag", "Young Chrysalis", "Psi Emitter", "Data Disc", "Khaydarin Crystal", "Mineral Cluster Type 1", "Mineral Cluster Type 2", "Protoss Vespene Gas Orb Type 1", "Protoss Vespene Gas Orb Type 2", "Zerg Vespene Gas Sac Type 1", "Zerg Vespene Gas Sac Type 2", "Terran Vespene Gas Tank Type 1", "Terran Vespene Gas Tank Type 2"};
+        private static readonly String[] weaponNames = new String[] { "Gauss Rifle (Normal)", "Gauss Rifle (Jim Raynor-Marine)", "C-10 Concussion Rifle (Normal)", "C-10 Concussion Rifle (Sarah Kerrigan)", "Fragmentation Grenade (Normal)", "Fragmentation Grenade (Jim Raynor-Vulture)", "Spider Mines", "Twin Autocannons (Normal)", "Hellfire Missile Pack (Normal)", "Twin Autocannons (Alan Schezar)", "Hellfire Missile Pack (Alan Schezar)", "Arclite Cannon (Normal)", "Arclite Cannon (Edmund Duke)", "Fusion Cutter", "Fusion Cutter (Harvest)", "Gemini Missiles (Normal)", "Burst Lasers (Normal)", "Gemini Missiles (Tom Kazansky)", "Burst Lasers (Tom Kazansky)", "ATS Laser Battery (Normal)", "ATA Laser Battery (Normal)", "ATS Laser Battery (Norad II+Mengsk+DuGalle)", "ATA Laser Battery (Norad II+Mengsk+DuGalle)", "ATS Laser Battery (Hyperion)", "ATA Laser Battery (Hyperion)", "Flame Thrower (Normal)", "Flame Thrower (Gui Montag)", "Arclite Shock Cannon (Normal)", "Arclite Shock Cannon (Edmund Duke)", "Longbolt Missiles", "Yamato Gun", "Nuclear Missile", "Lockdown", "EMP Shockwave", "Irradiate", "Claws (Normal)", "Claws (Devouring One)", "Claws (Infested Kerrigan)", "Needle Spines (Normal)", "Needle Spines (Hunter Killer)", "Kaiser Blades (Normal)", "Kaiser Blades (Torrasque)", "Toxic Spores (Broodling)", "Spines", "Spines (Harvest)", "Acid Spray (Unused)", "Acid Spore (Normal)", "Acid Spore (Kukulza-Guardian)", "Glave Wurm (Normal)", "Glave Wurm (Kukulza-Mutalisk)", "Venom (Unused-Defiler)", "Venom (Unused-Defiler Hero)", "Seeker Spores", "Subterranean Tentacle", "Suicide (Infested Terran)", "Suicide (Scourge)", "Parasite", "Spawn Broodlings", "Ensnare", "Dark Swarm", "Plague", "Consume", "Particle Beam", "Particle Beam (Harvest)", "Psi Blades (Normal)", "Psi Blades (Fenix-Zealot)", "Phase Disruptor (Normal)", "Phase Disruptor (Fenix-Dragoon)", "Psi Assault (Normal-Unused)", "Psi Assault (Tassadar+Aldaris)", "Psionic Shockwave (Normal)", "Psionic Shockwave (Tassadar/Zeratul Archon)", "Unknown72", "Dual Photon Blasters (Normal)", "Anti-matter Missiles (Normal)", "Dual Photon Blasters (Mojo)", "Anit-matter Missiles (Mojo)", "Phase Disruptor Cannon (Normal)", "Phase Disruptor Cannon (Danimoth)", "Pulse Cannon", "STS Photon Cannon", "STA Photon Cannon", "Scarab", "Stasis Field", "Psi Storm", "Warp Blades (Zeratul)", "Warp Blades (Dark Templar Hero)", "Missiles (Unused)", "Laser Battery1 (Unused)", "Tormentor Missiles (Unused)", "Bombs (Unused)", "Raider Gun (Unused)", "Laser Battery2 (Unused)", "Laser Battery3 (Unused)", "Dual Photon Blasters (Unused)", "Flechette Grenade (Unused)", "Twin Autocannons (Floor Trap)", "Hellfire Missile Pack (Wall Trap)", "Flame Thrower (Wall Trap)", "Hellfire Missile Pack (Floor Trap)", "Neutron Flare", "Disruption Web", "Restoration", "Halo Rockets", "Corrosive Acid", "Mind Control", "Feedback", "Optical Flare", "Maelstrom", "Subterranean Spines", "Gauss Rifle0 (Unused)", "Warp Blades (Normal)", "C-10 Concussion Rifle (Samir Duran)", "C-10 Concussion Rifle (Infested Duran)", "Dual Photon Blasters (Artanis)", "Anti-matter Missiles (Artanis)", "C-10 Concussion Rifle (Alexei Stukov)", "Gauss Rifle1 (Unused)", "Gauss Rifle2 (Unused)", "Gauss Rifle3 (Unused)", "Gauss Rifle4 (Unused)", "Gauss Rifle5 (Unused)", "Gauss Rifle6 (Unused)", "Gauss Rifle7 (Unused)", "Gauss Rifle8 (Unused)", "Gauss Rifle9 (Unused)", "Gauss Rifle10 (Unused)", "Gauss Rifle11 (Unused)", "Gauss Rifle12 (Unused)", "Gauss Rifle13 (Unused)"};
+        private static readonly short[] weaponMapping = new short[] { 0x00, 0x02, 0x04, 0x82, 0x07, 0x82, 0x0b, 0x0d, 0x10, 0x82, 0x1a, 0x82, 0x13, 0x06, 0x82, 0x82, 0x03, 0x82, 0x09, 0x05, 0x01, 0x12, 0x82, 0x82, 0x0c, 0x82, 0x1c, 0x15, 0x17, 0x15, 0x82, 0x1b, 0x19, 0x82, 0x82, 0x82, 0x82, 0x23, 0x26, 0x28, 0x2a, 0x2b, 0x82, 0x30, 0x2e, 0x82, 0x82, 0x82, 0x29, 0x82, 0x36, 0x25, 0x82, 0x27, 0x24, 0x31, 0x2f, 0x82, 0x82, 0x82, 0x82, 0x6f, 0x82, 0x82, 0x3e, 0x40, 0x42, 0x82, 0x46, 0x82, 0x49, 0x4d, 0x82, 0x4f, 0x56, 0x55, 0x47, 0x41, 0x43, 0x45, 0x4b, 0x82, 0x82, 0x82, 0x82, 0x52, 0x4e, 0x45, 0x72, 0x82, 0x82, 0x82, 0x82, 0x82, 0x82, 0x82, 0x82, 0x82, 0x82, 0x70, 0x74, 0x82, 0x15, 0x6d, 0x71, 0x82, 0x82, 0x82, 0x82, 0x82, 0x82, 0x82, 0x82, 0x82, 0x82, 0x82, 0x82, 0x82, 0x82, 0x82, 0x82, 0x82, 0x82, 0x82, 0x82, 0x82, 0x82, 0x82, 0x82, 0x82, 0x82, 0x82, 0x82, 0x82, 0x82, 0x82, 0x82, 0x82, 0x82, 0x82, 0x82, 0x82, 0x82, 0x82, 0x82, 0x82, 0x35, 0x82, 0x82, 0x82, 0x82, 0x82, 0x82, 0x82, 0x82, 0x82, 0x82, 0x82, 0x82, 0x82, 0x82, 0x82, 0x50, 0x82, 0x82, 0x82, 0x82, 0x82, 0x82, 0x82, 0x82, 0x82, 0x82, 0x82, 0x82, 0x82, 0x82, 0x82, 0x82, 0x82, 0x82, 0x82, 0x5c, 0x82, 0x5d, 0x82, 0x82, 0x82, 0x82, 0x82, 0x82, 0x82, 0x82, 0x82, 0x82, 0x82, 0x82, 0x82, 0x82, 0x82, 0x82, 0x82, 0x82, 0x63, 0x82, 0x82, 0x82, 0x82, 0x82, 0x60, 0x61, 0x62, 0x61, 0x62, 0x82, 0x82, 0x82, 0x82, 0x82, 0x82, 0x82, 0x82, 0x82, 0x82, 0x82, 0x82, 0x82, 0x82 };
+
+        public UniSetting(int index, UnitSettings raw, UnitSettings recalculated, Settings settings) {
+            this.settings = settings;
+            this.unitID = index;
+            this._weaponID = weaponMapping[unitID];
+
+            this.unitName = unitNames[this.unitID];
+            this.rawHP = raw.hp[unitID] / 256;
+            this.rawArmor = raw.armor[unitID];
+            this.rawShield = raw.shield[unitID];
+            this.rawDamage = _weaponID < 130 ? raw.weapon_damage[_weaponID] : (short) 0;
+
+            this.recalculatedHP = recalculated.hp[unitID] / 256;
+            this.recalculatedArmor = recalculated.armor[unitID];
+            this.recalculatedShield = recalculated.shield[unitID];
+            this.recalculatedDamage = _weaponID < 130 ? recalculated.weapon_damage[_weaponID] : (short) 0;
+
+            this.isUsed = recalculated.used[unitID] == 0 ? true : false;
+
+        }
     }
 
     public class InvertedBooleanToVisibilityConverter : IValueConverter {
@@ -643,6 +900,31 @@ namespace WpfApplication1 {
                 return Visibility.Collapsed;
             } else {
                 return Visibility.Visible;
+            }
+        }
+    }
+
+    public class ColumnNameAttribute : System.Attribute {
+        public ColumnNameAttribute(string Name) { this.Name = Name; }
+        public string Name { get; set; }
+    }
+
+    public class DataGridNumericColumn : DataGridTextColumn {
+        protected override object PrepareCellForEdit(System.Windows.FrameworkElement editingElement, System.Windows.RoutedEventArgs editingEventArgs) {
+            TextBox edit = editingElement as TextBox;
+            edit.PreviewTextInput += OnPreviewTextInput;
+
+            return base.PrepareCellForEdit(editingElement, editingEventArgs);
+        }
+
+        void OnPreviewTextInput(object sender, System.Windows.Input.TextCompositionEventArgs e) {
+            try {
+                Convert.ToInt32(e.Text);
+            } catch {
+                // Show some kind of error message if you want
+
+                // Set handled to true
+                e.Handled = true;
             }
         }
     }

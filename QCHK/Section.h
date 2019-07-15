@@ -335,11 +335,70 @@ public:
 
 };
 
-class Section_UNIT : public BasicSection {
+struct Unit {
+	unsigned int instanceID; //  The unit's class instance (sort of a "serial number")
+	unsigned short x; //  X coordinate of unit
+	unsigned short y; //  Y coordinate of unit
+	unsigned short unitID; //  Unit ID
+	unsigned short relationType; //  Type of relation to another building (i.e. add-on, nydus link)
+	unsigned short flags; //  Flags of special properties which can be applied to the unit and are valid:
+	unsigned short validFields; //  Out of the elements of the unit data, the properties which can be changed by the map maker:
+	unsigned char ownerID; //  Player number of owner (0-based)
+	unsigned char HP; //  Hit points % (1-100)
+	unsigned char Shields; //  Shield points % (1-100)
+	unsigned char Energy; //  Energy points % (1-100)
+	unsigned int Resources; //  Resource amount
+	unsigned short Hangar; //  Number of units in hangar
+	unsigned short StateFlags; //  Unit state flags
+	unsigned int Unused; //  Unused
+	unsigned int InstanceRelation; //  Class instance of the unit to which this unit is related to (i.e. via an add-on, nydus link, etc.). It is "0" if the unit is not linked to any other unit.
+};
+
+class Section_UNIT : public Section {
 
 public:
 
-	COMMON_CONSTR_SEC_BS(Section_UNIT)
+	Array<Unit*> units;
+
+	COMMON_CONSTR_SEC(Section_UNIT)
+
+		virtual ~Section_UNIT() {
+		for (unsigned int i = 0; i < units.getSize(); i++) {
+			if (units[i] != nullptr) {
+				Unit* unit = units[i];
+				free(unit);
+				units[i] = nullptr;
+			}
+		}
+	}
+
+protected:
+
+	bool parse() {
+
+		unsigned int totalUnits = this->size / sizeof(Unit);
+		bool error = false;
+		for (unsigned int i = 0; i < totalUnits; i++) {
+			Unit* unit = (Unit*) this->buffer->readArray(sizeof(Unit), &error);
+			if (error) {
+				return false;
+			}
+			this->units.append(unit);
+		}
+		return true;
+	}
+
+	bool write(WriteBuffer* buffer) {
+		bool error = false;
+		for (unsigned int i = 0; i < this->units.getSize(); i++) {
+			Unit* unit = this->units[i];
+			buffer->writeArray((unsigned char*)unit, sizeof(Unit), &error);
+			if (error) {
+				return false;
+			}
+		};
+		return true;
+	}
 
 
 };

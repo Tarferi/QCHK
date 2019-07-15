@@ -24,11 +24,9 @@
 
 
 using System;
-using csogg;
 
-namespace csvorbis 
-{
-	class Lpc
+namespace csvorbis {
+    class Lpc
 	{
 		Drft fft=new Drft();
 

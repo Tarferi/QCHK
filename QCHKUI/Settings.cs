@@ -2,7 +2,7 @@
 using System.IO;
 
 namespace WpfApplication1 {
-    class Settings {
+    public class Settings {
 
         public String settingsPath;
         public String inpuPath;
@@ -34,11 +34,26 @@ namespace WpfApplication1 {
         public String timeLockRangeTo;
 
         public int result;
+        public UnitSettings preferredSettings;
 
         private Settings() {
 
         }
 
+        private static UnitSettings readUnitSettings(ReadBuffer rb) {
+            UnitSettings us;
+            us.used = rb.readByteArray(228);
+            us.hp = rb.readIntArray(228);
+            us.shield = rb.readShortArray(228);
+            us.armor = rb.readByteArray(228);
+            us.build_time = rb.readShortArray(228);
+            us.mineral_cost = rb.readShortArray(228);
+            us.gas_cost = rb.readShortArray(228);
+            us.str_unit_name = rb.readShortArray(228);
+            us.weapon_damage = rb.readShortArray(130);
+            us.upgrade_bonus = rb.readShortArray(130);
+            return us;
+        }
    
         public static Settings loadFromFile(String fileName) {
             Settings s = new Settings();
@@ -68,6 +83,7 @@ namespace WpfApplication1 {
                 try {
                     s.adjustHPAndWeapons = rb.readBool();
                     s.muteUnits = rb.readBool();
+                    s.preferredSettings = readUnitSettings(rb);
                 } catch (Exception) {
                     s.adjustHPAndWeapons = s.enableBarrier;
                     s.muteUnits = false;
@@ -103,6 +119,7 @@ namespace WpfApplication1 {
 
                 wb.writeBool(this.adjustHPAndWeapons);
                 wb.writeBool(this.muteUnits);
+                wb.writeData(this.preferredSettings);
 
                 File.WriteAllBytes(file, wb.ToArray());
                 return true;

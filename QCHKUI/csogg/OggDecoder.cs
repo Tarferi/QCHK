@@ -1,14 +1,11 @@
 using System;
 using System.IO;
-using csogg;
-using csvorbis;
 
-namespace OggDecoder
-{
-	/// <summary>
-	/// Ogg Vorbis decoder test application.
-	/// </summary>
-	class Decoder
+namespace OggDecoder {
+    /// <summary>
+    /// Ogg Vorbis decoder test application.
+    /// </summary>
+    class Decoder
 	{
 		/// <summary>
 		/// The main entry point for the application.

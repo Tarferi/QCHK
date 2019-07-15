@@ -1,11 +1,8 @@
-﻿using System;
-using System.Text;
-using System.Media;
+﻿using System.Media;
 using System.IO;
 
-namespace OggDecoder
-{
-	class OggPlayer
+namespace OggDecoder {
+    class OggPlayer
 	{
 		static void Main(string[] args)
 		{

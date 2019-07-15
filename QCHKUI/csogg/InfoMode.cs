@@ -23,12 +23,9 @@
  */
 
 
-using System;
-using csogg;
 
-namespace csvorbis 
-{
-	class InfoMode
+namespace csvorbis {
+    class InfoMode
 	{
 		internal int blockflag;
 		internal int windowtype;

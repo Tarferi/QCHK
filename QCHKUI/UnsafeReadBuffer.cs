@@ -1,9 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
 
 namespace WpfApplication1 {
     unsafe class UnsafeReadBuffer {
@@ -41,6 +37,30 @@ namespace WpfApplication1 {
         public UnsafeReadBuffer(byte* data) {
             this.data = data;
             this.position = 0;
+        }
+
+        public byte[] readByteArray(int length) {
+            byte[] data = new byte[length];
+            for (int i = 0; i < length; i++) {
+                data[i] = (byte)readByte();
+            }
+            return data;
+        }
+
+        public short[] readShortArray(int length) {
+            short[] data = new short[length];
+            for (int i = 0; i < length; i++) {
+                data[i] = (short)readShort();
+            }
+            return data;
+        }
+
+        public int[] readIntArray(int length) {
+            int[] data = new int[length];
+            for (int i = 0; i < length; i++) {
+                data[i] = (int)readInt();
+            }
+            return data;
         }
     }
 }

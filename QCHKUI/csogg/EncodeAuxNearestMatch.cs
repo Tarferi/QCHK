@@ -23,11 +23,9 @@
  */
 
 
-using System;
 
-namespace csvorbis 
-{
-	class EncodeAuxNearestMatch
+namespace csvorbis {
+    class EncodeAuxNearestMatch
 	{
 		internal int[] ptr0 = null;
 		internal int[] ptr1 = null;

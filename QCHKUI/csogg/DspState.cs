@@ -24,12 +24,9 @@
 
 
 using System;
-using csogg;
-using csvorbis;
 
-namespace csvorbis 
-{
-	public class DspState
+namespace csvorbis {
+    public class DspState
 	{
 		static float M_PI=3.1415926539f;
 		static int VI_TRANSFORMB=1;

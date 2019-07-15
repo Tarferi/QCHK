@@ -293,6 +293,45 @@ void getForces(EUDSettings* settings) {
 	Storm* storm = new Storm(&error);
 
 	SET_NO_ERROR
+		settings->outputFilePath = nullptr;
+
+	MapFile* v3F = storm->readSCX(settings->inputFilePath, &error);
+	if (error) {
+		SET_ERROR_LOAD_FILE
+			delete v3F;
+		delete storm;
+		return;
+	}
+
+	CHK* v3 = v3F->getCHK();
+	if (v3 == nullptr) {
+		SET_ERROR_LOAD_FILE
+			LOG("QCHK", "Failed to load CHK from file \"%s\"", settings->inputFilePath);
+		return;
+	}
+	Section_OWNR* forc = (Section_OWNR*)v3->getSection("OWNR");
+	if (forc == nullptr) {
+		SET_ERROR_LOAD_SECTION
+			LOG("QCHK", "Failed to load CHK from file \"%s\"", settings->inputFilePath);
+		return;
+	}
+	GET_CLONED_DATA(result, char, forc->data, 12, { SET_ERROR_PROCESS error = true; });
+	if (!error) {
+		settings->outputFilePath = result;
+	}
+	delete v3F;
+	delete storm;
+	settings->TimeLockMessage = nullptr;
+
+}
+
+void getRecalculatedData(EUDSettings* settings) {
+
+
+	bool error = false;
+	Storm* storm = new Storm(&error);
+
+	SET_NO_ERROR
 	settings->outputFilePath = nullptr;
 
 	MapFile* v3F = storm->readSCX(settings->inputFilePath, &error);
@@ -306,19 +345,43 @@ void getForces(EUDSettings* settings) {
 	CHK* v3 = v3F->getCHK();
 	if (v3 == nullptr) {
 		SET_ERROR_LOAD_FILE
-		LOG("QCHK", "Failed to load CHK from file \"%s\"", settings->inputFilePath);
+			LOG("QCHK", "Failed to load CHK from file \"%s\"", settings->inputFilePath);
 		return;
 	}
-	Section_OWNR* forc = (Section_OWNR*)v3->getSection("OWNR");
-	if (forc == nullptr) {
+	Section_UNIx* UNIx = (Section_UNIx*)v3->getSection("UNIx");
+	if (UNIx== nullptr) {
 		SET_ERROR_LOAD_SECTION
 		LOG("QCHK", "Failed to load CHK from file \"%s\"", settings->inputFilePath);
 		return;
 	}
-	GET_CLONED_DATA(result, char, forc->data, 12, { SET_ERROR_PROCESS error = true; });
-	if (!error) {
-		settings->outputFilePath = result;
+	WriteBuffer wb;
+	GET_CLONED_DATA(pre, UnitSettings, UNIx->data, 1, { SET_ERROR_PROCESS error = true; delete v3F; delete storm; return; });
+	wb.writeArray((unsigned char*)pre, sizeof(UnitSettings), &error);
+	delete pre;
+	if (!fix13_RecalculateHPAndDamage(nullptr, v3, settings)) {
+		SET_ERROR_PROCESS
+		delete v3F;
+		delete storm;
+		return;
 	}
+	
+	
+	GET_CLONED_DATA(post, UnitSettings, UNIx->data, 1, { SET_ERROR_PROCESS error = true; delete v3F; delete storm; return; });
+	wb.writeArray((unsigned char*)post, sizeof(UnitSettings), &error);
+	delete post;
+	if (error) {
+		SET_ERROR_PROCESS
+		delete v3F;
+		delete storm;
+		return;
+	}
+	char* result;
+	unsigned int length;
+	wb.getWrittenData((unsigned char**) (&result), &length);
+
+	GET_CLONED_DATA(data, char, result, length, { error = true; });
+
+	settings->outputFilePath = data;
 	delete v3F;
 	delete storm;
 	settings->TimeLockMessage = nullptr;
@@ -340,6 +403,9 @@ LIBRARY_API void __cdecl realize(EUDSettings* settings) {
 	}
 	else if (settings->action == 5) { // Get forces
 		getForces(settings);
+	}
+	else if (settings->action == 6) { // Get recalculated data
+		getRecalculatedData(settings);
 	}
 }
 

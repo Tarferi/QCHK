@@ -23,13 +23,11 @@
  */
 
 
-using System;
 using System.Runtime.CompilerServices;
 using csogg;
 
-namespace csvorbis 
-{
-	class CodeBook
+namespace csvorbis {
+    class CodeBook
 	{
 		internal int dim;            // codebook dimensions (elements per vector)
 		internal int entries;        // codebook entries

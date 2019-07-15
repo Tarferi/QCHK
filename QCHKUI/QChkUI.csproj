@@ -118,6 +118,7 @@
     <Compile Include="ReadBuffer.cs" />
     <Compile Include="Settings.cs" />
     <Compile Include="TheLib.cs" />
+    <Compile Include="UnsafeWriteBuffer.cs" />
     <Compile Include="WriteBuffer.cs" />
     <Page Include="MainWindow.xaml">
       <Generator>MSBuild:Compile</Generator>

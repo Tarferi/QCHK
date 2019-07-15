@@ -23,11 +23,9 @@
  */
 
 
-using System;
 
-namespace csvorbis 
-{
-	class EncodeAuxThreshMatch
+namespace csvorbis {
+    class EncodeAuxThreshMatch
 	{
 		internal float[] quantthresh = null;
 		internal int[]   quantmap = null;
