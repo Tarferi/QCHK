@@ -1,7 +1,10 @@
-﻿using QChkUI;
+﻿#if !DEBUG
+#define USE_MEMORY_MODULE
+#endif
+
+using QChkUI;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
 using System.Runtime.InteropServices;
 using System.Text;
@@ -17,87 +20,31 @@ namespace WpfApplication1 {
             this.mapSounds = mapSounds;
         }
     }
-    /*
-        public struct EUDSettings {
-            public unsafe char action;
-
-            public bool addTouchRevive;
-            public bool useDefaultGunShot;
-            public bool useDefaultBackgroundMusic;
-            public bool enableVisor;
-            public bool enableBarrier;
-            public bool addLeaderboard;
-            public bool addTimeLock;
-
-            public bool useSanctuaryColors;
-
-            public char[] GunShotWavFilePath;
-            public char[] VisorUsageFilePath;
-            public char[] BackgroundWavFilePath;
-
-            public char[] TimeLockMessage;
-            public char[] TimeLockFrom;
-            public char[] TimeLockTo;
-            public char[] inputFilePath;
-            public char[] outputFilePath;
-
-            public short EMPDamage;
-
-            public bool verbose;
-        }
-        */
-
-    [StructLayout(LayoutKind.Explicit)]
+   
     public unsafe struct EUDSettings {
-        [MarshalAs(UnmanagedType.U1), FieldOffset(0)]
-        public unsafe char action;
-
-        [MarshalAs(UnmanagedType.U1), FieldOffset(1)]
+        public unsafe byte action;
         public unsafe bool addTouchRevive;
-        [MarshalAs(UnmanagedType.U1), FieldOffset(2)]
         public unsafe bool useDefaultGunShot;
-        [MarshalAs(UnmanagedType.U1), FieldOffset(3)]
         public unsafe bool useDefaultBackgroundMusic;
-        [MarshalAs(UnmanagedType.U1), FieldOffset(4)]
         public unsafe bool enableVisor;
-        [MarshalAs(UnmanagedType.U1), FieldOffset(5)]
         public unsafe bool enableBarrier;
-        [MarshalAs(UnmanagedType.U1), FieldOffset(6)]
         public unsafe bool addLeaderboard;
-        [MarshalAs(UnmanagedType.U1), FieldOffset(7)]
         public unsafe bool addTimeLock;
-        [MarshalAs(UnmanagedType.U1), FieldOffset(8)]
         public unsafe bool useSanctuaryColors;
-        [MarshalAs(UnmanagedType.U1), FieldOffset(9)]
         public unsafe bool recalculateHPAndDamage;
-        [MarshalAs(UnmanagedType.U1), FieldOffset(10)]
         public unsafe bool muteUnits;
 
-        [FieldOffset(12)]
         public unsafe byte* GunShotWavFilePath;
-        [FieldOffset(16)]
         public unsafe byte* VisorUsageFilePath;
-        [FieldOffset(20)]
         public unsafe byte* BackgroundWavFilePath;
 
-        [FieldOffset(24)]
         public unsafe byte* TimeLockMessage;
-        [FieldOffset(28)]
         public unsafe byte* TimeLockFrom;
-        [FieldOffset(32)]
         public unsafe byte* TimeLockTo;
-        [FieldOffset(36)]
         public unsafe byte* inputFilePath;
-        [FieldOffset(40)]
         public unsafe byte* outputFilePath;
-
-        [MarshalAs(UnmanagedType.U2), FieldOffset(44)]
         public unsafe short EMPDamage;
-
-        [MarshalAs(UnmanagedType.U4), FieldOffset(46)]
         public unsafe int result;
-
-        [MarshalAs(UnmanagedType.U4), FieldOffset(52)]
         public unsafe byte* preferredUnitSettings;
     }
 
@@ -222,7 +169,7 @@ namespace WpfApplication1 {
     }
 
     class TheLib {
-
+       
         private static unsafe void run(EUDSettings* settings) {
             
             unsafe
@@ -230,72 +177,69 @@ namespace WpfApplication1 {
                 // Move to unmanaged memory
                 
                 //int dataSize = Marshal.SizeOf<EUDSettings>(settings);
-                int dataSize = 512; // Stupid but works
+
+                int dataSize = 1024; // Stupid but works
                 IntPtr ptr = Marshal.AllocHGlobal(dataSize);
-                EUDSettings* rawSettings = (EUDSettings*)ptr;
+                byte* data = (byte*)ptr;
+                UnsafeWriteBuffer wb = new UnsafeWriteBuffer(data);
+                wb.writeByte(settings->action);
+                wb.writeBool(settings->addTouchRevive);
+                wb.writeBool(settings->useDefaultGunShot);
+                wb.writeBool(settings->useDefaultBackgroundMusic);
+                wb.writeBool(settings->enableVisor);
+                wb.writeBool(settings->enableBarrier);
+                wb.writeBool(settings->addLeaderboard);
+                wb.writeBool(settings->addTimeLock);
 
-                rawSettings->action = settings->action;
+                wb.writeBool(settings->useSanctuaryColors);
 
-                rawSettings->addTouchRevive = settings->addTouchRevive;
-                rawSettings->useDefaultGunShot = settings->useDefaultGunShot;
-                rawSettings->useDefaultBackgroundMusic = settings->useDefaultBackgroundMusic;
-                rawSettings->enableVisor = settings->enableVisor;
-                rawSettings->enableBarrier = settings->enableBarrier;
-                rawSettings->addLeaderboard = settings->addLeaderboard;
-                rawSettings->addTimeLock = settings->addTimeLock;
-                rawSettings->muteUnits = settings->muteUnits;
+                wb.writeBool(settings->recalculateHPAndDamage);
+                wb.writeBool(settings->muteUnits);
 
-                rawSettings->useSanctuaryColors = settings->useSanctuaryColors;
+                wb.writeBytePtr(settings->GunShotWavFilePath);
+                wb.writeBytePtr(settings->VisorUsageFilePath);
+                wb.writeBytePtr(settings->BackgroundWavFilePath);
 
-                rawSettings->GunShotWavFilePath = settings->GunShotWavFilePath;
-                rawSettings->VisorUsageFilePath = settings->VisorUsageFilePath;
-                rawSettings->BackgroundWavFilePath = settings->BackgroundWavFilePath;
-                rawSettings->recalculateHPAndDamage = settings->recalculateHPAndDamage;
+                wb.writeBytePtr(settings->TimeLockMessage);
+                wb.writeBytePtr(settings->TimeLockFrom);
+                wb.writeBytePtr(settings->TimeLockTo);
+                wb.writeBytePtr(settings->inputFilePath);
+                wb.writeBytePtr(settings->outputFilePath);
 
-                rawSettings->TimeLockMessage = settings->TimeLockMessage;
-                rawSettings->TimeLockFrom = settings->TimeLockFrom;
-                rawSettings->TimeLockTo = settings->TimeLockTo;
-                rawSettings->inputFilePath = settings->inputFilePath;
-                rawSettings->outputFilePath = settings->outputFilePath;
+                wb.writeShort(settings->EMPDamage);
 
-                rawSettings->EMPDamage = settings->EMPDamage;
-
-                rawSettings->result = 0;
-                rawSettings->preferredUnitSettings = settings->preferredUnitSettings;
+                wb.writeInt(settings->result);
+                wb.writeBytePtr(settings->preferredUnitSettings);
 
                 // Process
-                IntPtr ms = (IntPtr)rawSettings;
+                IntPtr ms = (IntPtr)data;
                 Process(ms);
 
-                settings->action = rawSettings->action;
+                UnsafeReadBuffer rb = new UnsafeReadBuffer(data);
+                settings->action = (byte) rb.readByte();
+                settings->addTouchRevive = rb.readBool();
+                settings->useDefaultGunShot = rb.readBool();
+                settings->useDefaultBackgroundMusic = rb.readBool();
+                settings->enableVisor = rb.readBool();
+                settings->enableBarrier = rb.readBool();
+                settings->addLeaderboard = rb.readBool();
+                settings->addTimeLock = rb.readBool();
+                settings->useSanctuaryColors = rb.readBool();
+                settings->recalculateHPAndDamage = rb.readBool();
+                settings->muteUnits = rb.readBool();
 
-                settings->addTouchRevive = rawSettings->addTouchRevive;
-                settings->useDefaultGunShot = rawSettings->useDefaultGunShot;
-                settings->useDefaultBackgroundMusic = rawSettings->useDefaultBackgroundMusic;
-                settings->enableVisor = rawSettings->enableVisor;
-                settings->enableBarrier = rawSettings->enableBarrier;
-                settings->addLeaderboard = rawSettings->addLeaderboard;
-                settings->addTimeLock = rawSettings->addTimeLock;
+                settings->GunShotWavFilePath = rb.readBytePtr();
+                settings->VisorUsageFilePath = rb.readBytePtr();
+                settings->BackgroundWavFilePath = rb.readBytePtr();
 
-                settings->useSanctuaryColors = rawSettings->useSanctuaryColors;
-                settings->recalculateHPAndDamage = rawSettings->recalculateHPAndDamage;
-
-                settings->GunShotWavFilePath = rawSettings->GunShotWavFilePath;
-                settings->VisorUsageFilePath = rawSettings->VisorUsageFilePath;
-                settings->BackgroundWavFilePath = rawSettings->BackgroundWavFilePath;
-                settings->muteUnits = rawSettings->muteUnits;
-
-                settings->TimeLockMessage = rawSettings->TimeLockMessage;
-                settings->TimeLockFrom = rawSettings->TimeLockFrom;
-                settings->TimeLockTo = rawSettings->TimeLockTo;
-                settings->inputFilePath = rawSettings->inputFilePath;
-                settings->outputFilePath = rawSettings->outputFilePath;
-
-                settings->EMPDamage = rawSettings->EMPDamage;
-
-                settings->result = rawSettings->result;
-                settings->preferredUnitSettings = rawSettings->preferredUnitSettings;
-
+                settings->TimeLockMessage = rb.readBytePtr();
+                settings->TimeLockFrom = rb.readBytePtr();
+                settings->TimeLockTo = rb.readBytePtr();
+                settings->inputFilePath = rb.readBytePtr();
+                settings->outputFilePath = rb.readBytePtr();
+                settings->EMPDamage = (short) rb.readShort();
+                settings->result = rb.readInt();
+                settings->preferredUnitSettings = rb.readBytePtr();
                 Marshal.FreeHGlobal(ptr);
             }
         }
@@ -325,9 +269,42 @@ namespace WpfApplication1 {
             }
             return result;
         }
-        [DllImport("QCHK.dll", EntryPoint = "#1", CallingConvention = CallingConvention.Cdecl)]
-        protected static unsafe extern void Process(IntPtr settings);
-        
+
+#if !USE_MEMORY_MODULE
+        [DllImport("kernel32.dll")]
+        public static extern IntPtr LoadLibrary(string dllToLoad);
+
+        [DllImport("kernel32.dll")]
+        public static extern IntPtr GetProcAddress(IntPtr hModule, IntPtr procOrdinal);
+
+        [DllImport("kernel32.dll")]
+        public static extern bool FreeLibrary(IntPtr hModule);
+#endif
+
+        [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+        public delegate void ProcessFunc(IntPtr settings);
+
+        protected static unsafe void Process(IntPtr settings) {
+            if (_Process == null) {
+#if USE_MEMORY_MODULE
+              byte[] data = QChkUI.Properties.Resources.QCHK;
+                mem = new MemoryModule(data);
+                _Process = (ProcessFunc)mem.GetDelegateFromFuncName(0, typeof(ProcessFunc));
+#else
+                IntPtr pDll = LoadLibrary("QCHK.dll");
+                IntPtr pAddressOfFunctionToCall0 = GetProcAddress(pDll, (IntPtr)1);
+                _Process = (ProcessFunc)Marshal.GetDelegateForFunctionPointer(pAddressOfFunctionToCall0, typeof(ProcessFunc));
+#endif
+            }
+            _Process(settings);
+        }
+
+#if USE_MEMORY_MODULE
+        private static MemoryModule mem = null; // Memory module (if used)
+#endif
+        private static ProcessFunc _Process = null; // DLL Method
+
+
         public unsafe static SoundFiles getWavs(Settings settings) {
             if(settings.inpuPath == null) {
                 throw new Exception("Invalid file");
@@ -336,7 +313,7 @@ namespace WpfApplication1 {
             }
 
             EUDSettings es = new EUDSettings();
-            es.action = (char) 2;
+            es.action = (byte) 2;
             es.inputFilePath = toByteArray(settings.inpuPath);
             List<SoundFile> insides = new List<SoundFile>();
             List<SoundFile> maps = new List<SoundFile>();
@@ -347,7 +324,7 @@ namespace WpfApplication1 {
                 insides = fromListOfStringsFromBuffer("Native", rb, true, false);
                 maps = fromListOfStringsFromBuffer(new FileInfo(settings.inpuPath).Name, rb, false, true);
 
-                es.action = (char)3;
+                es.action = (byte)3;
                 run(&es); // Free the array data string
 
             } catch (Exception ex) {
@@ -373,9 +350,6 @@ namespace WpfApplication1 {
                 bytes[i] = (byte)str[i];
             }
             bytes[str.Length] = (byte)0;
-#if DEBUG
-            Debug.WriteLine("Allocating " + (str.Length + 1) + " bytes at " + (ptr) + " stored at " + ((int)bytes));
-#endif
             return bytes;
         }
 
@@ -385,9 +359,6 @@ namespace WpfApplication1 {
             byte* bytes = (byte*)ptr;
             UnsafeWriteBuffer wb = new UnsafeWriteBuffer(bytes);
             wb.writeData(data);
-#if DEBUG
-            Debug.WriteLine("Allocating " + (dataSize) + " bytes at " + (ptr) + " stored at " + ((int)bytes));
-#endif
             return bytes;
         }
 
@@ -396,15 +367,13 @@ namespace WpfApplication1 {
                 return;
             }
             IntPtr ptr = (IntPtr)str;
-#if DEBUG
-            Debug.WriteLine("Freeing bytes at " + (ptr) + " stored at " + ((int)str));
-#endif
             Marshal.FreeHGlobal(ptr);
         }
 
         public unsafe static void process(Settings settings) {
             EUDSettings es = new EUDSettings();
-            es.action = (char) 1;
+            es.action = (byte)1;
+            
             es.addTouchRevive = settings.addTouchRevive;
             es.useDefaultGunShot = settings.useDefaultGunfireSound;
             es.useDefaultBackgroundMusic = settings.useDefaultBackgroundSound;
@@ -430,9 +399,9 @@ namespace WpfApplication1 {
             es.result = 0;
             es.preferredUnitSettings = toByteArray(settings.preferredSettings);
             es.EMPDamage = (short) settings.EMPDamage;
-
+            
             run(&es);
-
+            
             killByteArray(es.GunShotWavFilePath);
             killByteArray(es.VisorUsageFilePath);
             killByteArray(es.BackgroundWavFilePath);
@@ -446,12 +415,12 @@ namespace WpfApplication1 {
             settings.result = es.result;
 
             killByteArray(es.preferredUnitSettings);
-
+            
         }
 
         public unsafe static int getFileDurationInMs(String filePath) {
             EUDSettings es = new EUDSettings();
-            es.action = (char)4;
+            es.action = (byte)4;
             es.outputFilePath = (byte*) 0;
             es.inputFilePath = toByteArray(filePath);
             try {
@@ -469,7 +438,7 @@ namespace WpfApplication1 {
 
         public unsafe static Slot[] getSlots(String filePath) {
             EUDSettings es = new EUDSettings();
-            es.action = (char)5;
+            es.action = (byte)5;
             es.outputFilePath = (byte*)0;
             es.inputFilePath = toByteArray(filePath);
             try {
@@ -485,7 +454,7 @@ namespace WpfApplication1 {
                     }
                 }
 
-                es.action = (char)3;
+                es.action = (byte)3;
                 run(&es); // Free the array data string
                 return ret;
             } catch (Exception) {
@@ -496,7 +465,7 @@ namespace WpfApplication1 {
 
         public unsafe static UnitSettings[] getUnitSettings(String filePath) {
             EUDSettings es = new EUDSettings();
-            es.action = (char)6;
+            es.action = (byte)6;
             es.outputFilePath = (byte*)0;
             es.inputFilePath = toByteArray(filePath);
             try {
@@ -515,7 +484,7 @@ namespace WpfApplication1 {
                     ret[i].weapon_damage = rb.readShortArray(130);
                     ret[i].upgrade_bonus = rb.readShortArray(130);
                 }
-                es.action = (char)3;
+                es.action = (byte)3;
                 run(&es); // Free the array data string
                 return ret;
             } catch (Exception) {

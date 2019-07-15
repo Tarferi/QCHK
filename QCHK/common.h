@@ -4,8 +4,17 @@
 #include <stdarg.h>
 #include "string.h"
 #include "miniz.h"
+#include <cstdint>
 
 //#define TRIG_PRINT
+
+typedef uint8_t uint8;
+typedef int8_t int8;
+typedef uint16_t uint16;
+typedef int16_t int16;
+typedef uint32_t uint32;
+typedef int32_t int32;
+typedef int8_t bool8;
 
 #define MALLOC(target, type, size, failBlock) target = (type*) malloc(sizeof(type)*(size)); if(!target){failBlock};
 
@@ -34,8 +43,14 @@ static int initValue = ARRAY_DEFAULT_SIZE;
 
 #ifdef DEBUG_LOG
 
-#define LOG_R(section, fmt, ...) \
-	do { fprintf(stderr, "[" section "] " fmt , __VA_ARGS__); } while (0);
+#define __LOG_SKIP(sectionName) _skip |= !strcmp(_section, sectionName);
+
+#define LOG_R(section, fmt, ...) {\
+	bool _skip=false;\
+	char* _section = (char*) section;\
+	__LOG_SKIP("HP REMAPPER")\
+	__LOG_SKIP("DAMAGE REMAPPER")\
+	if(!_skip){do { fprintf(stderr, "[" section "] " fmt , __VA_ARGS__); } while (0);}}
 
 #define LOG(section, fmt, ...) \
 		LOG_R(section, fmt "\n", __VA_ARGS__)

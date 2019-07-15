@@ -6,6 +6,9 @@ MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "QCHK", "QCHK\QCHK.vcxproj", "{A5A706B4-816E-4E07-8455-197B9161CB9C}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "QChkUI", "QCHKUI\QChkUI.csproj", "{6DBF97FF-6201-4058-849D-B9071DEE279C}"
+	ProjectSection(ProjectDependencies) = postProject
+		{A5A706B4-816E-4E07-8455-197B9161CB9C} = {A5A706B4-816E-4E07-8455-197B9161CB9C}
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

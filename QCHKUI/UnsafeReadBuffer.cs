@@ -62,5 +62,9 @@ namespace WpfApplication1 {
             }
             return data;
         }
+
+        public byte* readBytePtr() {
+            return (byte*)readInt();
+        }
     }
 }

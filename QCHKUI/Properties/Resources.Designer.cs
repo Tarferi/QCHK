@@ -59,5 +59,15 @@ namespace QChkUI.Properties {
                 resourceCulture = value;
             }
         }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Byte[].
+        /// </summary>
+        internal static byte[] QCHK {
+            get {
+                object obj = ResourceManager.GetObject("QCHK", resourceCulture);
+                return ((byte[])(obj));
+            }
+        }
     }
 }

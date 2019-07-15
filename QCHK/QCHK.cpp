@@ -4,12 +4,18 @@
 #include "stdafx.h"
 #include "QCHK.h"
 
+#ifndef _DEBUG
+#define _CRTDBG_MAP_ALLOC
+#include <stdlib.h>
+#include <crtdbg.h>
+#endif
+
 void processMap(EUDSettings* settings) {
 	bool error = false;
 	Storm* storm = new Storm(&error);
 
 	MapFile* v2F = storm->readSanc(&error);
-	MapFile* v3F = storm->readSCX(settings->inputFilePath, &error);
+	MapFile* v3F = storm->readSCX((char*) settings->inputFilePath, &error);
 	if (error || v2F == nullptr || v3F == nullptr) {
 		SET_ERROR_LOAD_FILE
 			settings->outputFilePath = nullptr;
@@ -78,7 +84,7 @@ void processMap(EUDSettings* settings) {
 	error |= !fix18_RelocateSTREUDSection(v2, v3, settings);
 
 
-	v2F->writeToFile(storm, settings->outputFilePath, &error);
+	v2F->writeToFile(storm, (char*)settings->outputFilePath, &error);
 	
 	if (error) {
 		SET_ERROR_PROCESS
@@ -103,8 +109,6 @@ void processMap(EUDSettings* settings) {
 	delete v2F;
 	delete v3F;
 	delete storm;
-
-
 }
 
 void collectIntoBuffer(Array<char*>* array, WriteBuffer* wb, bool* error) {
@@ -189,7 +193,7 @@ void loadWavs(EUDSettings* settings) {
 	settings->outputFilePath = nullptr;
 
 	MapFile* v2F = storm->readSanc(&error);
-	MapFile* v3F = storm->readSCX(settings->inputFilePath, &error);
+	MapFile* v3F = storm->readSCX((char*)settings->inputFilePath, &error);
 	if (error || v2F == nullptr || v3F == nullptr) {
 		SET_ERROR_LOAD_SECTION
 		settings->outputFilePath = nullptr;
@@ -251,7 +255,7 @@ void getSoundLength(EUDSettings* settings) {
 	int duration = 0;
 
 	FILE* f;
-	if (fopen_s(&f, settings->inputFilePath, "rb")) {
+	if (fopen_s(&f, (char*)settings->inputFilePath, "rb")) {
 		SET_ERROR_LOAD_FILE
 		return;
 	}
@@ -272,10 +276,10 @@ void getSoundLength(EUDSettings* settings) {
 		return;
 	}
 
-	if (ENDS_WIDTH(settings->inputFilePath, ".wav")) {
+	if (ENDS_WIDTH(((char*)settings->inputFilePath), ".wav")) {
 		duration = getWavLengthMs((char*) data, &error);
 	}
-	else if (ENDS_WIDTH(settings->inputFilePath, ".ogg")) {
+	else if (ENDS_WIDTH(((char*)settings->inputFilePath), ".ogg")) {
 		duration = getOggLengthMs((char*) data, size, &error);
 	}
 	if (error) {
@@ -295,7 +299,7 @@ void getForces(EUDSettings* settings) {
 	SET_NO_ERROR
 		settings->outputFilePath = nullptr;
 
-	MapFile* v3F = storm->readSCX(settings->inputFilePath, &error);
+	MapFile* v3F = storm->readSCX((char*)settings->inputFilePath, &error);
 	if (error) {
 		SET_ERROR_LOAD_FILE
 			delete v3F;
@@ -306,13 +310,13 @@ void getForces(EUDSettings* settings) {
 	CHK* v3 = v3F->getCHK();
 	if (v3 == nullptr) {
 		SET_ERROR_LOAD_FILE
-			LOG("QCHK", "Failed to load CHK from file \"%s\"", settings->inputFilePath);
+			LOG("QCHK", "Failed to load CHK from file \"%s\"", (char*) settings->inputFilePath);
 		return;
 	}
 	Section_OWNR* forc = (Section_OWNR*)v3->getSection("OWNR");
 	if (forc == nullptr) {
 		SET_ERROR_LOAD_SECTION
-			LOG("QCHK", "Failed to load CHK from file \"%s\"", settings->inputFilePath);
+			LOG("QCHK", "Failed to load CHK from file \"%s\"", (char*)settings->inputFilePath);
 		return;
 	}
 	GET_CLONED_DATA(result, char, forc->data, 12, { SET_ERROR_PROCESS error = true; });
@@ -334,7 +338,7 @@ void getRecalculatedData(EUDSettings* settings) {
 	SET_NO_ERROR
 	settings->outputFilePath = nullptr;
 
-	MapFile* v3F = storm->readSCX(settings->inputFilePath, &error);
+	MapFile* v3F = storm->readSCX((char*)settings->inputFilePath, &error);
 	if (error) {
 		SET_ERROR_LOAD_FILE
 		delete v3F;
@@ -345,13 +349,13 @@ void getRecalculatedData(EUDSettings* settings) {
 	CHK* v3 = v3F->getCHK();
 	if (v3 == nullptr) {
 		SET_ERROR_LOAD_FILE
-			LOG("QCHK", "Failed to load CHK from file \"%s\"", settings->inputFilePath);
+			LOG("QCHK", "Failed to load CHK from file \"%s\"", (char*)settings->inputFilePath);
 		return;
 	}
 	Section_UNIx* UNIx = (Section_UNIx*)v3->getSection("UNIx");
 	if (UNIx== nullptr) {
 		SET_ERROR_LOAD_SECTION
-		LOG("QCHK", "Failed to load CHK from file \"%s\"", settings->inputFilePath);
+		LOG("QCHK", "Failed to load CHK from file \"%s\"", (char*)settings->inputFilePath);
 		return;
 	}
 	WriteBuffer wb;
@@ -389,6 +393,8 @@ void getRecalculatedData(EUDSettings* settings) {
 }
 
 LIBRARY_API void __cdecl realize(EUDSettings* settings) {
+	fprintf(stderr, "QCHK Entry\n");
+	LOG("QCHK", "Received request to perform action %d", settings->action);
 	if (settings->action == 1) { // The main action
 		processMap(settings);
 	}
@@ -407,5 +413,9 @@ LIBRARY_API void __cdecl realize(EUDSettings* settings) {
 	else if (settings->action == 6) { // Get recalculated data
 		getRecalculatedData(settings);
 	}
+#ifndef _DEBUG
+	_CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
+	_CrtDumpMemoryLeaks();
+#endif
 }
 

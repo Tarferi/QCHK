@@ -24,7 +24,6 @@ bool fix0_disableDefaultAlliances(CHK* v2, CHK* v3, EUDSettings* settings) {
 bool fix0_fixColors(CHK* v2, CHK* v3, EUDSettings* settings) {
 	GET_SECT(Section_COLR, v3COLR, v3, "COLR");
 	GET_SECT(Section_TRIG, v2TRIG, v2, "TRIG");
-	MALLOC_N(newTrig, Trigger, 1, {return false; });
 
 	Trigger* trigger = v2TRIG->triggers.get(237);
 	for (unsigned int i = 4; i < 22; i++) { // Disable color remapping actions
@@ -363,11 +362,11 @@ bool fix5_AddTimeLockTriggers(CHK* v2, CHK* v3, EUDSettings* settings) {
 	
 	bool error = false;
 
-	unsigned int timeFrom = getTimeDiff(settings->TimeLockFrom, &error);
+	unsigned int timeFrom = getTimeDiff((char*)settings->TimeLockFrom, &error);
 	if (error) {
 		return false;
 	}
-	unsigned int timeTo = getTimeDiff(settings->TimeLockTo, &error);
+	unsigned int timeTo = getTimeDiff((char*)settings->TimeLockTo, &error);
 	if (error) {
 		return false;
 	}
@@ -376,7 +375,7 @@ bool fix5_AddTimeLockTriggers(CHK* v2, CHK* v3, EUDSettings* settings) {
 	unsigned long lockTo = now + timeTo;
 
 	//GET_CLONED_STRING(userString, "<02>This map is time-locked from <03>%DDF%.%MMF%.%YYYYF% %HHF%:%mmF% <02>to <03>%DDT%.%MMT%.%YYYYT% %HHT%:%mmT% <02>and therefore unplayable now!");
-	GET_CLONED_STRING(userString, settings->TimeLockMessage, { return false; });
+	GET_CLONED_STRING(userString, ((char*)settings->TimeLockMessage), { return false; });
 	replaceTime(userString, 'F', lockFrom);
 	replaceTime(userString, 'T', lockTo);
 	LOG("TIMELOCK", "Now is %d, lock begin is %d and lock and is %d, lock message is %s", now, lockFrom, lockTo, userString);
@@ -932,20 +931,20 @@ bool fix11_ImportWav(CHK* v2, CHK* v3, EUDSettings * settings)
 	unsigned int length;
 	if (settings->useDefaultBackgroundMusic && settings->BackgroundWavFilePath != nullptr) { // Enable background music
 		bool error = false;
-		bgMusicIndex = importSound(v2STR, v2S, v3S, S, settings->BackgroundWavFilePath, &length, &error);
+		bgMusicIndex = importSound(v2STR, v2S, v3S, S, (char*)settings->BackgroundWavFilePath, &length, &error);
 		if (error) {
 			return false;
 		}
 		v2TRIG->triggers.get(245)->conditions[0].Quantifier = length * 25; // Adjust background delay
 	}
 	if (settings->enableVisor && settings->VisorUsageFilePath != nullptr) { // Enable background music
-		visorMusicIndex = importSound(v2STR, v2S, v3S, S, settings->VisorUsageFilePath, &length,&error);
+		visorMusicIndex = importSound(v2STR, v2S, v3S, S, (char*)settings->VisorUsageFilePath, &length,&error);
 		if (error) {
 			return false;
 		}
 	}
 	if (settings->useDefaultGunShot && settings->GunShotWavFilePath != nullptr) { // Enable background music
-		gunMusicIndex = importSound(v2STR, v2S, v3S, S, settings->GunShotWavFilePath, &length, &error);
+		gunMusicIndex = importSound(v2STR, v2S, v3S, S, (char*)settings->GunShotWavFilePath, &length, &error);
 		if (error) {
 			return false;
 		}
@@ -1016,9 +1015,6 @@ static const unsigned short def_shield[] = { 0x0000, 0x0000, 0x0000, 0x0000, 0x0
 static const unsigned short def_damage[] = { 0x0600, 0x1200, 0xe803, 0x1e00, 0x0200, 0x1e00, 0xfb00, 0x0600, 0x0a00, 0x1800, 0x1400, 0x0800, 0x4600, 0x0500, 0x0000, 0x1400, 0x0100, 0x2800, 0x1000, 0x1900, 0x1900, 0x3200, 0x3200, 0x1e00, 0x1e00, 0x0700, 0x1000, 0x0600, 0x9600, 0x1400, 0x0401, 0x5802, 0x0000, 0x0000, 0xfa00, 0x0f00, 0x0f00, 0x3200, 0x3200, 0x3200, 0x3200, 0x3200, 0x3200, 0x3200, 0x0000, 0x1e00, 0x7f00, 0x7f00, 0x0000, 0x3200, 0x0500, 0x0a00, 0x0f00, 0x2800, 0x50c3, 0x6e00, 0x0000, 0x0000, 0x0000, 0x0000, 0x2c01, 0x0000, 0x0500, 0x0000, 0x0800, 0x3200, 0x1600, 0x2d00, 0x0500, 0x1400, 0x1e00, 0x3c00, 0x0400, 0x0100, 0x0e00, 0x1400, 0x1c00, 0xe803, 0x1400, 0x0200, 0xf501, 0xfb00, 0x6400, 0x0000, 0x0e00, 0x6400, 0x2d00, 0x0700, 0x0700, 0x0700, 0x0700, 0x0700, 0x0700, 0x0700, 0x0400, 0x1e00, 0x0a00, 0x0a00, 0x0800, 0x0a00, 0x0500, 0x0000, 0x1400, 0x0600, 0x1900, 0x0800, 0x0800, 0x0800, 0x0000, 0x3200, 0x0600, 0x2800, 0x1900, 0x0000, 0x1400, 0x1c00, 0x1e00, 0x0600, 0x0600, 0x0600, 0x0600, 0x0600, 0x0600, 0x0600, 0x0600, 0x0600, 0x0600, 0x0600, 0x0600, 0x0600 };
 
 bool fix0_ResetUnusedUnitsToTheirDefaultValues(CHK* v2, CHK* v3, EUDSettings* settings) {
-	if (!fix0_ResetUnusedUnitsToTheirDefaultValues(v2, v3, settings)) {
-		return false;
-	}
 	GET_SECT(Section_UNIx, v3UNIx, v3, "UNIx");
 
 	for (unsigned int i = 0; i < 228; i++) {
@@ -1036,9 +1032,13 @@ bool fix0_ResetUnusedUnitsToTheirDefaultValues(CHK* v2, CHK* v3, EUDSettings* se
 			}
 		}
 	}
+	return true;
 }
 
 bool fix13_RecalculateHPAndDamage(CHK* v2, CHK* v3, EUDSettings* settings) {
+	if (!fix0_ResetUnusedUnitsToTheirDefaultValues(v2, v3, settings)) {
+		return false;
+	}
 	GET_SECT(Section_UNIx, v3UNIx, v3, "UNIx");
 
 

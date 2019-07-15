@@ -11,37 +11,39 @@
 #define SET_ERROR_PROCESS SET_ERROR(3)
 #define SET_NO_ERROR settings->result = 0;
 
+#pragma pack(push, 1)
+ _declspec(align(1)) // Disable alignment
+struct EUDSettings {
 
-typedef struct EUDSettings {
+	uint8 action;
 
-	unsigned char action;
-
-	bool addTouchRevive;
-	bool useDefaultGunShot;
-	bool useDefaultBackgroundMusic;
-	bool enableVisor;
-	bool enableBarrier;
-	bool addLeaderboard;
-	bool addTimeLock;
+	bool8 addTouchRevive;
+	bool8 useDefaultGunShot;
+	bool8 useDefaultBackgroundMusic;
+	bool8 enableVisor;
+	bool8 enableBarrier;
+	bool8 addLeaderboard;
+	bool8 addTimeLock;
 	
-	bool useSanctuaryColors;
+	bool8 useSanctuaryColors;
 
-	bool recalculateHPAndDamage;
-	bool muteUnits;
+	bool8 recalculateHPAndDamage;
+	bool8 muteUnits;
 
-	char* GunShotWavFilePath;
-	char* VisorUsageFilePath;
-	char* BackgroundWavFilePath;
+	void* GunShotWavFilePath;
+	void* VisorUsageFilePath;
+	void* BackgroundWavFilePath;
 
-	char* TimeLockMessage;
-	char* TimeLockFrom;
-	char* TimeLockTo;
-	char* inputFilePath;
-	char* outputFilePath;
+	void* TimeLockMessage;
+	void* TimeLockFrom;
+	void* TimeLockTo;
+	void* inputFilePath;
+	void* outputFilePath;
 
-	unsigned short EMPDamage;
+	uint16 EMPDamage;
+	uint32 result;
 
-	unsigned int result;
-	char* preferredUnitSettings;
+	void* preferredUnitSettings;
 
-} EUDSettings;
+};
+#pragma pack(pop)

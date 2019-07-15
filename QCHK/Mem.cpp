@@ -5,18 +5,8 @@
 #include <winnt.h>
 #include <stddef.h>
 #include <tchar.h>
-#ifdef DEBUG_OUTPUT
-#include <stdio.h>
-#endif
 
 #if _MSC_VER
-// Disable warning about data -> function pointer conversion
-#pragma warning(disable:4055)
-// C4244: conversion from 'uintptr_t' to 'DWORD', possible loss of data.
-#pragma warning(error: 4244)
-// C4267: conversion from 'size_t' to 'int', possible loss of data.
-#pragma warning(error: 4267)
-
 #define inline __inline
 #endif
 
@@ -833,8 +823,7 @@ FARPROC MemoryGetProcAddress(HMEMORYMODULE mod, LPCSTR name)
 	return (FARPROC)(LPVOID)(codeBase + (*(DWORD *)(codeBase + exports->AddressOfFunctions + (idx * 4))));
 }
 
-void MemoryFreeLibrary(HMEMORYMODULE mod)
-{
+void MemoryFreeLibrary(HMEMORYMODULE mod) {
 	PMEMORYMODULE module = (PMEMORYMODULE)mod;
 
 	if (module == NULL) {
@@ -870,8 +859,7 @@ void MemoryFreeLibrary(HMEMORYMODULE mod)
 	HeapFree(GetProcessHeap(), 0, module);
 }
 
-int MemoryCallEntryPoint(HMEMORYMODULE mod)
-{
+int MemoryCallEntryPoint(HMEMORYMODULE mod) {
 	PMEMORYMODULE module = (PMEMORYMODULE)mod;
 
 	if (module == NULL || module->isDLL || module->exeEntry == NULL || !module->isRelocated) {
@@ -883,16 +871,11 @@ int MemoryCallEntryPoint(HMEMORYMODULE mod)
 
 #define DEFAULT_LANGUAGE        MAKELANGID(LANG_NEUTRAL, SUBLANG_NEUTRAL)
 
-HMEMORYRSRC MemoryFindResource(HMEMORYMODULE module, LPCTSTR name, LPCTSTR type)
-{
+HMEMORYRSRC MemoryFindResource(HMEMORYMODULE module, LPCTSTR name, LPCTSTR type) {
 	return MemoryFindResourceEx(module, name, type, DEFAULT_LANGUAGE);
 }
 
-static PIMAGE_RESOURCE_DIRECTORY_ENTRY _MemorySearchResourceEntry(
-	void *root,
-	PIMAGE_RESOURCE_DIRECTORY resources,
-	LPCTSTR key)
-{
+static PIMAGE_RESOURCE_DIRECTORY_ENTRY _MemorySearchResourceEntry(void *root, PIMAGE_RESOURCE_DIRECTORY resources, LPCTSTR key) {
 	PIMAGE_RESOURCE_DIRECTORY_ENTRY entries = (PIMAGE_RESOURCE_DIRECTORY_ENTRY)(resources + 1);
 	PIMAGE_RESOURCE_DIRECTORY_ENTRY result = NULL;
 	DWORD start;

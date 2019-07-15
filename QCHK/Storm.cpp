@@ -38,6 +38,8 @@ Storm::Storm(bool* error) {
 	SFileFinishFile = (SFileFinishFileF)MemoryGetProcAddress(this->lib, "SFileFinishFile");
 	SFileCreateArchive = (SFileCreateArchiveF)MemoryGetProcAddress(this->lib, "SFileCreateArchive");
 	SFileCloseArchive = (SFileCloseArchiveF)MemoryGetProcAddress(this->lib, "SFileCloseArchive");
+
+	LOG("STORM", "Storm library initiated");
 }
 
 Storm::~Storm() {
@@ -49,6 +51,7 @@ Storm::~Storm() {
 		MemoryFreeLibrary(this->lib);
 		this->lib = nullptr;
 	}
+	LOG("STORM", "Storm library uninitiated");
 }
 
 MapFile * Storm::readSCX(char * filePath, bool* error)
@@ -116,6 +119,7 @@ void process(char* fileName, unsigned int fileSize, char* data, unsigned int *po
 }
 
 MapFile * Storm::readSanc(bool* error) {
+	LOG("STORM", "Began reading sanc data");
 	char* decompressedSancData;
 	unsigned int decompressedSancDataLength;
 	decompress((char*) _acdata, 3279744UL + 1, &decompressedSancData, &decompressedSancDataLength, error);
@@ -140,6 +144,7 @@ MapFile * Storm::readSanc(bool* error) {
 	free(decompressedSancData);
 
 	MapFile* mf = new MapFile(filesContents, fileSizes, fileNames, error);
+	LOG("STORM", "Finished reading sanc data");
 	return mf;
 }
 
