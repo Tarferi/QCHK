@@ -181,7 +181,7 @@
                             <DataGrid.Columns >
                                 <DataGridTextColumn x:Name="us_Name"  Width="*" Header="Unit name" Binding="{Binding unitName}" IsReadOnly="True" MinWidth="50" />
 
-                                <DataGridTextColumn x:Name="us_rhp" Header="HP" Binding="{Binding rawHP}" MinWidth="40" >
+                                <DataGridTextColumn IsReadOnly="True"  x:Name="us_rhp" Header="HP" Binding="{Binding rawHP}" MinWidth="40" >
                                     <DataGridTextColumn.CellStyle>
                                         <Style TargetType="DataGridCell">
                                             <Setter Property="BorderBrush" Value="Black" />
