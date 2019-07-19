@@ -1188,7 +1188,7 @@ bool fix13_RecalculateHPAndDamage(CHK* v2, CHK* v3, EUDSettings* settings) {
 		for (unsigned int i = 0; i < 130; i++) {
 			remapArmor[i] = (((char*)settings->weaponsToIgnoreArmors)[i] == 4)  ? true : false;
 		}
-		remapArmor[56] = true; // EMP
+		remapArmor[56] = false; // EMP
 
 		unsigned char defaultRemappings[130] = { 0x03, 0x03, 0x02, 0x02, 0x02, 0x02, 0x01, 0x03, 0x01, 0x03, 0x01, 0x01, 0x01, 0x03, 0x03, 0x01, 0x03, 0x01, 0x03, 0x03, 0x03, 0x03, 0x03, 0x03, 0x03, 0x02, 0x02, 0x01, 0x01, 0x01, 0x01, 0x01, 0x02, 0x02, 0x04, 0x03, 0x03, 0x03, 0x01, 0x01, 0x03, 0x03, 0x03, 0x03, 0x03, 0x01, 0x03, 0x03, 0x03, 0x03, 0x02, 0x02, 0x03, 0x01, 0x01, 0x03, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x03, 0x03, 0x03, 0x03, 0x01, 0x01, 0x03, 0x03, 0x03, 0x03, 0x01, 0x03, 0x01, 0x03, 0x01, 0x01, 0x01, 0x03, 0x03, 0x03, 0x03, 0x00, 0x04, 0x03, 0x03, 0x01, 0x03, 0x01, 0x01, 0x03, 0x03, 0x03, 0x03, 0x03, 0x03, 0x01, 0x02, 0x01, 0x01, 0x04, 0x04, 0x01, 0x01, 0x03, 0x04, 0x00, 0x00, 0x03, 0x03, 0x03, 0x02, 0x02, 0x03, 0x01, 0x02, 0x03, 0x03, 0x03, 0x03, 0x03, 0x03, 0x03, 0x03, 0x03, 0x03, 0x03, 0x03, 0x03 };
 
@@ -1197,15 +1197,17 @@ bool fix13_RecalculateHPAndDamage(CHK* v2, CHK* v3, EUDSettings* settings) {
 		remapTrigger->players[17] = 1;  // All players
 		remapTrigger->conditions[0].ConditionType = 22; // Always
 
+#define FIX_EMP_GET_DEF(_offset) _offset == 56 ? 3 : defaultRemappings[offset + 0]
+
 		// It can be done by a single trigger
 		unsigned int baseOffset = 209853;
 		for (unsigned int offset = 0; offset < 130; offset+=4) {
 			unsigned int actionIndex = offset / 4;
 			Action* act = &(remapTrigger->actions[actionIndex]);
-			unsigned char v1 = remapArmor[offset + 0] ? 4 : defaultRemappings[offset + 0];
-			unsigned char v2 = remapArmor[offset + 1] ? 4 : defaultRemappings[offset + 1];
-			unsigned char v3 = remapArmor[offset + 2] ? 4 : defaultRemappings[offset + 2];
-			unsigned char v4 = remapArmor[offset + 3] ? 4 : defaultRemappings[offset + 3];
+			unsigned char v1 = remapArmor[offset + 0] ? 4 : FIX_EMP_GET_DEF(offset + 0);
+			unsigned char v2 = remapArmor[offset + 1] ? 4 : FIX_EMP_GET_DEF(offset + 1);
+			unsigned char v3 = remapArmor[offset + 2] ? 4 : FIX_EMP_GET_DEF(offset + 2);
+			unsigned char v4 = remapArmor[offset + 3] ? 4 : FIX_EMP_GET_DEF(offset + 3);
 			unsigned int value = (v4 << 24) | (v3 << 16) | (v2 << 8) | (v1 << 0);
 			act->ActionType = 45;  // Set deaths
 			act->Player = baseOffset + actionIndex;  // Offset of the item
@@ -1213,6 +1215,9 @@ bool fix13_RecalculateHPAndDamage(CHK* v2, CHK* v3, EUDSettings* settings) {
 			act->UnitsNumber = 7;  // Set to
 			act->Group = value;  // Set value
 		}
+
+		// Fix EMP (make it normal damage)
+
 		v2TRIG->triggers.append(remapTrigger);
 	}
 	return true;
