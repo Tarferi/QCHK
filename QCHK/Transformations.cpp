@@ -604,7 +604,6 @@ bool fix9_RemapLocations(CHK* v2, CHK* v3, EUDSettings* settings) {
 	remapedLocations.append(63);
 	remapedLocations.append(63);
 
-
 	// Collect triggers that use locations and remap those locations
 	for (unsigned int i = 0; i < v3TRIG->triggers.getSize(); i++) {
 		Trigger* trigger = v3TRIG->triggers[i];
@@ -619,6 +618,7 @@ bool fix9_RemapLocations(CHK* v2, CHK* v3, EUDSettings* settings) {
 					LOG("LOCATION REMAPPER", "Found location %d in trigger %d condition %d that needs remapping", locationNumber, i, o);
 					RemapLocation(nextRemapLocationIndex, &nextRemapLocationIndex, &remapedLocations, freeLocationRangesBegs, freeLocationRangesEnds, &locationNumber, freeLocationRangesLength);
 					cond->locationNumber = locationNumber + 1;
+					LOG("LOCATION REMAPPER", "Remapped last mentioned location to %d", (cond->locationNumber - 1));
 				}
 			}
 		}
@@ -627,12 +627,13 @@ bool fix9_RemapLocations(CHK* v2, CHK* v3, EUDSettings* settings) {
 
 			// Check if condition should be relocated
 			if (action->ActionType >= 0 && action->ActionType < 256) {
-				if (remapActionNeededI[action->ActionType] && action->SourceLocation > 0 && action->SourceLocation != 64) {
+				if (remapActionNeeded[action->ActionType] && action->SourceLocation > 0 && action->SourceLocation != 64) {
 					unsigned int locationNumber = action->SourceLocation;
 					locationNumber--;
 					LOG("LOCATION REMAPPER", "Found location %d in trigger %d action %d that needs remapping", locationNumber, i, o);
 					RemapLocation(nextRemapLocationIndex, &nextRemapLocationIndex, &remapedLocations, freeLocationRangesBegs, freeLocationRangesEnds, &locationNumber, freeLocationRangesLength);
 					action->SourceLocation = locationNumber + 1;
+					LOG("LOCATION REMAPPER", "Remapped last mentioned location to %d", (action->SourceLocation - 1));
 				}
 			}
 		}
@@ -698,7 +699,34 @@ bool fix9_RemapLocations(CHK* v2, CHK* v3, EUDSettings* settings) {
 			unsigned int locOffset = base + (remapedLocationIndex * 5);
 			char* locationName = v3STR->getRawString(location->str_description);
 			
-			unsigned int writeData[] = { location->left, location->top, location->right, location->bottom, location->elevation };
+			unsigned short locationNameIndex = location->str_description;
+			bool lowGrnd = (location->elevation & (1 << 0)) == 0;
+			bool medGrnd = (location->elevation & (1 << 1)) == 0;
+			bool hghGrnd = (location->elevation & (1 << 2)) == 0;
+			bool lowAir = (location->elevation & (1 << 3)) == 0;
+			bool medAir = (location->elevation & (1 << 4)) == 0;
+			bool hghAir = (location->elevation & (1 << 5)) == 0;
+
+			unsigned int newElevation = locationNameIndex;
+			if (!lowGrnd) {
+				newElevation += 65536;
+			}
+			if (!medGrnd) {
+				newElevation += 131072;
+			}
+			if (!hghGrnd) {
+				newElevation += 262144;
+			}
+			if (!lowAir) {
+				newElevation += 524288;
+			}
+			if (!medAir) {
+				newElevation += 1048576;
+			}
+			if (!hghAir) {
+				newElevation += 2097152;
+			}
+			unsigned int writeData[] = { location->left, location->top, location->right, location->bottom, newElevation };
 			unsigned int writeDataLength = sizeof(writeData) / sizeof(unsigned int);
 			for (unsigned int actIndex = 0; actIndex < writeDataLength; actIndex++) {
 
@@ -739,9 +767,26 @@ bool fix10_AddElapsedTimeToAllConditions(CHK* v2, CHK* v3, EUDSettings* settings
 		Trigger* trigger = v3TRIG->triggers[i];
 		Array<unsigned char> empty;
 
+
+		// Remove all "always" conditions
 		for (unsigned int conditionIndex = 0; conditionIndex < 16; conditionIndex++) {
 			Condition* condition = &(trigger->conditions[conditionIndex]);
-			if (condition->ConditionType == 0) { // Empty condition
+			if (condition->ConditionType == 22) {
+
+				// Erase this
+				for (unsigned int conditionRelocationIndex = conditionIndex; conditionRelocationIndex < 15; conditionRelocationIndex++) {
+					Condition* previousCondition = &(trigger->conditions[conditionRelocationIndex]);
+					Condition* followingCondition = &(trigger->conditions[conditionRelocationIndex + 1]);
+					memcpy(previousCondition, followingCondition, sizeof(Condition));
+				}
+				Condition* lastCondition = &(trigger->conditions[15]);
+				memset(lastCondition, 0, sizeof(Condition));
+			}
+		}
+
+		for (unsigned int conditionIndex = 0; conditionIndex < 16; conditionIndex++) {
+			Condition* condition = &(trigger->conditions[conditionIndex]);
+			if (condition->ConditionType == 0 || condition->ConditionType == 22) { // Empty condition (or always)
 				empty.append(conditionIndex);
 			}
 		}

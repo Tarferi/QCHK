@@ -133,8 +133,15 @@
       <ImportLibrary />
     </Link>
     <PostBuildEvent>
-      <Command>copy /B /Y "$(OutDir)\$(ProjectName).dll" "$(SolutionDir)QCHKUI\Resources\$(ProjectName).dll"</Command>
+      <Command>copy /B /Y "$(OutDir)\$(ProjectName).dll" "$(SolutionDir)QCHKUI\Resources\$(ProjectName).dll"
+copy /B /Y "$(OutDir)\$(ProjectName).dll" "$(SolutionDir)QCHKUI\Release\$(ProjectName).dll"
+</Command>
     </PostBuildEvent>
+    <PreBuildEvent>
+      <Command>del /S "$(SolutionDir)QCHKUI\Resources\$(ProjectName).dll"
+del /S "$(SolutionDir)QCHKUI\Release\$(ProjectName).dll"
+</Command>
+    </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
