@@ -44,6 +44,7 @@ struct EUDSettings {
 	uint32 result;
 
 	void* preferredUnitSettings;
+	void* weaponsToIgnoreArmors;
 
 };
 #pragma pack(pop)

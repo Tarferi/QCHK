@@ -46,6 +46,7 @@ namespace WpfApplication1 {
         public unsafe short EMPDamage;
         public unsafe int result;
         public unsafe byte* preferredUnitSettings;
+        public unsafe byte* ignoreArmors;
     }
 
     public struct UnitSettings {
@@ -210,6 +211,7 @@ namespace WpfApplication1 {
 
                 wb.writeInt(settings->result);
                 wb.writeBytePtr(settings->preferredUnitSettings);
+                wb.writeBytePtr(settings->ignoreArmors);
 
                 // Process
                 IntPtr ms = (IntPtr)data;
@@ -240,6 +242,7 @@ namespace WpfApplication1 {
                 settings->EMPDamage = (short) rb.readShort();
                 settings->result = rb.readInt();
                 settings->preferredUnitSettings = rb.readBytePtr();
+                settings->ignoreArmors = rb.readBytePtr();
                 Marshal.FreeHGlobal(ptr);
             }
         }
@@ -353,6 +356,18 @@ namespace WpfApplication1 {
             return bytes;
         }
 
+        private static unsafe byte* toByteArray(byte[] data) {
+            if (data == null) {
+                return (byte*)0;
+            }
+            IntPtr ptr = Marshal.AllocHGlobal(data.Length);
+            byte* bytes = (byte*)ptr;
+            for (int i = 0; i < data.Length; i++) {
+                bytes[i] = (byte)data[i];
+            }
+            return bytes;
+        }
+
         private static unsafe byte* toByteArray(UnitSettings data) {
             int dataSize = 4168;
             IntPtr ptr = Marshal.AllocHGlobal(dataSize);
@@ -399,6 +414,7 @@ namespace WpfApplication1 {
             es.result = 0;
             es.preferredUnitSettings = toByteArray(settings.preferredSettings);
             es.EMPDamage = (short) settings.EMPDamage;
+            es.ignoreArmors = toByteArray(settings.ignoreArmors);
             
             run(&es);
             
@@ -415,6 +431,7 @@ namespace WpfApplication1 {
             settings.result = es.result;
 
             killByteArray(es.preferredUnitSettings);
+            killByteArray(es.ignoreArmors);
             
         }
 

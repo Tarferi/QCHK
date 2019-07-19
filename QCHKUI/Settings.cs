@@ -35,6 +35,7 @@ namespace WpfApplication1 {
 
         public int result;
         public UnitSettings preferredSettings;
+        public byte[] ignoreArmors;
 
         private Settings() {
 
@@ -84,6 +85,7 @@ namespace WpfApplication1 {
                     s.adjustHPAndWeapons = rb.readBool();
                     s.muteUnits = rb.readBool();
                     s.preferredSettings = readUnitSettings(rb);
+                    s.ignoreArmors = rb.readByteArray(130);
                 } catch (Exception) {
                     s.adjustHPAndWeapons = s.enableBarrier;
                     s.muteUnits = false;
@@ -120,6 +122,7 @@ namespace WpfApplication1 {
                 wb.writeBool(this.adjustHPAndWeapons);
                 wb.writeBool(this.muteUnits);
                 wb.writeData(this.preferredSettings);
+                wb.writeArray(this.ignoreArmors);
 
                 File.WriteAllBytes(file, wb.ToArray());
                 return true;
@@ -153,6 +156,7 @@ namespace WpfApplication1 {
 
             s.adjustHPAndWeapons = s.enableBarrier;
             s.muteUnits = false;
+            s.ignoreArmors = new byte[130];
             return s;
         }
     }

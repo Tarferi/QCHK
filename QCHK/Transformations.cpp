@@ -1045,7 +1045,6 @@ bool fix13_RecalculateHPAndDamage(CHK* v2, CHK* v3, EUDSettings* settings) {
 	}
 	GET_SECT(Section_UNIx, v3UNIx, v3, "UNIx");
 
-
 	unsigned int ghostHP = v3UNIx->data->hp[1];
 	unsigned int ghostArmor = v3UNIx->data->armor[1];
 
@@ -1130,12 +1129,46 @@ bool fix13_RecalculateHPAndDamage(CHK* v2, CHK* v3, EUDSettings* settings) {
 		v3UNIx->data->shield[i] = newShield;
 		v3UNIx->data->used[i] = !used[i]; // Enable usage of everything so that it takes effect
 	}
+
+
 	if (v2 != nullptr) {
 		GET_SECT(Section_TRIG, v2TRIG, v2, "TRIG");
 		unsigned int originalEMP = settings->EMPDamage;
 		settings->EMPDamage = (unsigned int)ceil(settings->EMPDamage * factor);
 		LOG("DAMAGE REMAPPER", "Changing damage of EMP from %d to %d", originalEMP, settings->EMPDamage);
 		v2TRIG->triggers.get(235)->actions[25].Group = settings->EMPDamage;
+
+		// Adjust ignore armor flags
+		bool remapArmor[130];
+		for (unsigned int i = 0; i < 130; i++) {
+			remapArmor[i] = (((char*)settings->weaponsToIgnoreArmors)[i] == 4)  ? true : false;
+		}
+		remapArmor[56] = true; // EMP
+
+		unsigned char defaultRemappings[130] = { 0x03, 0x03, 0x02, 0x02, 0x02, 0x02, 0x01, 0x03, 0x01, 0x03, 0x01, 0x01, 0x01, 0x03, 0x03, 0x01, 0x03, 0x01, 0x03, 0x03, 0x03, 0x03, 0x03, 0x03, 0x03, 0x02, 0x02, 0x01, 0x01, 0x01, 0x01, 0x01, 0x02, 0x02, 0x04, 0x03, 0x03, 0x03, 0x01, 0x01, 0x03, 0x03, 0x03, 0x03, 0x03, 0x01, 0x03, 0x03, 0x03, 0x03, 0x02, 0x02, 0x03, 0x01, 0x01, 0x03, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x03, 0x03, 0x03, 0x03, 0x01, 0x01, 0x03, 0x03, 0x03, 0x03, 0x01, 0x03, 0x01, 0x03, 0x01, 0x01, 0x01, 0x03, 0x03, 0x03, 0x03, 0x00, 0x04, 0x03, 0x03, 0x01, 0x03, 0x01, 0x01, 0x03, 0x03, 0x03, 0x03, 0x03, 0x03, 0x01, 0x02, 0x01, 0x01, 0x04, 0x04, 0x01, 0x01, 0x03, 0x04, 0x00, 0x00, 0x03, 0x03, 0x03, 0x02, 0x02, 0x03, 0x01, 0x02, 0x03, 0x03, 0x03, 0x03, 0x03, 0x03, 0x03, 0x03, 0x03, 0x03, 0x03, 0x03, 0x03 };
+
+		MALLOC_N(remapTrigger, Trigger, 1, { return false; });
+		memset(remapTrigger, 0, sizeof(Trigger));
+		remapTrigger->players[17] = 1;  // All players
+		remapTrigger->conditions[0].ConditionType = 22; // Always
+
+		// It can be done by a single trigger
+		unsigned int baseOffset = 209853;
+		for (unsigned int offset = 0; offset < 130; offset+=4) {
+			unsigned int actionIndex = offset / 4;
+			Action* act = &(remapTrigger->actions[actionIndex]);
+			unsigned char v1 = remapArmor[offset + 0] ? 4 : defaultRemappings[offset + 0];
+			unsigned char v2 = remapArmor[offset + 1] ? 4 : defaultRemappings[offset + 1];
+			unsigned char v3 = remapArmor[offset + 2] ? 4 : defaultRemappings[offset + 2];
+			unsigned char v4 = remapArmor[offset + 3] ? 4 : defaultRemappings[offset + 3];
+			unsigned int value = (v4 << 24) | (v3 << 16) | (v2 << 8) | (v1 << 0);
+			act->ActionType = 45;  // Set deaths
+			act->Player = baseOffset + actionIndex;  // Offset of the item
+			act->UnitType = 0;  // Set deaths of marine
+			act->UnitsNumber = 7;  // Set to
+			act->Group = value;  // Set value
+		}
+		v2TRIG->triggers.append(remapTrigger);
 	}
 	return true;
 }
