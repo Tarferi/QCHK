@@ -15,6 +15,8 @@ bool fix0_relocateStrings(CHK* v2, CHK* v3, EUDSettings* settings);
 
 bool fix0_ResetUnusedUnitsToTheirDefaultValues(CHK* v2, CHK* v3, EUDSettings* settings);
 
+bool fix0_muteSounds(CHK* v2, CHK* v3, EUDSettings* settings);
+
 bool fix1_FixDeathsLabel(CHK* v2, CHK* v3, EUDSettings* settings);
 
 bool fix1_DisableLeaderboard(CHK* v2, CHK* v3, EUDSettings* settings);

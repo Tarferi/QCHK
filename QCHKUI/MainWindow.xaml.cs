@@ -115,6 +115,7 @@ namespace WpfApplication1 {
                 btnUSUseRecalc.IsEnabled = true;
                 btnUSUseRecalcSel.IsEnabled = true;
                 lstUnitSettings.IsEnabled = true;
+                checkUSShowUnavailable.IsEnabled = true;
             }
         }
 
@@ -180,7 +181,7 @@ namespace WpfApplication1 {
             btnUSUseRecalc.IsEnabled = false;
             btnUSUseRecalcSel.IsEnabled = false;
             lstUnitSettings.IsEnabled = false;
-            
+            checkUSShowUnavailable.IsEnabled = false;
         }
 
         private int __getSoundIndex(String name) {
@@ -745,14 +746,19 @@ namespace WpfApplication1 {
             US_copyRecalculated(new int[] { 0 }, new int[] { 228 });
         }
 
-        private void updateUnitSetingsFilter(bool _checked) {
+        private void updateUnitSetingsFilter() {
             ICollectionView Itemlist = CollectionViewSource.GetDefaultView(unitSettingsLst);
             Predicate<object> predicate;
-            if (checkUSShotUnused.IsChecked == true) {
+            bool showUnused = checkUSShotUnused == null ? true : (bool)checkUSShotUnused.IsChecked;
+            bool showUnavailable = checkUSShowUnavailable == null ? true : (bool) checkUSShowUnavailable.IsChecked;
+            if(showUnused && showUnavailable) { // Show all
                 predicate = new Predicate<object>(item => (true));
-            } else {
+            } else if(showUnused && !showUnavailable) { // Hide unavailable
+                predicate = new Predicate<object>(item => ((UniSetting)item).isAvailable);
+            } else if(!showUnused && showUnavailable) { // Hide unused
                 predicate = new Predicate<object>(item => ((UniSetting)item).isUsed);
-
+            } else { // Hide unused or unavailable
+                predicate = new Predicate<object>(item => ((UniSetting)item).isAvailable && ((UniSetting)item).isUsed);
             }
             Itemlist.Filter = predicate;
             lstUnitSettings.ItemsSource = null;
@@ -760,11 +766,11 @@ namespace WpfApplication1 {
         }
 
         private void checkUSShotUnused_Checked(object sender, RoutedEventArgs e) {
-            updateUnitSetingsFilter(true);
+            updateUnitSetingsFilter();
         }
 
         private void checkUSShotUnused_Unchecked(object sender, RoutedEventArgs e) {
-            updateUnitSetingsFilter(false);
+            updateUnitSetingsFilter();
         }
 
         private void btnUSUseAll_Click(object sender, RoutedEventArgs e) {
@@ -824,6 +830,14 @@ namespace WpfApplication1 {
             US_use(false, firsts, getSelLasts());
             setSelecteds(firsts);
         }
+
+        private void checkUSShowUnavailable_Unchecked(object sender, RoutedEventArgs e) {
+            updateUnitSetingsFilter();
+        }
+
+        private void checkUSShowUnavailable_Checked(object sender, RoutedEventArgs e) {
+            updateUnitSetingsFilter();
+        }
     }
 
     public class UniSetting {
@@ -854,20 +868,9 @@ namespace WpfApplication1 {
         public bool canChangeWeapon { get { return hasWeapon; } set { } }
 
         public bool rawIgnoreArmor { get { return hasWeapon ? (defaultUseArmor[_weaponID] == 4) : false; } set { } }
-        public bool proposedIgnoreArmor {
-            get {
-                return hasWeapon ? (settings.ignoreArmors[_weaponID] == 4)  : false;
-            }
-            set {
-                if (hasWeapon) {
-                    if (value) {
-                        settings.ignoreArmors[_weaponID] = 4;
-                    } else {
-                        settings.ignoreArmors[_weaponID] = 3;
-                    }
-                }
-            }
-        }
+        public bool proposedIgnoreArmor { get { return hasWeapon ? (settings.ignoreArmors[_weaponID] == 4)  : false; } set { if (hasWeapon) {settings.ignoreArmors[_weaponID] = (byte)(value ? 4 : 3);} } }
+
+        public bool isAvailable { get { return availables[unitID]; } set { } }
 
         private short _weaponID;
 
@@ -883,6 +886,7 @@ namespace WpfApplication1 {
         private static readonly String[] weaponNames = new String[] { "Gauss Rifle (Normal)", "Gauss Rifle (Jim Raynor-Marine)", "C-10 Concussion Rifle (Normal)", "C-10 Concussion Rifle (Sarah Kerrigan)", "Fragmentation Grenade (Normal)", "Fragmentation Grenade (Jim Raynor-Vulture)", "Spider Mines", "Twin Autocannons (Normal)", "Hellfire Missile Pack (Normal)", "Twin Autocannons (Alan Schezar)", "Hellfire Missile Pack (Alan Schezar)", "Arclite Cannon (Normal)", "Arclite Cannon (Edmund Duke)", "Fusion Cutter", "Fusion Cutter (Harvest)", "Gemini Missiles (Normal)", "Burst Lasers (Normal)", "Gemini Missiles (Tom Kazansky)", "Burst Lasers (Tom Kazansky)", "ATS Laser Battery (Normal)", "ATA Laser Battery (Normal)", "ATS Laser Battery (Norad II+Mengsk+DuGalle)", "ATA Laser Battery (Norad II+Mengsk+DuGalle)", "ATS Laser Battery (Hyperion)", "ATA Laser Battery (Hyperion)", "Flame Thrower (Normal)", "Flame Thrower (Gui Montag)", "Arclite Shock Cannon (Normal)", "Arclite Shock Cannon (Edmund Duke)", "Longbolt Missiles", "Yamato Gun", "Nuclear Missile", "Lockdown", "EMP Shockwave", "Irradiate", "Claws (Normal)", "Claws (Devouring One)", "Claws (Infested Kerrigan)", "Needle Spines (Normal)", "Needle Spines (Hunter Killer)", "Kaiser Blades (Normal)", "Kaiser Blades (Torrasque)", "Toxic Spores (Broodling)", "Spines", "Spines (Harvest)", "Acid Spray (Unused)", "Acid Spore (Normal)", "Acid Spore (Kukulza-Guardian)", "Glave Wurm (Normal)", "Glave Wurm (Kukulza-Mutalisk)", "Venom (Unused-Defiler)", "Venom (Unused-Defiler Hero)", "Seeker Spores", "Subterranean Tentacle", "Suicide (Infested Terran)", "Suicide (Scourge)", "Parasite", "Spawn Broodlings", "Ensnare", "Dark Swarm", "Plague", "Consume", "Particle Beam", "Particle Beam (Harvest)", "Psi Blades (Normal)", "Psi Blades (Fenix-Zealot)", "Phase Disruptor (Normal)", "Phase Disruptor (Fenix-Dragoon)", "Psi Assault (Normal-Unused)", "Psi Assault (Tassadar+Aldaris)", "Psionic Shockwave (Normal)", "Psionic Shockwave (Tassadar/Zeratul Archon)", "Unknown72", "Dual Photon Blasters (Normal)", "Anti-matter Missiles (Normal)", "Dual Photon Blasters (Mojo)", "Anit-matter Missiles (Mojo)", "Phase Disruptor Cannon (Normal)", "Phase Disruptor Cannon (Danimoth)", "Pulse Cannon", "STS Photon Cannon", "STA Photon Cannon", "Scarab", "Stasis Field", "Psi Storm", "Warp Blades (Zeratul)", "Warp Blades (Dark Templar Hero)", "Missiles (Unused)", "Laser Battery1 (Unused)", "Tormentor Missiles (Unused)", "Bombs (Unused)", "Raider Gun (Unused)", "Laser Battery2 (Unused)", "Laser Battery3 (Unused)", "Dual Photon Blasters (Unused)", "Flechette Grenade (Unused)", "Twin Autocannons (Floor Trap)", "Hellfire Missile Pack (Wall Trap)", "Flame Thrower (Wall Trap)", "Hellfire Missile Pack (Floor Trap)", "Neutron Flare", "Disruption Web", "Restoration", "Halo Rockets", "Corrosive Acid", "Mind Control", "Feedback", "Optical Flare", "Maelstrom", "Subterranean Spines", "Gauss Rifle0 (Unused)", "Warp Blades (Normal)", "C-10 Concussion Rifle (Samir Duran)", "C-10 Concussion Rifle (Infested Duran)", "Dual Photon Blasters (Artanis)", "Anti-matter Missiles (Artanis)", "C-10 Concussion Rifle (Alexei Stukov)", "Gauss Rifle1 (Unused)", "Gauss Rifle2 (Unused)", "Gauss Rifle3 (Unused)", "Gauss Rifle4 (Unused)", "Gauss Rifle5 (Unused)", "Gauss Rifle6 (Unused)", "Gauss Rifle7 (Unused)", "Gauss Rifle8 (Unused)", "Gauss Rifle9 (Unused)", "Gauss Rifle10 (Unused)", "Gauss Rifle11 (Unused)", "Gauss Rifle12 (Unused)", "Gauss Rifle13 (Unused)"};
         private static readonly short[] weaponMapping = new short[] { 0x00, 0x02, 0x04, 0x82, 0x07, 0x82, 0x0b, 0x0d, 0x10, 0x82, 0x1a, 0x82, 0x13, 0x06, 0x82, 0x82, 0x03, 0x82, 0x09, 0x05, 0x01, 0x12, 0x82, 0x82, 0x0c, 0x82, 0x1c, 0x15, 0x17, 0x15, 0x82, 0x1b, 0x19, 0x82, 0x82, 0x82, 0x82, 0x23, 0x26, 0x28, 0x2a, 0x2b, 0x82, 0x30, 0x2e, 0x82, 0x82, 0x82, 0x29, 0x82, 0x36, 0x25, 0x82, 0x27, 0x24, 0x31, 0x2f, 0x82, 0x82, 0x82, 0x82, 0x6f, 0x82, 0x82, 0x3e, 0x40, 0x42, 0x82, 0x46, 0x82, 0x49, 0x4d, 0x82, 0x4f, 0x56, 0x55, 0x47, 0x41, 0x43, 0x45, 0x4b, 0x82, 0x82, 0x82, 0x82, 0x52, 0x4e, 0x45, 0x72, 0x82, 0x82, 0x82, 0x82, 0x82, 0x82, 0x82, 0x82, 0x82, 0x82, 0x70, 0x74, 0x82, 0x15, 0x6d, 0x71, 0x82, 0x82, 0x82, 0x82, 0x82, 0x82, 0x82, 0x82, 0x82, 0x82, 0x82, 0x82, 0x82, 0x82, 0x82, 0x82, 0x82, 0x82, 0x82, 0x82, 0x82, 0x82, 0x82, 0x82, 0x82, 0x82, 0x82, 0x82, 0x82, 0x82, 0x82, 0x82, 0x82, 0x82, 0x82, 0x82, 0x82, 0x82, 0x82, 0x82, 0x82, 0x35, 0x82, 0x82, 0x82, 0x82, 0x82, 0x82, 0x82, 0x82, 0x82, 0x82, 0x82, 0x82, 0x82, 0x82, 0x82, 0x50, 0x82, 0x82, 0x82, 0x82, 0x82, 0x82, 0x82, 0x82, 0x82, 0x82, 0x82, 0x82, 0x82, 0x82, 0x82, 0x82, 0x82, 0x82, 0x82, 0x5c, 0x82, 0x5d, 0x82, 0x82, 0x82, 0x82, 0x82, 0x82, 0x82, 0x82, 0x82, 0x82, 0x82, 0x82, 0x82, 0x82, 0x82, 0x82, 0x82, 0x82, 0x63, 0x82, 0x82, 0x82, 0x82, 0x82, 0x60, 0x61, 0x62, 0x61, 0x62, 0x82, 0x82, 0x82, 0x82, 0x82, 0x82, 0x82, 0x82, 0x82, 0x82, 0x82, 0x82, 0x82, 0x82 };
         private static readonly byte[] defaultUseArmor = { 0x03, 0x03, 0x02, 0x02, 0x02, 0x02, 0x01, 0x03, 0x01, 0x03, 0x01, 0x01, 0x01, 0x03, 0x03, 0x01, 0x03, 0x01, 0x03, 0x03, 0x03, 0x03, 0x03, 0x03, 0x03, 0x02, 0x02, 0x01, 0x01, 0x01, 0x01, 0x01, 0x02, 0x02, 0x04, 0x03, 0x03, 0x03, 0x01, 0x01, 0x03, 0x03, 0x03, 0x03, 0x03, 0x01, 0x03, 0x03, 0x03, 0x03, 0x02, 0x02, 0x03, 0x01, 0x01, 0x03, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x03, 0x03, 0x03, 0x03, 0x01, 0x01, 0x03, 0x03, 0x03, 0x03, 0x01, 0x03, 0x01, 0x03, 0x01, 0x01, 0x01, 0x03, 0x03, 0x03, 0x03, 0x00, 0x04, 0x03, 0x03, 0x01, 0x03, 0x01, 0x01, 0x03, 0x03, 0x03, 0x03, 0x03, 0x03, 0x01, 0x02, 0x01, 0x01, 0x04, 0x04, 0x01, 0x01, 0x03, 0x04, 0x00, 0x00, 0x03, 0x03, 0x03, 0x02, 0x02, 0x03, 0x01, 0x02, 0x03, 0x03, 0x03, 0x03, 0x03, 0x03, 0x03, 0x03, 0x03, 0x03, 0x03, 0x03, 0x03 };
+        private static readonly bool[] availables = { true, true, true, true, true, true, true, true, true, true, false, true, true, true, true, true, false, false, false, false, false, false, false, false, false, false, false, false, false, false, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, false, false, true, false, false, false, false, false, false, false, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, false, false, false, false, false, false, false, false, false, true, true, true, false, false, false, false, false, false, false, false, false, false, false, true, false, false, false, false, false, true, false, true, true, true, true, true, true, true, true, true, true, true, true, true, true, false, true, false, true, true, true, true, false, false, false, false, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, false, true, false, false, true, false, false, false, false, true, true, true, true, false, true, true, false, true, true, true, true, true, true, false, true, true, true, true, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, true, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false};
 
         public UniSetting(int index, UnitSettings raw, UnitSettings recalculated, Settings settings) {
             this.settings = settings;

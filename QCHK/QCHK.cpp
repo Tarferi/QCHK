@@ -54,7 +54,9 @@ void processMap(EUDSettings* settings) {
 	else {
 		error |= !fix1_DisableLeaderboard(v2, v3, settings);
 	}
-
+	if (settings->muteUnits) {
+		error |= !fix0_muteSounds(v2, v3, settings);
+	}
 	error |= !fix2_FixCenteringViewAtBeginning(v2, v3, settings);
 	if (!settings->enableVisor) {
 		error |= !fix3_DisableVisor(v2, v3, settings);
@@ -354,14 +356,15 @@ void getRecalculatedData(EUDSettings* settings) {
 			LOG("QCHK", "Failed to load CHK from file \"%s\"", (char*)settings->inputFilePath);
 		return;
 	}
-	Section_UNIx* UNIx = (Section_UNIx*)v3->getSection("UNIx");
-	if (UNIx== nullptr) {
+	Section_UNIx* v3UNIx = (Section_UNIx*)v3->getSection("UNIx");
+	if (v3UNIx == nullptr) {
 		SET_ERROR_LOAD_SECTION
 		LOG("QCHK", "Failed to load CHK from file \"%s\"", (char*)settings->inputFilePath);
 		return;
 	}
 	WriteBuffer wb;
-	GET_CLONED_DATA(pre, UnitSettings, UNIx->data, 1, { SET_ERROR_PROCESS error = true; delete v3F; delete storm; return; });
+	fix0_ResetUnusedUnitsToTheirDefaultValues(nullptr, v3, settings);
+	GET_CLONED_DATA(pre, UnitSettings, v3UNIx->data, 1, { SET_ERROR_PROCESS error = true; delete v3F; delete storm; return; });
 	wb.writeArray((unsigned char*)pre, sizeof(UnitSettings), &error);
 	delete pre;
 	if (!fix13_RecalculateHPAndDamage(nullptr, v3, settings)) {
@@ -372,7 +375,7 @@ void getRecalculatedData(EUDSettings* settings) {
 	}
 	
 	
-	GET_CLONED_DATA(post, UnitSettings, UNIx->data, 1, { SET_ERROR_PROCESS error = true; delete v3F; delete storm; return; });
+	GET_CLONED_DATA(post, UnitSettings, v3UNIx->data, 1, { SET_ERROR_PROCESS error = true; delete v3F; delete storm; return; });
 	wb.writeArray((unsigned char*)post, sizeof(UnitSettings), &error);
 	delete post;
 	if (error) {

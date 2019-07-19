@@ -166,6 +166,9 @@
                                 <ColumnDefinition Width="{Binding ElementName=us_cs, Path=ActualWidth}" />
                                 <ColumnDefinition Width="{Binding ElementName=us_iaa, Path=ActualWidth}" />
                                 <ColumnDefinition Width="{Binding ElementName=us_cd, Path=ActualWidth}" />
+
+                                <ColumnDefinition Width="{Binding ElementName=us_used, Path=ActualWidth}" />
+                                <ColumnDefinition Width="{Binding ElementName=us_use_my, Path=ActualWidth}" />
                             </Grid.ColumnDefinitions>
                             <Border Grid.Column="0" Grid.ColumnSpan="1" BorderBrush="Black" HorizontalAlignment="Stretch" BorderThickness="1,1,1,0" Margin="0,0,-2,0" />
 
@@ -177,6 +180,9 @@
                             </Border>
                             <Border Grid.Column="10" Grid.ColumnSpan="5" BorderBrush="Black" HorizontalAlignment="Stretch" BorderThickness="0,1,1,0" Margin="0,0,-2,0">
                                 <Label Margin="0" HorizontalAlignment="Center">Custom</Label>
+                            </Border>
+                            <Border Grid.Column="15" Grid.ColumnSpan="2" BorderBrush="Black" HorizontalAlignment="Stretch" BorderThickness="0,1,1,0" Margin="0,0,-2,0">
+                                <Label Margin="0" HorizontalAlignment="Center">Actions</Label>
                             </Border>
                         </Grid>
                         <DataGrid Grid.Row="1" AutoGenerateColumns="False" x:Name="lstUnitSettings" Margin="0" HeadersVisibility="Column" CanUserReorderColumns="False">
@@ -264,7 +270,8 @@
                             <Button x:Name="btnUSUseRecalcSel" Content="Copy recalculated to custom" HorizontalAlignment="Left" Margin="185,10,0,0" VerticalAlignment="Top" Width="170" Height="30" Click="btnUSUseRecalcSel_Click"/>
                             <Button x:Name="btnUSUseAllSel" Content="Use all" HorizontalAlignment="Left" Margin="360,10,0,0" VerticalAlignment="Top" Width="69" Height="30" RenderTransformOrigin="0.159,0" Click="btnUSUseAllSel_Click"/>
                             <Button x:Name="btnUSUseNoneSel" Content="Use none" HorizontalAlignment="Left" Margin="434,10,0,0" VerticalAlignment="Top" Width="69" Height="30" RenderTransformOrigin="-0.116,-1.267" Click="btnUSUseNoneSel_Click"/>
-                            <CheckBox x:Name="checkUSShotUnused" Content="Show unused units" HorizontalAlignment="Left" VerticalAlignment="Bottom" Margin="508,0,0,10" Checked="checkUSShotUnused_Checked" Unchecked="checkUSShotUnused_Unchecked" IsChecked="True"/>
+                            <CheckBox x:Name="checkUSShotUnused" Content="Show unused units" HorizontalAlignment="Left" VerticalAlignment="Bottom" Margin="508,0,0,22" Checked="checkUSShotUnused_Checked" Unchecked="checkUSShotUnused_Unchecked" IsChecked="True"/>
+                            <CheckBox x:Name="checkUSShowUnavailable" Content="Show unavailable units" HorizontalAlignment="Left" VerticalAlignment="Bottom" Margin="508,0,0,4" IsChecked="True" Unchecked="checkUSShowUnavailable_Unchecked" Checked="checkUSShowUnavailable_Checked"/>
                         </Grid>
                     </GroupBox>
 
