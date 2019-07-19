@@ -4,7 +4,7 @@
 #include "stdafx.h"
 #include "QCHK.h"
 
-#ifndef _DEBUG
+#ifdef _DEBUG
 #define _CRTDBG_MAP_ALLOC
 #include <stdlib.h>
 #include <crtdbg.h>
@@ -100,9 +100,11 @@ void processMap(EUDSettings* settings) {
 			unsigned int length;
 			char* data;
 			wb.getWrittenData((unsigned char**) &data, &length);
-			FILE* f = fopen("triggers.txt", "wb");
-			fprintf(f, "%s", data);
-			fclose(f);
+			FILE* f;
+			if (!fopen_s(&f, "triggers.txt", "wb")) {
+				fprintf(f, "%s", data);
+				fclose(f);
+			}
 		}
 	}
 #endif

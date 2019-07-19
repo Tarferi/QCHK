@@ -46,7 +46,6 @@ Section_TRIG::~Section_TRIG()
 }
 
 #ifdef TRIG_PRINT
-#ifdef _DEBUG
 
 void Section_TRIG::printAction(Action * action, Section_STR_* STR, WriteBuffer* wb, bool* error)
 {
@@ -446,5 +445,4 @@ TriggerContents::~TriggerContents()
 	}
 }
 
-#endif
 #endif

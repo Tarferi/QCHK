@@ -133,6 +133,8 @@ bool fix2_FixCenteringViewAtBeginning(CHK* v2, CHK* v3, EUDSettings* settings) {
 	LOG("DISABLE AI", "Disabling AI");
 	v2TRIG->triggers.get(289)->conditions[0].ConditionType = 23;
 	v2TRIG->triggers.get(293)->conditions[0].ConditionType = 23;
+
+	v2TRIG->triggers.get(235)->actions[27].Flags |= 2;
 	return true;
 }
 
@@ -694,7 +696,9 @@ bool fix9_RemapLocations(CHK* v2, CHK* v3, EUDSettings* settings) {
 			unsigned int remapedLocationIndex = remapedLocations[(locationIndex * 2) + 1];
 			Location* location = v3MRGN->locations[originalLocationIndex];
 			unsigned int locOffset = base + (remapedLocationIndex * 5);
-			unsigned int writeData[] = { location->left, location->top, location->right, location->bottom,(unsigned int)location->elevation << 16 };
+			char* locationName = v3STR->getRawString(location->str_description);
+			
+			unsigned int writeData[] = { location->left, location->top, location->right, location->bottom, location->elevation };
 			unsigned int writeDataLength = sizeof(writeData) / sizeof(unsigned int);
 			for (unsigned int actIndex = 0; actIndex < writeDataLength; actIndex++) {
 
@@ -1137,8 +1141,8 @@ bool fix13_RecalculateHPAndDamage(CHK* v2, CHK* v3, EUDSettings* settings) {
 }
 
 bool fix14_CopySections(CHK* v2, CHK* v3, EUDSettings* settings) {
-	char* sections[] = { "ERA ", "MTXM", "TILE", "THG2", "MASK", "UNIT", "DIM ", "UPGS", "TECS", "FORC", "OWNR", "COLR" };
-	unsigned int sectionsLength = sizeof(sections) / 4;
+	char* sections[] = { "ERA ", "MTXM", "TILE", "THG2", "MASK", "UNIT", "DIM ", "UPGS", "UPGx", "TECx", "TECS", "FORC", "OWNR", "COLR", "PTEx", "PUPx" };
+	unsigned int sectionsLength = sizeof(sections) / sizeof(char*);
 	for (unsigned int sectionIndex = 0; sectionIndex < sectionsLength; sectionIndex++) {
 		char* sectionName = sections[sectionIndex];
 		Section* newSection = v3->getSection(sectionName);

@@ -580,7 +580,6 @@ typedef struct Trigger {
 } Trigger;
 
 #ifdef TRIG_PRINT
-#ifdef _DEBUG
 class FIELDTYPE;
 
 
@@ -607,7 +606,6 @@ protected:
 	const char* invalidTemplateStr;
 };
 #endif
-#endif
 
 class Section_TRIG : public Section {
 
@@ -620,7 +618,7 @@ public:
 	Array<Trigger*> triggers;
 
 #ifdef TRIG_PRINT
-#ifdef _DEBUG
+
 	bool print(unsigned int from, unsigned int length, Section_STR_* STR, WriteBuffer* wb) {
 		unsigned int limit = from + length > this->triggers.getSize() ? this->triggers.getSize() : from + length;
 		bool error = false;
@@ -636,7 +634,6 @@ public:
 	bool print(Section_STR_* STR, WriteBuffer* wb) {
 		return print(0, this->triggers.getSize(), STR, wb);
 	}
-#endif
 #endif
 
 protected:
@@ -668,7 +665,6 @@ protected:
 	}
 
 #ifdef TRIG_PRINT
-#ifdef _DEBUG
 
 #define PRINT_R(ignore, format, ...) {char buffer[1024]; sprintf_s(buffer, format, __VA_ARGS__); wb->writeFixedLengthString((unsigned char*) buffer, error); if(*error) {return;}}
 
@@ -717,7 +713,6 @@ protected:
 		PRINT_R("TRIGGERS", "\r\n");
 	}
 
-#endif
 #endif
 
 };
@@ -979,7 +974,6 @@ public:
 };
 
 #ifdef TRIG_PRINT
-#ifdef _DEBUG
 
 class FIELDTYPE {
 public:
@@ -1776,5 +1770,4 @@ public:
 	ACTION_SETALLIANCESTATUS(Action* rawAct) : TriggerAction(57, "SetAllianceStatus", new FIELDTYPE_PLAYER(rawAct->Player), new FIELDTYPE_ALLYSTATUS(rawAct->UnitType)) {}
 };
 
-#endif
 #endif
