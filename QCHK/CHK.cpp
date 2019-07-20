@@ -144,7 +144,7 @@ void CHK::removeSection(Section* section)
 	}
 }
 
-void CHK::setSection(Section * newSection)
+void CHK::setSection(Section * newSection, bool* error)
 {
 	for (unsigned int i = 0; i < this->sections.getSize(); i++) {
 		Section* section = this->sections[i];
@@ -155,7 +155,10 @@ void CHK::setSection(Section * newSection)
 			return;
 		}
 	};
-	this->sections.append(newSection);
+	if (!this->sections.append(newSection)) {
+		delete newSection; // This section was meant to be managed (and deleted) by this class, delete it now
+		*error = true;
+	}
 }
 
 bool contains(Array<char*>* array, char* value) {
@@ -359,7 +362,10 @@ bool CHK::parse() {
 		else {
 			section = new BasicSection((unsigned char*)name, size, this->buffer);
 		}
-		this->sections.append(section);
+		if (!this->sections.append(section)) {
+			delete section;
+			return false;
+		}
 		if (!section->process()) {
 			LOG("CHK", "Failed to process section \"%s\" (size %d)", name, size);
 			return false;

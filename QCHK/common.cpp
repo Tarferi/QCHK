@@ -41,3 +41,17 @@ void decompress(char* data, unsigned int dataLength, char** outputData, unsigned
 	*outputData = (char*)decompressedData;
 	*outputLength = (unsigned int)uncompressedLength;
 }
+
+void destroyFileArray(Array<MapFileStr*>* array) {
+	for (unsigned int mapFileIndex = 0; mapFileIndex < array->getSize(); mapFileIndex++) {
+		MapFileStr* mf = array->get(mapFileIndex);
+		if (mf->fileName != nullptr) {
+			free(mf->fileName);
+		}
+		if (mf->contents != nullptr) {
+			free(mf->contents);
+		}
+		free(mf);
+	}
+	delete(array);
+}

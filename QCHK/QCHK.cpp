@@ -40,7 +40,6 @@ void processMap(EUDSettings* settings) {
 		return;
 	}
 
-
 	error |= !fix0_disableDefaultAlliances(v2, v3, settings);
 	error |= !fix0_relocateStrings(v2, v3, settings);
 
@@ -68,12 +67,15 @@ void processMap(EUDSettings* settings) {
 	if (!settings->addTouchRevive) {
 		error |= !fix4_DisableTouchRevive(v2, v3, settings);
 	}
+
 	if (settings->addTimeLock) {
 		error |= !fix5_AddTimeLockTriggers(v2, v3, settings);
 	}
+
 	if (settings->recalculateHPAndDamage) {
 		error |= !fix13_RecalculateHPAndDamage(v2, v3, settings);
 	}
+
 	error |= !fix6_CopyForceNames(v2, v3, settings);
 	error |= !fix7_CopyUnitProperties(v2, v3, settings);
 	error |= !fix9_RemapLocations(v2, v3, settings);
@@ -84,7 +86,6 @@ void processMap(EUDSettings* settings) {
 	error |= !fix16_CopyTriggersAndBriefing(v2, v3, settings);
 	error |= !fix17_CopyUnitSettings(v2, v3, settings);
 	error |= !fix18_RelocateSTREUDSection(v2, v3, settings);
-
 
 	v2F->writeToFile(storm, (char*)settings->outputFilePath, &error);
 	
@@ -335,7 +336,6 @@ void getForces(EUDSettings* settings) {
 
 void getRecalculatedData(EUDSettings* settings) {
 
-
 	bool error = false;
 	Storm* storm = new Storm(&error);
 
@@ -418,7 +418,7 @@ LIBRARY_API void __cdecl realize(EUDSettings* settings) {
 	else if (settings->action == 6) { // Get recalculated data
 		getRecalculatedData(settings);
 	}
-#ifndef _DEBUG
+#ifdef _DEBUG
 	_CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
 	_CrtDumpMemoryLeaks();
 #endif

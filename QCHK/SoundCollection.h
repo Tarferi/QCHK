@@ -16,7 +16,7 @@ struct SoundFile {
 class SoundCollection
 {
 public:
-	SoundCollection(Array<char*>* data, Array<unsigned int>* dataLengths, Array<char*>* fileNames, bool* error);
+	SoundCollection(Array<MapFileStr*>* files, bool* error);
 	~SoundCollection();
 
 	void deleteSound(char* fileName);

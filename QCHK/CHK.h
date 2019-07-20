@@ -18,7 +18,7 @@ public:
 	bool write(const char* file);
 	Section* getSection(const char* name);
 	void removeSection(Section* section);
-	void setSection(Section* section);
+	void setSection(Section* section, bool* errpr);
 	Array<unsigned short>* getUsedWavs(bool* error) {
 		return getUsedWavs(nullptr, error);
 	}

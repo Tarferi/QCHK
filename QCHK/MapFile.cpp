@@ -2,12 +2,10 @@
 #include "Storm.h"
 
 
-MapFile::MapFile(Array<char*>* data, Array<unsigned int>* dataLengths, Array<char*>* fileNames, bool* error) {
+MapFile::MapFile(Array<MapFileStr*>* files, bool* error) {
 	this->chk = nullptr;
-	this->contents = data;
-	this->fileNames = fileNames;
-	this->dataLengths = dataLengths;
-	this->sounds = new SoundCollection(data, dataLengths, fileNames, error);
+	this->files = files;
+	this->sounds = new SoundCollection(files, error);
 }
 
 MapFile::~MapFile() {
@@ -19,36 +17,18 @@ MapFile::~MapFile() {
 		delete this->sounds;
 		this->sounds = nullptr;
 	}
-	if (this->contents != nullptr) {
-		for (unsigned int i = 0; i < this->contents->getSize(); i++) {
-			char* content = this->contents->get(i);
-			if (content != nullptr) {
-				free(content);
-				this->contents->set(i, nullptr);
-			}
-		}
-		delete this->contents;
-	}
-	if (this->fileNames != nullptr) {
-		for (unsigned int i = 0; i < this->fileNames->getSize(); i++) {
-			if (this->fileNames->get(i) != nullptr) {
-				free(this->fileNames->get(i));
-			}
-		}
-		delete this->fileNames;
-		this->fileNames = nullptr;
-	}
-	if (this->dataLengths != nullptr) {
-		delete this->dataLengths;
+	if (this->files != nullptr) {
+		destroyFileArray(this->files);
+		this->files = nullptr;
 	}
 }
 
 CHK * MapFile::getCHK()
 {
 	if (this->chk == nullptr) {
-		for (unsigned int i = 0; i < this->fileNames->getSize(); i++) {
-			if (!strcmp(this->fileNames->get(i), "staredit\\scenario.chk")) {
-				this->chk = new CHK(this->sounds, this->contents->get(i), this->dataLengths->get(i));
+		for (unsigned int i = 0; i < this->files->getSize(); i++) {
+			if (!strcmp(this->files->get(i)->fileName, "staredit\\scenario.chk")) {
+				this->chk = new CHK(this->sounds, (char*) this->files->get(i)->contents, this->files->get(i)->contentsLength);
 			}
 		}
 	}
@@ -56,8 +36,8 @@ CHK * MapFile::getCHK()
 }
 
 bool hasFile(MapFile* mf, char* name) {
-	for (unsigned int wavIndex = 0; wavIndex < mf->fileNames->getSize(); wavIndex++) {
-		char* wavFile = mf->fileNames->get(wavIndex);
+	for (unsigned int wavIndex = 0; wavIndex < mf->files->getSize(); wavIndex++) {
+		char* wavFile = mf->files->get(wavIndex)->fileName;
 		if (!strcmp(wavFile, name)) {
 			return true;
 		}

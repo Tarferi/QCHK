@@ -34,14 +34,14 @@ bool fix0_fixColors(CHK* v2, CHK* v3, EUDSettings* settings) {
 
 #define REMAP_STR(index, triggerindex, actionindex) {\
 GET_CLONED_STRING(nstr, v2STR->getRawString(index+1), {stringsToRelocate.freeItems(); return false;});\
-stringsToRelocate.append(nstr);\
-actionsUsingThoseStrings.append(&(((Trigger*)(v2TRIG->triggers[triggerindex]))->actions[actionindex]));\
+if (!stringsToRelocate.append(nstr)) {return false;};\
+if (!(actionsUsingThoseStrings.append(&(((Trigger*)(v2TRIG->triggers[triggerindex]))->actions[actionindex])))){return false;};\
 }\
 
 #define REMAP_XSTR(origStr, triggerindex, actionindex) {\
 GET_CLONED_STRING(nstr, origStr, {stringsToRelocate.freeItems(); return false;});\
-stringsToRelocate.append(nstr);\
-actionsUsingThoseStrings.append(&(((Trigger*)(v2TRIG->triggers[triggerindex]))->actions[actionindex]));\
+if (!stringsToRelocate.append(nstr)){return false;};\
+if (!(actionsUsingThoseStrings.append(&(((Trigger*)(v2TRIG->triggers[triggerindex]))->actions[actionindex])))){return false;};\
 }\
 
 static unsigned short defaultSoundsWhatStart[] = { 0x1f01, 0xe600, 0x6801, 0xf800, 0x0000, 0x4401, 0x4401, 0x7901, 0x0901, 0x5401, 0x2b01, 0xd700, 0xb900, 0x0f00, 0x0f00, 0xc600, 0xce01, 0xf800, 0x0000, 0xa701, 0x9b01, 0x0901, 0x5401, 0xb401, 0xb401, 0xb401, 0xb401, 0xc101, 0x9b01, 0xc101, 0x4401, 0x4401, 0x2b01, 0x0000, 0xe903, 0x5303, 0x3c03, 0x8503, 0x6603, 0x7603, 0x1803, 0x4503, 0x9003, 0xb303, 0x5a03, 0xa503, 0x3503, 0x0d03, 0x7603, 0xa503, 0x2503, 0xbf03, 0x3503, 0x6603, 0x8503, 0xb303, 0x5a03, 0x9003, 0x0704, 0x3c03, 0x1404, 0xdd02, 0x4d04, 0x2f04, 0x5e02, 0x9e02, 0xf201, 0x7302, 0x3d02, 0x0802, 0x1c02, 0x2f02, 0x4b02, 0x0000, 0xdd02, 0xea02, 0x3d02, 0xb702, 0xab02, 0xcf02, 0x1c02, 0x8202, 0xc302, 0x8202, 0x9202, 0x1c02, 0x2f02, 0x0000, 0x7004, 0x3600, 0x2e00, 0x0000, 0x0000, 0xcc03, 0xd003, 0x3200, 0xc803, 0x3c03, 0x1404, 0xdd03, 0xe600, 0x0000, 0xc101, 0x3d04, 0x6104, 0x0000, 0x0f00, 0x8301, 0x8c01, 0x8d01, 0x9001, 0x0f00, 0x8101, 0x0f00, 0x0f00, 0x8501, 0x8b01, 0x8601, 0x8e01, 0x0f00, 0x8801, 0x9101, 0x9201, 0x8201, 0x8901, 0x0f00, 0x8a01, 0x8701, 0x0f00, 0x0f00, 0x0f00, 0xf702, 0xfa02, 0xf802, 0x0003, 0x0303, 0xfe02, 0xfd02, 0xff02, 0xf502, 0x0203, 0x0503, 0xf302, 0xf602, 0x0403, 0x0f00, 0xfb02, 0x0103, 0x0103, 0xf902, 0xfc02, 0xf402, 0xf402, 0x0f00, 0xe401, 0xe801, 0xe701, 0xda01, 0x0f00, 0xdc01, 0xdf01, 0xe301, 0xe501, 0xdd01, 0xe001, 0xd901, 0xde01, 0x0f00, 0x8f01, 0xeb01, 0xea01, 0xe901, 0xdb01, 0xe201, 0xe601, 0xe601, 0x0f00, 0x0f00, 0x0f00, 0x0f00, 0x0f00, 0x0f00, 0x0f00, 0x0f00, 0x0f00, 0x0f00, 0x0f00, 0x0f00, 0x0f00, 0xeb01, 0x8701, 0x0f00, 0x0f00, 0x0f00, 0x0f00, 0x0f00, 0x0f00, 0x0f00, 0x0f00, 0x0f00, 0x8c01, 0x0103, 0x0000, 0x0f00, 0x1e00, 0x1800, 0x1a00, 0x1c00, 0x1e00, 0x0f00, 0x0f00, 0x0f00, 0x0f00, 0x0f00, 0x0f00, 0x0f00, 0x0f00, 0x0f00, 0x0f00, 0x0f00, 0x0f00, 0x0f00, 0x0f00, 0x0f00, 0x0f00, 0x0f00, 0x0f00, 0x0f00 };
@@ -80,10 +80,12 @@ bool fix0_muteSounds(CHK * v2, CHK * v3, EUDSettings * settings) {
 
 	SET_DEATH_ACT(220951, defaultSoundsReady, 1); // Ready
 
-	v2TRIG->triggers.append(remapTrigger);
+	if (!v2TRIG->triggers.append(remapTrigger)) {
+		free(remapTrigger);
+		return false;
+	}
 	return true;
 }
-
 
 bool fix0_relocateStrings(CHK* v2, CHK* v3, EUDSettings* settings) {
 	GET_SECT(Section_TRIG, v2TRIG, v2, "TRIG");
@@ -345,7 +347,8 @@ bool addTimeLockTrigger(Section_TRIG* v2TRIG, unsigned char comparator, unsigned
 
 	newTrig->actions[2].ActionType = 2; // Defeat
 
-	if (v2TRIG->triggers.append(newTrig)) {
+	if (!v2TRIG->triggers.append(newTrig)) {
+		free(newTrig);
 		return true;
 	}
 	else {
@@ -568,7 +571,7 @@ bool fix7_CopyUnitProperties(CHK * v2, CHK * v3, EUDSettings * settings) {
 	return true;
 }
 
-void RemapLocation(unsigned int nextRemapLocationIndex, unsigned int* nextRemapLocationIndexPtr, Array<unsigned int>* remapedLocations, unsigned int *freeLocationRangesBeginPtr, unsigned int *freeLocationRangesEndPtr, unsigned int *locationIndexPtr, unsigned int freeLocationsRangeLength) {
+bool RemapLocation(unsigned int nextRemapLocationIndex, unsigned int* nextRemapLocationIndexPtr, Array<unsigned int>* remapedLocations, unsigned int *freeLocationRangesBeginPtr, unsigned int *freeLocationRangesEndPtr, unsigned int *locationIndexPtr, unsigned int freeLocationsRangeLength) {
 	unsigned int locationIndex = *locationIndexPtr;
 
 	// If exists, find it
@@ -577,13 +580,17 @@ void RemapLocation(unsigned int nextRemapLocationIndex, unsigned int* nextRemapL
 		if (originalLocation == locationIndex) {
 			unsigned int remapedLocation = remapedLocations->get(i + 1);
 			*locationIndexPtr = remapedLocation;
-			return;
+			return true;
 		}
 	}
 
 	// Otherwise insert it
-	remapedLocations->append(locationIndex);
-	remapedLocations->append(nextRemapLocationIndex);
+	if (!remapedLocations->append(locationIndex)) {
+		return false;
+	}
+	if (!remapedLocations->append(nextRemapLocationIndex)) {
+		return false;
+	}
 	*locationIndexPtr = nextRemapLocationIndex;
 
 	// Update next range 
@@ -595,6 +602,7 @@ void RemapLocation(unsigned int nextRemapLocationIndex, unsigned int* nextRemapL
 		}
 	}
 	*nextRemapLocationIndexPtr = nextRemapLocationIndex + 1;
+	return true;
 }
 
 bool fix8_DisableBarrier(CHK* v2, CHK* v3, EUDSettings* settings) {
@@ -642,8 +650,12 @@ bool fix9_RemapLocations(CHK* v2, CHK* v3, EUDSettings* settings) {
 	Array<unsigned int> remapedLocations;
 	unsigned int nextRemapLocationIndex = freeLocationRangesBegs[0];
 
-	remapedLocations.append(63);
-	remapedLocations.append(63);
+	if (!remapedLocations.append(63)) {
+		return false;
+	}
+	if (!remapedLocations.append(63)) {
+		return false;
+	}
 
 	// Collect triggers that use locations and remap those locations
 	for (unsigned int i = 0; i < v3TRIG->triggers.getSize(); i++) {
@@ -657,7 +669,9 @@ bool fix9_RemapLocations(CHK* v2, CHK* v3, EUDSettings* settings) {
 					unsigned int locationNumber = cond->locationNumber;
 					locationNumber--;
 					LOG("LOCATION REMAPPER", "Found location %d in trigger %d condition %d that needs remapping", locationNumber, i, o);
-					RemapLocation(nextRemapLocationIndex, &nextRemapLocationIndex, &remapedLocations, freeLocationRangesBegs, freeLocationRangesEnds, &locationNumber, freeLocationRangesLength);
+					if (!RemapLocation(nextRemapLocationIndex, &nextRemapLocationIndex, &remapedLocations, freeLocationRangesBegs, freeLocationRangesEnds, &locationNumber, freeLocationRangesLength)) {
+						return false;
+					}
 					cond->locationNumber = locationNumber + 1;
 					LOG("LOCATION REMAPPER", "Remapped last mentioned location to %d", (cond->locationNumber - 1));
 				}
@@ -672,7 +686,9 @@ bool fix9_RemapLocations(CHK* v2, CHK* v3, EUDSettings* settings) {
 					unsigned int locationNumber = action->SourceLocation;
 					locationNumber--;
 					LOG("LOCATION REMAPPER", "Found location %d in trigger %d action %d that needs remapping", locationNumber, i, o);
-					RemapLocation(nextRemapLocationIndex, &nextRemapLocationIndex, &remapedLocations, freeLocationRangesBegs, freeLocationRangesEnds, &locationNumber, freeLocationRangesLength);
+					if (!RemapLocation(nextRemapLocationIndex, &nextRemapLocationIndex, &remapedLocations, freeLocationRangesBegs, freeLocationRangesEnds, &locationNumber, freeLocationRangesLength)) {
+						return false;
+					}
 					action->SourceLocation = locationNumber + 1;
 					LOG("LOCATION REMAPPER", "Remapped last mentioned location to %d", (action->SourceLocation - 1));
 				}
@@ -797,7 +813,10 @@ bool fix9_RemapLocations(CHK* v2, CHK* v3, EUDSettings* settings) {
 			act->Group = 1; // 1
 		}
 		locationIndexWithinActions++; // For further modders
-		v2TRIG->triggers.append(trigger);
+		if (!v2TRIG->triggers.append(trigger)) {
+			free(trigger);
+			return false;
+		}
 	}
 	return true;
 }
@@ -828,7 +847,9 @@ bool fix10_AddElapsedTimeToAllConditions(CHK* v2, CHK* v3, EUDSettings* settings
 		for (unsigned int conditionIndex = 0; conditionIndex < 16; conditionIndex++) {
 			Condition* condition = &(trigger->conditions[conditionIndex]);
 			if (condition->ConditionType == 0 || condition->ConditionType == 22) { // Empty condition (or always)
-				empty.append(conditionIndex);
+				if (!empty.append(conditionIndex)) {
+					return false;
+				}
 			}
 		}
 
@@ -932,18 +953,25 @@ bool fix11_ImportWav(CHK* v2, CHK* v3, EUDSettings * settings)
 	// Create new sound collection for original v2S data
 	SoundCollection* v2S = v2->getSounds();
 	SoundCollection* v3S = v3->getSounds();
-	Array<char*> fileNames;
-	Array<char*> contents;
-	
-	Array<unsigned int> contentsLengths;
+
+	Array<MapFileStr*>* mapFiles = new Array<MapFileStr*>();
+
 	for (unsigned int fileIndex = 0; fileIndex < v2S->files.getSize(); fileIndex++) {
 		SoundFile* file = v2S->files[fileIndex];
-		fileNames.append(file->fileName);
-		contents.append(file->contents);
-		contentsLengths.append(file->contentsSize);
+		MALLOC_N(mapFile, MapFileStr, 1, { destroyFileArray(mapFiles); return false; });
+		mapFile->fileName = file->fileName;
+		mapFile->contents = (unsigned char*) file->contents;
+		mapFile->contentsLength = file->contentsSize;
+		if (!mapFiles->append(mapFile)) {
+			free(mapFile);
+			destroyFileArray(mapFiles);
+			return false;
+		}
 	}
 	bool error = false;
-	SoundCollection _S(&contents, &contentsLengths, &fileNames, &error);
+	SoundCollection _S(mapFiles, &error);
+	mapFiles->freeItems();
+	delete mapFiles; // Destroy this array, sound collection has deep copy of its data
 	if (error) {
 		return false;
 	}
@@ -982,7 +1010,10 @@ bool fix11_ImportWav(CHK* v2, CHK* v3, EUDSettings * settings)
 			free(newWavName);
 			continue;
 		}
-		wavRemapping.append(index);
+		if (!wavRemapping.append(index)) {
+			free(newWavName);
+			return false;
+		}
 		free(newWavName);
 	}
 	// Remap actions to those new indexes
@@ -1259,7 +1290,10 @@ bool fix13_RecalculateHPAndDamage(CHK* v2, CHK* v3, EUDSettings* settings) {
 
 		// Fix EMP (make it normal damage)
 
-		v2TRIG->triggers.append(remapTrigger);
+		if (!v2TRIG->triggers.append(remapTrigger)) {
+			free(remapTrigger);
+			return false;
+		}
 	}
 	return true;
 }
@@ -1275,7 +1309,11 @@ bool fix14_CopySections(CHK* v2, CHK* v3, EUDSettings* settings) {
 		}
 		else {
 			v3->removeSection(newSection);
-			v2->setSection(newSection);
+			bool error = false;
+			v2->setSection(newSection, &error);
+			if (error) {
+				return false;
+			}
 		}
 	}
 	return true;

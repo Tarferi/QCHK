@@ -3,19 +3,24 @@
 
 
 
-SoundCollection::SoundCollection(Array<char*>* archiveContents, Array<unsigned int>* dataLengths, Array<char*>* fileNames, bool* error)
+SoundCollection::SoundCollection(Array<MapFileStr*>* files, bool* error)
 {
-	for (unsigned int fileIndex = 0; fileIndex < fileNames->getSize(); fileIndex++) {
+	for (unsigned int fileIndex = 0; fileIndex < files->getSize(); fileIndex++) {
 
-		GET_CLONED_DATA(newContents, char, archiveContents->get(fileIndex), dataLengths->get(fileIndex), { *error = true; return; });
-		GET_CLONED_STRING(newFilename, fileNames->get(fileIndex), { free(newContents); *error = true; return; });
+		GET_CLONED_DATA(newContents, char, files->get(fileIndex)->contents, files->get(fileIndex)->contentsLength, { *error = true; return; });
+		GET_CLONED_STRING(newFilename, files->get(fileIndex)->fileName, { free(newContents); *error = true; return; });
 		MALLOC_N(file, SoundFile, 1, { free(newContents); free(newFilename); *error = true; return; });
 		file->contents = newContents;
-		file->contentsSize = dataLengths->get(fileIndex);
+		file->contentsSize = files->get(fileIndex)->contentsLength;
 		file->fileName = newFilename;
 		file->v2Index = 0;
 		file->isOgg = IS_OGG(file->fileName);
-		this->files.append(file);
+		if (!this->files.append(file)) {
+			free(newFilename);
+			free(newContents);
+			free(file);
+			*error = true;
+		}
 	}
 }
 
@@ -73,7 +78,12 @@ unsigned short SoundCollection::addOrRewriteSound(Section_STR_ * STR, char * fil
 		char buffer[1024];
 		sprintf_s(buffer, "snd_%d.%s", this->files.getSize(), isOgg ? "ogg" : "wav");
 		file->v2Index = STR->getNewStringIndex(buffer);
-		this->files.append(file);
+		if (!this->files.append(file)) {
+			free(file->fileName);
+			free(file->contents);
+			free(file);
+			*error = true;
+		}
 		return file->v2Index;
 	}
 }

@@ -69,52 +69,86 @@ MapFile * Storm::readSCX(char * filePath, bool* error)
 
 	HANDLE searchHandle = SFileFindFirstFile(mapFile, "*", &data, (const char*)0);
 
-	Array<char*>* fileNames = new Array<char*>();
-	Array<unsigned int>* fileSizes = new Array<unsigned int>();
-	Array<char*>* filesContents = new Array<char*>();
-
+	Array<MapFileStr*>* files = new Array<MapFileStr*>();
 	bool hasScenarioChk = false;
 
 	do {
-		
-		fileSizes->append(data.dwFileSize);
-		GET_CLONED_STRING(fileName, data.cFileName, { fileNames->freeItems(); filesContents->freeItems(); SFileFindClose(searchHandle); SFileCloseArchive(mapFile); delete fileNames; delete fileSizes; delete filesContents; return nullptr; });
-		fileNames->append(fileName);
+		GET_CLONED_STRING(fileName, data.cFileName, { destroyFileArray(files); SFileFindClose(searchHandle); SFileCloseArchive(mapFile); return nullptr; });
+		MALLOC_N(fileContents, char, data.dwFileSize, { free(fileName); destroyFileArray(files); SFileFindClose(searchHandle); SFileCloseArchive(mapFile); return nullptr; });
+		MALLOC_N(file, MapFileStr, 1, { free(fileName); free(fileContents); destroyFileArray(files); SFileFindClose(searchHandle); SFileCloseArchive(mapFile); return nullptr; });
+
+
 		HANDLE fileH;
-		MALLOC_N(fileContents, char, data.dwFileSize, { fileNames->freeItems(); filesContents->freeItems(); SFileFindClose(searchHandle); SFileCloseArchive(mapFile); delete fileNames; delete fileSizes; delete filesContents; return nullptr; });
-		SFileOpenFileEx(mapFile, data.cFileName, 0, &fileH);
 		DWORD read;
-		SFileReadFile(fileH, fileContents, data.dwFileSize, &read, 0);
+
+		if (!SFileOpenFileEx(mapFile, data.cFileName, 0, &fileH)) {
+			LOG_ERROR("STORM", "Failed to open file \"%s\" in archive \"%s\" for reading (reason: %d)", data.cFileName, filePath, GetLastError());
+			free(fileName);
+			free(fileContents);
+			free(file);
+			destroyFileArray(files);
+			return nullptr;
+		}
+		if (!SFileReadFile(fileH, fileContents, data.dwFileSize, &read, 0)) {
+			LOG_ERROR("STORM", "Failed to read file \"%s\" in archive \"%s\" (reason: %d)", data.cFileName, filePath, GetLastError());
+			free(fileName);
+			free(fileContents);
+			free(file);
+			destroyFileArray(files);
+			return nullptr;
+		}
 		LOG("STORM", "Read file %s from %s", data.cFileName, filePath);
 		if (read != data.dwFileSize) {
 			LOG("STORM", "Read only %d of %d total\n", read, data.dwFileSize);
 		}
 		SFileCloseFile(fileH);
-		filesContents->append(fileContents);
+
+		memset(file, 0, sizeof(MapFileStr));
+		file->contentsLength = data.dwFileSize;
+		file->fileName = fileName;
+		file->contents = (unsigned char*) fileContents;
+		if (!files->append(file)) {
+			free(file->fileName);
+			free(file->contents);
+			free(file);
+			destroyFileArray(files);
+			SFileFindClose(searchHandle);
+			SFileCloseArchive(mapFile);
+			return nullptr;
+		}
 
 	} while (SFileFindNextFile(searchHandle, &data));
 
 	SFileFindClose(searchHandle);
 	SFileCloseArchive(mapFile);
 	LOG("STORM", "Closed file %s", filePath);
-	MapFile* mf = new MapFile(filesContents, fileSizes, fileNames, error);
+	MapFile* mf = new MapFile(files, error);
 	return mf;
 }
 
-#define HEXDIGIT(d) (d - 'A')
-
-void process(char* fileName, unsigned int fileSize, char* data, unsigned int *position, Array<char*>* fileNames, Array<unsigned int>* fileSizes, Array<char*>* filesContents, bool* error) {
+void process(char* fileName, unsigned int fileSize, char* data, unsigned int *position, Array<MapFileStr*>* files, bool* error) {
 	unsigned int begin = *position;
-	fileSizes->append(fileSize);
-	GET_CLONED_STRING(newFileName, fileName, { *error = true; return; });
-	fileNames->append(newFileName);
-	MALLOC_N(newFileContents, char, fileSize, { *error = true; return; });
+
+	GET_CLONED_STRING(newFileName, fileName, { destroyFileArray(files); *error = true; return; });
+	MALLOC_N(newFileContents, char, fileSize, { free(newFileName); destroyFileArray(files); *error = true; return; });
+	MALLOC_N(mapFile, MapFileStr, 1, { free(newFileName); free(newFileContents); destroyFileArray(files); *error = true; return; });
+
+	memset(mapFile, 0, sizeof(MapFileStr));
+	mapFile->contentsLength = fileSize;
+	mapFile->fileName = newFileName;
+	mapFile->contents = (unsigned char*)newFileContents;
+	if (!files->append(mapFile)) {
+		free(newFileName);
+		free(newFileContents);
+		free(mapFile);
+		destroyFileArray(files);
+		return;
+	}
 	for (unsigned int i = 0; i < fileSize; i++) {
 		char byte = data[begin + i];
 		byte = byte ^ (i % 256);
 		newFileContents[i] = byte;
 	}
-	filesContents->append(newFileContents);
 	*position = begin + fileSize;
 }
 
@@ -128,22 +162,25 @@ MapFile * Storm::readSanc(bool* error) {
 	}
 
 
-	Array<char*>* fileNames = new Array<char*>();
-	Array<unsigned int>* fileSizes = new Array<unsigned int>();
-	Array<char*>* filesContents = new Array<char*>();
+	Array<MapFileStr*>* files = new Array<MapFileStr*>();
 	unsigned int pos = 0;
-	process((char*)_acfile_0_name, _acfile_0_length, (char*)decompressedSancData, &pos, fileNames, fileSizes, filesContents, error);
-	process((char*)_acfile_1_name, _acfile_1_length, (char*)decompressedSancData, &pos, fileNames, fileSizes, filesContents, error);
-	process((char*)_acfile_2_name, _acfile_2_length, (char*)decompressedSancData, &pos, fileNames, fileSizes, filesContents, error);
-	process((char*)_acfile_3_name, _acfile_3_length, (char*)decompressedSancData, &pos, fileNames, fileSizes, filesContents, error);
-	process((char*)_acfile_4_name, _acfile_4_length, (char*)decompressedSancData, &pos, fileNames, fileSizes, filesContents, error);
-	process((char*)_acfile_5_name, _acfile_5_length, (char*)decompressedSancData, &pos, fileNames, fileSizes, filesContents, error);
-	process((char*)_acfile_6_name, _acfile_6_length, (char*)decompressedSancData, &pos, fileNames, fileSizes, filesContents, error);
-	process((char*)_acfile_7_name, _acfile_7_length, (char*)decompressedSancData, &pos, fileNames, fileSizes, filesContents, error);
+	process((char*)_acfile_0_name, _acfile_0_length, (char*)decompressedSancData, &pos, files, error);
+	process((char*)_acfile_1_name, _acfile_1_length, (char*)decompressedSancData, &pos, files, error);
+	process((char*)_acfile_2_name, _acfile_2_length, (char*)decompressedSancData, &pos, files, error);
+	process((char*)_acfile_3_name, _acfile_3_length, (char*)decompressedSancData, &pos, files, error);
+	process((char*)_acfile_4_name, _acfile_4_length, (char*)decompressedSancData, &pos, files, error);
+	process((char*)_acfile_5_name, _acfile_5_length, (char*)decompressedSancData, &pos, files, error);
+	process((char*)_acfile_6_name, _acfile_6_length, (char*)decompressedSancData, &pos, files, error);
+	process((char*)_acfile_7_name, _acfile_7_length, (char*)decompressedSancData, &pos, files, error);
 
 	free(decompressedSancData);
 
-	MapFile* mf = new MapFile(filesContents, fileSizes, fileNames, error);
+	if (*error) {
+		destroyFileArray(files);
+		return nullptr;
+	}
+
+	MapFile* mf = new MapFile(files, error);
 	LOG("STORM", "Finished reading sanc data");
 	return mf;
 }

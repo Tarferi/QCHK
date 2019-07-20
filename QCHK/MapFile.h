@@ -4,18 +4,16 @@
 
 class Storm;
 
-class MapFile
-{
+class MapFile {
+
 public:
-	MapFile(Array<char*>* data, Array<unsigned int>* dataLengths, Array<char*>* fileNames, bool* error);
+	MapFile(Array<MapFileStr*>* files, bool* error);
 	~MapFile();
 
 	CHK* getCHK();
 	void writeToFile(Storm* storm, char* name, bool* error);
 
-	Array<char*>* contents;
-	Array<unsigned int>* dataLengths;
-	Array<char*>* fileNames;
+	Array<MapFileStr*>* files = nullptr;
 
 private:
 	CHK* chk;

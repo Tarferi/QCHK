@@ -174,7 +174,9 @@ protected:
 			if (error) {
 				return false;
 			}
-			offsets.append(offset);
+			if (!offsets.append(offset)) {
+				return false;
+			}
 		}
 		unsigned int totalStrings = this->offsets.getSize();
 		this->sortedOffsets = new Section_STR_Offset[totalStrings];
@@ -383,7 +385,10 @@ protected:
 			if (error) {
 				return false;
 			}
-			this->units.append(unit);
+			if (!this->units.append(unit)) {
+				free(unit);
+				return false;
+			}
 		}
 		return true;
 	}
@@ -520,7 +525,10 @@ protected:
 			if (error) {
 				return false;
 			}
-			this->locations.append(location);
+			if (!this->locations.append(location)) {
+				free(location);
+				return false;
+			}
 		}
 		return true;
 	}
@@ -647,7 +655,10 @@ protected:
 			if (error) {
 				return false;
 			}
-			this->triggers.append(trigger);
+			if (!this->triggers.append(trigger)) {
+				free(trigger);
+				return false;
+			}
 		}
 		return true;
 	}

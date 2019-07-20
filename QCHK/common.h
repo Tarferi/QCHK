@@ -60,6 +60,9 @@ static int initValue = ARRAY_DEFAULT_SIZE;
 	#define LOG(section, fmt, ...)
 	#define LOG_R(section, fmt, ...)
 #endif
+
+#define LOG_ERROR(section, fmt, ...) fprintf(stderr, "[" section "] " fmt "\n" , __VA_ARGS__);
+
 template<typename type> class Array {
 
 	class ArrayProxy {
@@ -121,7 +124,7 @@ public:
 		return true;
 	}
 
-	void insert(unsigned int index, type value) {
+	bool insert(unsigned int index, type value) {
 		append(value);
 		for (unsigned int i = this->dataSize - 1; i > index ; i--) {
 			this->rawData[i] = this->rawData[i - 1];
@@ -131,7 +134,7 @@ public:
 
 	void freeItems() {
 		for (unsigned int i = 0; i < this->getSize(); i++) {
-			char* fn = this->get(i);
+			type fn = this->get(i);
 			free(fn);
 		}
 	}
@@ -185,3 +188,11 @@ private:
 void compress(char* data, unsigned int length, char** outputData, unsigned int* outputLength, bool* error);
 
 void decompress(char* data, unsigned int dataLength, char** outputData, unsigned int* outputLength, bool* error);
+
+struct MapFileStr {
+	char* fileName;
+	unsigned char* contents;
+	unsigned int contentsLength;
+};
+
+void destroyFileArray(Array<MapFileStr*>* array);
