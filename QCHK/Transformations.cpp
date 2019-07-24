@@ -262,8 +262,8 @@ bool replaceTime(char* string, char type, unsigned long timeX) {
 	GET_CLONED_STRING(D_LOOK, "%DDX%", { free(M_LOOK); return false; });
 	GET_CLONED_STRING(Y_LOOK, "%YYYYX%", { free(D_LOOK); free(M_LOOK); return false; });
 	GET_CLONED_STRING(H_LOOK, "%HHX%", { free(Y_LOOK); free(D_LOOK); free(M_LOOK); return false; });
-	GET_CLONED_STRING(m_LOOK, "%mmX%", { free(m_LOOK); free(Y_LOOK); free(D_LOOK); free(M_LOOK); return false; });
-	GET_CLONED_STRING(S_LOOK, "%SSX%", { free(S_LOOK); free(m_LOOK); free(Y_LOOK); free(D_LOOK); free(M_LOOK); return false; });
+	GET_CLONED_STRING(m_LOOK, "%mmX%", { free(H_LOOK); free(Y_LOOK); free(D_LOOK); free(M_LOOK); return false; });
+	GET_CLONED_STRING(S_LOOK, "%SSX%", { free(m_LOOK); free(H_LOOK); free(Y_LOOK); free(D_LOOK); free(M_LOOK); return false; });
 
 	M_LOOK[3] = type;
 	D_LOOK[3] = type;
@@ -1206,10 +1206,24 @@ bool fix13_RecalculateHPAndDamage(CHK* v2, CHK* v3, EUDSettings* settings) {
 	// Fix turrets
 	COEXISTS(3, 4);
 	COEXISTS(5, 6);
-	COEXISTS(17, 18);
-	COEXISTS(23, 24);
-	COEXISTS(25, 26);
+	COEXISTS(5, 30);
+	COEXISTS(5, 31);
+
 	COEXISTS(30, 31);
+	COEXISTS(30, 5);
+	COEXISTS(30, 6);
+
+	COEXISTS(17, 18);
+	
+	// Duke
+	COEXISTS(23, 24);
+	COEXISTS(23, 25);
+	COEXISTS(23, 26);
+
+	COEXISTS(25, 23);
+	COEXISTS(25, 24);
+	COEXISTS(25, 26);
+	
 
 	UnitSettings* prefferedSettings = (UnitSettings*)settings->preferredUnitSettings;
 	
