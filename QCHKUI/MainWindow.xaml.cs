@@ -754,7 +754,7 @@ namespace WpfApplication1 {
             if(showUnused && showUnavailable) { // Show all
                 predicate = new Predicate<object>(item => (true));
             } else if(showUnused && !showUnavailable) { // Hide unavailable
-                predicate = new Predicate<object>(item => ((UniSetting)item).isAvailable);
+                predicate = new Predicate<object>(item => (((UniSetting)item).isAvailable) || ((UniSetting)item).isUsed);
             } else if(!showUnused && showUnavailable) { // Hide unused
                 predicate = new Predicate<object>(item => ((UniSetting)item).isUsed);
             } else { // Hide unused or unavailable

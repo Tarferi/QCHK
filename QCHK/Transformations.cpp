@@ -1202,7 +1202,7 @@ bool fix13_RecalculateHPAndDamage(CHK* v2, CHK* v3, EUDSettings* settings) {
 			used[unitID] = 1;
 		}
 	}
-#define COEXISTS(id1, id2) used[id2] = used[id1];
+#define COEXISTS(id1, id2) if (used[id1]) {used[id2] = true;};
 	// Fix turrets
 	COEXISTS(3, 4);
 	COEXISTS(5, 6);
