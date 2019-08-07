@@ -54,8 +54,7 @@ void Section_TRIG::printAction(Action * action, Section_STR_* STR, WriteBuffer* 
 	delete ta;
 }
 
-void Section_TRIG::printCondition(Condition * condition, Section_STR_* STR, WriteBuffer* wb, bool* error)
-{
+void Section_TRIG::printCondition(Condition * condition, Section_STR_* STR, WriteBuffer* wb, bool* error) {
 	TriggerCondition* tc = TriggerCondition::get(condition);
 	tc->print(STR, wb, error);
 	delete tc;
