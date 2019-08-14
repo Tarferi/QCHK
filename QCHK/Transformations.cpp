@@ -447,6 +447,13 @@ bool addTimeLockTrigger(Section_TRIG* v2TRIG, unsigned char comparator, unsigned
 	newTrig->conditions[0].Comparision = comparator; // At most / at least
 	newTrig->conditions[0].Quantifier = time; // Max allowed time
 	
+	newTrig->conditions[1].ConditionType = 15; // Deaths
+	newTrig->conditions[1].groupNumber = 6; // Player 7
+	newTrig->conditions[1].Comparision = 10; // Exactly
+	newTrig->conditions[1].Quantifier = 1; // Bool switch that is off by default
+	newTrig->conditions[1].UnitID = 220; // Mineral Cluster Type 1
+
+
 	newTrig->actions[0].ActionType = 9; // Display text message
 	newTrig->actions[0].Flags = 4;
 	newTrig->actions[0].TriggerText = stringIndex; // Display text message
@@ -455,7 +462,7 @@ bool addTimeLockTrigger(Section_TRIG* v2TRIG, unsigned char comparator, unsigned
 	newTrig->actions[1].Time = 5000; // Display text message
 
 	newTrig->actions[2].ActionType = 2; // Defeat
-
+	
 	if (!v2TRIG->triggers.append(newTrig)) {
 		free(newTrig);
 		return true;
@@ -539,7 +546,7 @@ bool fix5_AddTimeLockTriggers(CHK* v2, CHK* v3, EUDSettings* settings) {
 		free(userString);
 		return false;
 	}
-	unsigned short string = v3STR->getNewStringIndex(userString, &error);
+	unsigned short string = v2STR->getNewStringIndex(userString, &error);
 
 	free(userString);
 

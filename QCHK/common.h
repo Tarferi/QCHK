@@ -7,7 +7,7 @@
 #include "miniz.h"
 #include <cstdint>
 
-#define TRIG_PRINT
+// #define TRIG_PRINT
 
 typedef uint8_t uint8;
 typedef int8_t int8;
