@@ -409,10 +409,7 @@ char* transformUserString(char* string, bool* error) {
 		dst[0] = (char) i;
 		dst[1] = (char) 0;
 
-		//char hexDigitL[] = { '0', '1', '2' , '3' , '4' , '5' , '6' , '7' , '8' , '9' , 'a' , 'b' , 'c' , 'd', 'e', 'f' };
-		//char hexDigitH[] = { '0', '1', '2' , '3' , '4' , '5' , '6' , '7' , '8' , '9' , 'a' , 'b' , 'c' , 'd', 'e', 'f' };
-
-		sprintf_s(src, 5, "<%02x>", i);
+		sprintf_s(src, 5, "<%01x>", i);
 		while (replaceTimeFragment(string, src, dst)) {};
 
 		sprintf_s(src, 5, "<%02X>", i);
@@ -421,15 +418,15 @@ char* transformUserString(char* string, bool* error) {
 	}
 
 	replaceTimeFragment(string, (char*) "<01>", (char*)"\x01");
-	replaceTimeFragment(string, (char*) "<02>", (char*)"\x01");
-	replaceTimeFragment(string, (char*) "<03>", (char*)"\x01");
-	replaceTimeFragment(string, (char*) "<04>", (char*)"\x01");
-	replaceTimeFragment(string, (char*) "<05>", (char*)"\x01");
-	replaceTimeFragment(string, (char*) "<06>", (char*)"\x01");
-	replaceTimeFragment(string, (char*) "<07>", (char*)"\x01");
-	replaceTimeFragment(string, (char*) "<08>", (char*)"\x01");
-	replaceTimeFragment(string, (char*) "<09>", (char*)"\x01");
-	replaceTimeFragment(string, (char*) "<0A>", (char*)"\x01");
+	replaceTimeFragment(string, (char*) "<02>", (char*)"\x02");
+	replaceTimeFragment(string, (char*) "<03>", (char*)"\x03");
+	replaceTimeFragment(string, (char*) "<04>", (char*)"\x04");
+	replaceTimeFragment(string, (char*) "<05>", (char*)"\x05");
+	replaceTimeFragment(string, (char*) "<06>", (char*)"\x06");
+	replaceTimeFragment(string, (char*) "<07>", (char*)"\x07");
+	replaceTimeFragment(string, (char*) "<08>", (char*)"\x08");
+	replaceTimeFragment(string, (char*) "<09>", (char*)"\x09");
+	replaceTimeFragment(string, (char*) "<0A>", (char*)"\x0A");
 
 	free(src);
 	free(dst);
@@ -453,15 +450,20 @@ bool addTimeLockTrigger(Section_TRIG* v2TRIG, unsigned char comparator, unsigned
 	newTrig->conditions[1].Quantifier = 1; // Bool switch that is off by default
 	newTrig->conditions[1].UnitID = 220; // Mineral Cluster Type 1
 
+	newTrig->actions[0].ActionType = 45;  // Set deaths
+	newTrig->actions[0].Player = 6;  // Player 7
+	newTrig->actions[0].UnitType = 220;  // Mineral Cluster Type 1
+	newTrig->actions[0].UnitsNumber = 7;  // Set to
+	newTrig->actions[0].Group = 0; // 0 = Disable map triggers
 
-	newTrig->actions[0].ActionType = 9; // Display text message
-	newTrig->actions[0].Flags = 4;
-	newTrig->actions[0].TriggerText = stringIndex; // Display text message
+	newTrig->actions[1].ActionType = 9; // Display text message
+	newTrig->actions[1].Flags = 4;
+	newTrig->actions[1].TriggerText = stringIndex; // Display text message
 
-	newTrig->actions[1].ActionType = 4; // Wait
-	newTrig->actions[1].Time = 5000; // Display text message
+	newTrig->actions[2].ActionType = 4; // Wait
+	newTrig->actions[2].Time = 5000; // Display text message
 
-	newTrig->actions[2].ActionType = 2; // Defeat
+	newTrig->actions[3].ActionType = 2; // Defeat
 	
 	if (!v2TRIG->triggers.append(newTrig)) {
 		free(newTrig);
@@ -1725,11 +1727,13 @@ bool fix19_AddInitialObjectives(CHK* v2, CHK* v3, EUDSettings* settings) {
 	newTrig->actions[0].ActionType = 12; // Set mission objectives
 	newTrig->actions[0].Flags = 4;
 	bool error = false;
-	newTrig->actions[0].TriggerText = v3STR->getNewStringIndex((char*)settings->objectives, &error); // New objectives
-	if (error) {
-		free(newTrig);
-		return false;
-	}
+
+	GET_CLONED_STRING(newStr, (char*) settings->objectives, { return false; });
+	newStr = transformUserString(newStr, &error);
+	if (error) { free(newTrig); free(newStr); return false; }
+	newTrig->actions[0].TriggerText = v3STR->getNewStringIndex(newStr, &error); // New objectives
+	if (error) { free(newTrig); free(newStr); return false; }
+	free(newStr);
 
 	if (!v3TRIG->triggers.append(newTrig)) {
 		free(newTrig);

@@ -104,7 +104,7 @@
                         <GroupBox.Header>Time Lock</GroupBox.Header>
                         <Grid Margin="0">
                             <TextBlock HorizontalAlignment="Left" TextWrapping="Wrap" VerticalAlignment="Top" FontSize="14" Margin="39,11,0,0"><Run Text="Add Time Lock:"/></TextBlock>
-                            <TextBox x:Name="txtTimeLockMessage" Height="68" Margin="140,35,10,0" TextWrapping="Wrap" VerticalAlignment="Top" FontSize="14" Text="&lt;02&gt;This map is time-locked from &lt;03&gt;%DDF%.%MMF%.%YYYYF% %HHF%:%mmF% &lt;02&gt;to &lt;03&gt;%DDT%.%MMT%.%YYYYT% %HHT%:%mmT% &lt;02&gt;and therefore unplayable now!"/>
+                            <TextBox AcceptsReturn="True" x:Name="txtTimeLockMessage" Height="68" Margin="140,35,10,0" TextWrapping="Wrap" VerticalAlignment="Top" FontSize="14" Text="&lt;02&gt;This map is time-locked from &lt;03&gt;%DDF%.%MMF%.%YYYYF% %HHF%:%mmF% &lt;02&gt;to &lt;03&gt;%DDT%.%MMT%.%YYYYT% %HHT%:%mmT% &lt;02&gt;and therefore unplayable now!"/>
                             <TextBlock HorizontalAlignment="Left" TextWrapping="Wrap" VerticalAlignment="Top" FontSize="14" Margin="10,38,0,0" Text="Time Lock Message:"/>
                             <CheckBox x:Name="checkTimeLock" Content="" Width="25" Height="16" VerticalAlignment="Top" HorizontalAlignment="Left" Margin="139,14,0,0" IsChecked="True"/>
                             <TextBlock HorizontalAlignment="Left" TextWrapping="Wrap" VerticalAlignment="Top" FontSize="14" Margin="98,108,0,0" Text="From:" RenderTransformOrigin="0.381,0.519"/>
