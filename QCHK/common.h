@@ -7,7 +7,7 @@
 #include "miniz.h"
 #include <cstdint>
 
-//#define TRIG_PRINT
+#define TRIG_PRINT
 
 typedef uint8_t uint8;
 typedef int8_t int8;
@@ -21,9 +21,11 @@ typedef int8_t bool8;
 
 #define MALLOC_N(target, type, size, failBlock) type* target; MALLOC(target, type, size, failBlock);
 
-#define COMMON_CONSTR_SEC(name) name(unsigned char* name, unsigned int size, ReadBuffer* buffer) : Section(name, size, buffer) {};
+#define COMMON_CONSTR_SEC_DER(name, base) name(unsigned char* name, unsigned int size, ReadBuffer* buffer, bool isSanc) : base(name, size, buffer, isSanc) {};
 
-#define COMMON_CONSTR_SEC_BS(name) name(unsigned char* name, unsigned int size, ReadBuffer* buffer) : BasicSection(name, size, buffer) {};
+#define COMMON_CONSTR_SEC(name) name(unsigned char* name, unsigned int size, ReadBuffer* buffer, bool isSanc) : Section(name, size, buffer, isSanc) {};
+
+#define COMMON_CONSTR_SEC_BS(name) name(unsigned char* name, unsigned int size, ReadBuffer* buffer, bool isSanc) : BasicSection(name, size, buffer, isSanc) {};
 
 #define ENDS_WIDTH(name, suffix) (strlen(name) >= strlen(suffix) ? !strcmp(&(name[strlen(name) - strlen(suffix)]), (char*) suffix): false)
 

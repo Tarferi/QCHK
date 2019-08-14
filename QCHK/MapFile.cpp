@@ -2,10 +2,11 @@
 #include "Storm.h"
 
 
-MapFile::MapFile(Array<MapFileStr*>* files, bool* error) {
+MapFile::MapFile(Array<MapFileStr*>* files, bool* error, bool isSanc) {
 	this->chk = nullptr;
 	this->files = files;
 	this->sounds = new SoundCollection(files, error);
+	this->isSanc = isSanc;
 }
 
 MapFile::~MapFile() {
@@ -28,7 +29,7 @@ CHK * MapFile::getCHK()
 	if (this->chk == nullptr) {
 		for (unsigned int i = 0; i < this->files->getSize(); i++) {
 			if (!strcmp(this->files->get(i)->fileName, "staredit\\scenario.chk")) {
-				this->chk = new CHK(this->sounds, (char*) this->files->get(i)->contents, this->files->get(i)->contentsLength);
+				this->chk = new CHK(this->sounds, (char*) this->files->get(i)->contents, this->files->get(i)->contentsLength, isSanc);
 			}
 		}
 	}

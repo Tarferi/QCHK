@@ -46,5 +46,9 @@ struct EUDSettings {
 	void* preferredUnitSettings;
 	void* weaponsToIgnoreArmors;
 
+	void* mapName;
+	void* mapDescription;
+	void* objectives;
+	bool8 useObjectives;
 };
 #pragma pack(pop)

@@ -7,6 +7,8 @@
 #include "wav.h"
 #include "math.h"
 
+bool fix0_disableHyperTriggers(CHK* v2, CHK* v3, EUDSettings* settings);
+
 bool fix0_disableDefaultAlliances(CHK* v2, CHK* v3, EUDSettings* settings);
 
 bool fix0_fixColors(CHK* v2, CHK* v3, EUDSettings* settings);
@@ -54,3 +56,5 @@ bool fix16_CopyTriggersAndBriefing(CHK* v2, CHK* v3, EUDSettings* settings);
 bool fix17_CopyUnitSettings(CHK* v2, CHK* v3, EUDSettings* settings);
 
 bool fix18_RelocateSTREUDSection(CHK* v2, CHK* v3, EUDSettings* settings);
+
+bool fix19_AddInitialObjectives(CHK* v2, CHK* v3, EUDSettings* settings);

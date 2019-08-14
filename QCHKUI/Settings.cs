@@ -37,6 +37,11 @@ namespace WpfApplication1 {
         public UnitSettings preferredSettings;
         public byte[] ignoreArmors;
 
+        public String mapName;
+        public String mapDescription;
+        public String mapObjectives;
+        public bool useObjectives;
+
         private Settings() {
 
         }
@@ -90,6 +95,17 @@ namespace WpfApplication1 {
                     s.adjustHPAndWeapons = s.enableBarrier;
                     s.muteUnits = false;
                 }
+                try {
+                    s.mapName = rb.readString();
+                    s.mapDescription = rb.readString();
+                    s.mapObjectives = rb.readString();
+                    s.useObjectives = rb.readBool();
+                } catch (Exception) {
+                    s.mapName = "";
+                    s.mapDescription = "";
+                    s.mapObjectives = "";
+                    s.useObjectives = false;
+                }
                 
             } catch (Exception) {
                 return null;
@@ -124,7 +140,12 @@ namespace WpfApplication1 {
                 wb.writeData(this.preferredSettings);
                 wb.writeArray(this.ignoreArmors);
 
-                File.WriteAllBytes(file, wb.ToArray());
+                wb.writeString(this.mapName);
+                wb.writeString(this.mapDescription);
+                wb.writeString(this.mapObjectives);
+                wb.writeBool(this.useObjectives);
+
+        File.WriteAllBytes(file, wb.ToArray());
                 return true;
             } catch (Exception) {
                 return false;
@@ -157,6 +178,11 @@ namespace WpfApplication1 {
             s.adjustHPAndWeapons = s.enableBarrier;
             s.muteUnits = false;
             s.ignoreArmors = new byte[130];
+
+            s.mapName = "";
+            s.mapDescription = "";
+            s.mapObjectives = "";
+            s.useObjectives = false;
             return s;
         }
     }

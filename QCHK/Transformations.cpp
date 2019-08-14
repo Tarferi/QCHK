@@ -24,6 +24,7 @@ bool fix0_disableDefaultAlliances(CHK* v2, CHK* v3, EUDSettings* settings) {
 bool fix0_fixColors(CHK* v2, CHK* v3, EUDSettings* settings) {
 	GET_SECT(Section_COLR, v3COLR, v3, "COLR");
 	GET_SECT(Section_TRIG, v2TRIG, v2, "TRIG");
+	GET_SECT(Section_TRIG, v3TRIG, v3, "TRIG");
 
 	Trigger* trigger = v2TRIG->triggers.get(237);
 	for (unsigned int i = 4; i < 22; i++) { // Disable color remapping actions
@@ -33,7 +34,7 @@ bool fix0_fixColors(CHK* v2, CHK* v3, EUDSettings* settings) {
 }
 
 #define REMAP_STR(index, triggerindex, actionindex) {\
-GET_CLONED_STRING(nstr, v2STR->getRawString(index+1), {stringsToRelocate.freeItems(); return false;});\
+GET_CLONED_STRING(nstr, v2STR->getRawSancString(index+1), {stringsToRelocate.freeItems(); return false;});\
 if (!stringsToRelocate.append(nstr)) {return false;};\
 if (!(actionsUsingThoseStrings.append(&(((Trigger*)(v2TRIG->triggers[triggerindex]))->actions[actionindex])))){return false;};\
 }\
@@ -43,6 +44,11 @@ GET_CLONED_STRING(nstr, origStr, {stringsToRelocate.freeItems(); return false;})
 if (!stringsToRelocate.append(nstr)){return false;};\
 if (!(actionsUsingThoseStrings.append(&(((Trigger*)(v2TRIG->triggers[triggerindex]))->actions[actionindex])))){return false;};\
 }\
+
+#define REMAP_DIRECT_WAV(index, triggerIndex, actionIndex) ((Action*)&((((Trigger*)(v2TRIG->triggers[triggerIndex])))->actions[actionIndex]))->WAVStringNumber = v2STR->getNewStringIndex( v2STR->getRawSancString(index + 1), &error )
+#define REMAP_DIRECT_STR(index, triggerIndex, actionIndex) ((Action*)&((((Trigger*)(v2TRIG->triggers[triggerIndex])))->actions[actionIndex]))->TriggerText = v2STR->getNewStringIndex( v2STR->getRawSancString(index + 1), &error )
+
+#define DISABLE_ACTION(trig, act) ((Action*)&((((Trigger*)(v2TRIG->triggers[trig])))->actions[act]))->Flags |= 2;
 
 static unsigned short defaultSoundsWhatStart[] = { 0x1f01, 0xe600, 0x6801, 0xf800, 0x0000, 0x4401, 0x4401, 0x7901, 0x0901, 0x5401, 0x2b01, 0xd700, 0xb900, 0x0f00, 0x0f00, 0xc600, 0xce01, 0xf800, 0x0000, 0xa701, 0x9b01, 0x0901, 0x5401, 0xb401, 0xb401, 0xb401, 0xb401, 0xc101, 0x9b01, 0xc101, 0x4401, 0x4401, 0x2b01, 0x0000, 0xe903, 0x5303, 0x3c03, 0x8503, 0x6603, 0x7603, 0x1803, 0x4503, 0x9003, 0xb303, 0x5a03, 0xa503, 0x3503, 0x0d03, 0x7603, 0xa503, 0x2503, 0xbf03, 0x3503, 0x6603, 0x8503, 0xb303, 0x5a03, 0x9003, 0x0704, 0x3c03, 0x1404, 0xdd02, 0x4d04, 0x2f04, 0x5e02, 0x9e02, 0xf201, 0x7302, 0x3d02, 0x0802, 0x1c02, 0x2f02, 0x4b02, 0x0000, 0xdd02, 0xea02, 0x3d02, 0xb702, 0xab02, 0xcf02, 0x1c02, 0x8202, 0xc302, 0x8202, 0x9202, 0x1c02, 0x2f02, 0x0000, 0x7004, 0x3600, 0x2e00, 0x0000, 0x0000, 0xcc03, 0xd003, 0x3200, 0xc803, 0x3c03, 0x1404, 0xdd03, 0xe600, 0x0000, 0xc101, 0x3d04, 0x6104, 0x0000, 0x0f00, 0x8301, 0x8c01, 0x8d01, 0x9001, 0x0f00, 0x8101, 0x0f00, 0x0f00, 0x8501, 0x8b01, 0x8601, 0x8e01, 0x0f00, 0x8801, 0x9101, 0x9201, 0x8201, 0x8901, 0x0f00, 0x8a01, 0x8701, 0x0f00, 0x0f00, 0x0f00, 0xf702, 0xfa02, 0xf802, 0x0003, 0x0303, 0xfe02, 0xfd02, 0xff02, 0xf502, 0x0203, 0x0503, 0xf302, 0xf602, 0x0403, 0x0f00, 0xfb02, 0x0103, 0x0103, 0xf902, 0xfc02, 0xf402, 0xf402, 0x0f00, 0xe401, 0xe801, 0xe701, 0xda01, 0x0f00, 0xdc01, 0xdf01, 0xe301, 0xe501, 0xdd01, 0xe001, 0xd901, 0xde01, 0x0f00, 0x8f01, 0xeb01, 0xea01, 0xe901, 0xdb01, 0xe201, 0xe601, 0xe601, 0x0f00, 0x0f00, 0x0f00, 0x0f00, 0x0f00, 0x0f00, 0x0f00, 0x0f00, 0x0f00, 0x0f00, 0x0f00, 0x0f00, 0x0f00, 0xeb01, 0x8701, 0x0f00, 0x0f00, 0x0f00, 0x0f00, 0x0f00, 0x0f00, 0x0f00, 0x0f00, 0x0f00, 0x8c01, 0x0103, 0x0000, 0x0f00, 0x1e00, 0x1800, 0x1a00, 0x1c00, 0x1e00, 0x0f00, 0x0f00, 0x0f00, 0x0f00, 0x0f00, 0x0f00, 0x0f00, 0x0f00, 0x0f00, 0x0f00, 0x0f00, 0x0f00, 0x0f00, 0x0f00, 0x0f00, 0x0f00, 0x0f00, 0x0f00, 0x0f00 };
 static unsigned short defaultSoundsWhatEnd[] = { 0x2201, 0xe900, 0x6b01, 0xfb00, 0x0000, 0x4701, 0x4701, 0x7c01, 0x0c01, 0x5701, 0x2e01, 0xda00, 0xbc00, 0x0f00, 0x0f00, 0xc900, 0xd101, 0xfb00, 0x0000, 0xaa01, 0x9e01, 0x0c01, 0x5701, 0xb701, 0xb701, 0xb701, 0xb701, 0xc401, 0x9e01, 0xc401, 0x4701, 0x4701, 0x2e01, 0x0000, 0xec03, 0x5303, 0x3d03, 0x8803, 0x6803, 0x7303, 0x1b03, 0x4903, 0x9303, 0xb603, 0x5d03, 0xa803, 0x3703, 0x0e03, 0x7303, 0xa803, 0x2803, 0xc203, 0x3703, 0x6803, 0x8803, 0xb603, 0x5d03, 0x9303, 0x0a04, 0x3d03, 0x1704, 0xe002, 0x4f04, 0x3204, 0x6102, 0xa102, 0xf901, 0x7602, 0x4002, 0x0b02, 0x1f02, 0x3202, 0x4e02, 0x0000, 0xe002, 0xed02, 0x4002, 0xba02, 0xae02, 0xd202, 0x1f02, 0x8502, 0xc602, 0x8502, 0x9302, 0x1f02, 0x3202, 0x0000, 0x7304, 0x3800, 0x3000, 0x0000, 0x0000, 0xce03, 0xd203, 0x3400, 0xca03, 0x3d03, 0x1704, 0xe003, 0xe900, 0x0000, 0xc401, 0x4004, 0x6404, 0x0000, 0x0f00, 0x8301, 0x8c01, 0x8d01, 0x9001, 0x0f00, 0x8101, 0x0f00, 0x0f00, 0x8501, 0x8b01, 0x8601, 0x8e01, 0x0f00, 0x8801, 0x9101, 0x9201, 0x8201, 0x8901, 0x0f00, 0x8a01, 0x8701, 0x0f00, 0x0f00, 0x0f00, 0xf702, 0xfa02, 0xf802, 0x0003, 0x0303, 0xfe02, 0xfd02, 0xff02, 0xf502, 0x0203, 0x0503, 0xf302, 0xf602, 0x0403, 0x0f00, 0xfb02, 0x0103, 0x0103, 0xf902, 0xfc02, 0xf402, 0xf402, 0x0f00, 0xe401, 0xe801, 0xe701, 0xda01, 0x0f00, 0xdc01, 0xdf01, 0xe301, 0xe501, 0xdd01, 0xe001, 0xd901, 0xde01, 0x0f00, 0x8f01, 0xeb01, 0xea01, 0xe901, 0xdb01, 0xe201, 0xe601, 0xe601, 0x0f00, 0x0f00, 0x0f00, 0x0f00, 0x0f00, 0x0f00, 0x0f00, 0x0f00, 0x0f00, 0x0f00, 0x0f00, 0x0f00, 0x0f00, 0xeb01, 0x8701, 0x0f00, 0x0f00, 0x0f00, 0x0f00, 0x0f00, 0x0f00, 0x0f00, 0x0f00, 0x0f00, 0x8c01, 0x0103, 0x0000, 0x0f00, 0x1f00, 0x1900, 0x1b00, 0x1d00, 0x1f00, 0x0f00, 0x0f00, 0x0f00, 0x0f00, 0x0f00, 0x0f00, 0x0f00, 0x0f00, 0x0f00, 0x0f00, 0x0f00, 0x0f00, 0x0f00, 0x0f00, 0x0f00, 0x0f00, 0x0f00, 0x0f00, 0x0f00 };
@@ -54,6 +60,41 @@ static unsigned short defaultSoundsAnnoyedStart[] = { 0x1801, 0xe200, 0x6401, 0x
 static unsigned short defaultSoundsAnnoyedEnd[] = { 0x1e01, 0xe500, 0x6701, 0xf700, 0x0000, 0x4301, 0x4301, 0x7801, 0x0801, 0x5301, 0x3501, 0xd600, 0xb800, 0x0000, 0x0000, 0xc500, 0xcd01, 0xf700, 0x0000, 0xa601, 0x9a01, 0x0801, 0x5301, 0xb301, 0xb301, 0xb301, 0xb301, 0xc001, 0x9a01, 0xc001, 0x4301, 0x4301, 0x3501, 0x0000, 0xf703, 0x5203, 0x3f03, 0x8303, 0x6503, 0x7103, 0x1703, 0x4403, 0x8f03, 0xb203, 0x5803, 0xa403, 0x3403, 0x0c03, 0x7103, 0xa403, 0x2403, 0xbe03, 0x3403, 0x6503, 0x8303, 0xb203, 0x5803, 0x8f03, 0x0604, 0x3f03, 0x2204, 0xdc02, 0x4c04, 0x2e04, 0x5d02, 0x9d02, 0xf101, 0x7202, 0x3c02, 0x0702, 0x1b02, 0x2e02, 0x4a02, 0x0000, 0xdc02, 0xe902, 0x3c02, 0xb602, 0xaa02, 0xce02, 0x1b02, 0x8102, 0xc202, 0x8102, 0x9102, 0x1b02, 0x2e02, 0x0000, 0x6f04, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x3f03, 0x2204, 0xdc03, 0xe500, 0x0000, 0xc001, 0x3c04, 0x6004, 0x0000 };
 
 static unsigned short defaultSoundsReady[] = { 0x1301, 0xe100, 0x6001, 0xf100, 0x0000, 0x3c01, 0x3c01, 0x7001, 0x0001, 0x4c01, 0x2701, 0xd100, 0xb000, 0x0000, 0x8600, 0x0000, 0x0000, 0xf100, 0x0000, 0x0000, 0x0000, 0x0001, 0x4c01, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x3c01, 0x3c01, 0x2701, 0x0000, 0xe703, 0x0000, 0x3b03, 0x8403, 0x6203, 0x7203, 0x1303, 0x4003, 0x8d03, 0xad03, 0x5903, 0xa003, 0x2e03, 0x0703, 0x7203, 0xa003, 0x2003, 0x0000, 0x2e03, 0x6203, 0x8403, 0xad03, 0x5903, 0x8d03, 0x0004, 0x3b03, 0x1104, 0xd802, 0x4804, 0x2904, 0x5502, 0x9a02, 0xec01, 0x6e02, 0x3702, 0x0102, 0x1602, 0x2502, 0x4602, 0x0000, 0xd802, 0x0000, 0x3702, 0x0000, 0x0000, 0x0000, 0x1602, 0x7d02, 0x0000, 0x7d02, 0x8a02, 0x0000, 0x2502, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x3b03, 0x1104, 0x0000, 0x0000, 0x0000, 0x0000, 0x3704, 0x0000, 0x0000 };
+
+bool fix0_disableHyperTriggers(CHK* v2, CHK* v3, EUDSettings* settings) {
+	GET_SECT(Section_TRIG, v3TRIG, v3, "TRIG");
+
+	for (unsigned int triggerIndex = 0; triggerIndex < v3TRIG->triggers.getSize(); triggerIndex++) {
+		Trigger* trigger = v3TRIG->triggers[triggerIndex];
+		unsigned int waiters = 0;
+		unsigned int nonzeroes = 0;
+		unsigned int preserves = 0;
+		for (unsigned int actionIndex = 0; actionIndex < 64; actionIndex++) {
+			Action* action = &(trigger->actions[actionIndex]);
+			if (action->ActionType != 0 && action->ActionType != 47) { // Ignore comments
+				nonzeroes++;
+			}
+			if (action->ActionType == 3) {
+				preserves++;
+			}
+			if (action->ActionType == 4 && action->UnitsNumber == 0) { // Hyper trigger
+				waiters++;
+			}
+		}
+		// Is hyper trigger?
+		if (nonzeroes == waiters + preserves && waiters > 0) {
+			for (unsigned int conditionIndex = 0; conditionIndex < 16; conditionIndex++) {
+				Condition* condition = &(trigger->conditions[conditionIndex]);
+				if (condition->ConditionType != 0) {
+					condition->ConditionType = 23; // Never
+					LOG("HYPER TRIGGERS", "Replaced hyper trigger condition %d in trigger %d\n", conditionIndex, triggerIndex);
+				}
+			}
+		}
+	}
+
+	return true;
+}
 
 bool fix0_muteSounds(CHK * v2, CHK * v3, EUDSettings * settings) {
 	GET_SECT(Section_TRIG, v2TRIG, v2, "TRIG");
@@ -89,15 +130,17 @@ bool fix0_muteSounds(CHK * v2, CHK * v3, EUDSettings * settings) {
 
 bool fix0_relocateStrings(CHK* v2, CHK* v3, EUDSettings* settings) {
 	GET_SECT(Section_TRIG, v2TRIG, v2, "TRIG");
-	GET_SECT(Section_STR_, v2STR, v2, "STR ");
+	GET_SECT(Section_STR_Sanc, v2STR, v2, "STR ");
+	
+	bool error = false;
 	Array<char*> stringsToRelocate;
 	Array<Action*> actionsUsingThoseStrings;
 	if (settings->enableBarrier) {
-		REMAP_STR(311, 249, 0); // Barrier charge
+		REMAP_DIRECT_STR(311, 249, 3); // Barrier charge
 		LOG("STR RELOCATOR", "Relocating barrier charged message")
 	}
 	if (settings->enableVisor) {
-		REMAP_STR(314, 321, 0); // Visor charge
+		REMAP_DIRECT_STR(314, 321, 0); // Visor charge
 		LOG("STR RELOCATOR", "Relocating visor charged message")
 	}
 
@@ -137,14 +180,80 @@ bool fix0_relocateStrings(CHK* v2, CHK* v3, EUDSettings* settings) {
 		REMAP_XSTR("\x03" "D" "\x04" "eaths", 240, 0);
 		LOG("STR RELOCATOR", "Fixing deaths leaderboard title");
 	}
+	// Sounds
+	
+	REMAP_DIRECT_WAV(8, 243, 1);
+	REMAP_DIRECT_WAV(9, 246, 0);
+	
+	REMAP_DIRECT_WAV(10, 249, 1);
+	REMAP_DIRECT_WAV(10, 272, 4);
+	REMAP_DIRECT_WAV(10, 274, 4);
+	REMAP_DIRECT_WAV(10, 276, 4);
+	REMAP_DIRECT_WAV(10, 278, 4);
+	REMAP_DIRECT_WAV(10, 280, 4);
+	REMAP_DIRECT_WAV(10, 282, 4);
+	REMAP_DIRECT_WAV(10, 321, 2);
+
+	REMAP_DIRECT_WAV(306, 308, 3);
+	REMAP_DIRECT_WAV(306, 309, 3);
+
+	REMAP_DIRECT_WAV(307, 311, 2);
+	REMAP_DIRECT_WAV(307, 313, 1);
+	REMAP_DIRECT_WAV(307, 314, 1);
+	REMAP_DIRECT_WAV(307, 315, 1);
+	REMAP_DIRECT_WAV(307, 316, 3);
+
+	REMAP_DIRECT_WAV(317, 312, 2);
+
+
+	/*
+
+	v2TRIG->triggers.get(1)->actions[0].Flags |= 2;
+	v2TRIG->triggers.get(234)->actions[0].Flags |= 2;
+	v2TRIG->triggers.get(235)->actions[45].Flags |= 2;
+	v2TRIG->triggers.get(236)->actions[3].Flags |= 2;
+	v2TRIG->triggers.get(237)->actions[22].Flags |= 2;
+	v2TRIG->triggers.get(238)->actions[2].Flags |= 2;
+	v2TRIG->triggers.get(240)->actions[0].Flags |= 2;
+	v2TRIG->triggers.get(241)->actions[0].Flags |= 2;
+	v2TRIG->triggers.get(242)->actions[0].Flags |= 2;
+	v2TRIG->triggers.get(243)->actions[1].Flags |= 2;
+	v2TRIG->triggers.get(246)->actions[0].Flags |= 2;
+	v2TRIG->triggers.get(249)->actions[1].Flags |= 2;
+	v2TRIG->triggers.get(249)->actions[3].Flags |= 2;
+	v2TRIG->triggers.get(272)->actions[4].Flags |= 2;
+	v2TRIG->triggers.get(274)->actions[4].Flags |= 2;
+	v2TRIG->triggers.get(276)->actions[4].Flags |= 2;
+	v2TRIG->triggers.get(278)->actions[4].Flags |= 2;
+	v2TRIG->triggers.get(280)->actions[4].Flags |= 2;
+	v2TRIG->triggers.get(282)->actions[4].Flags |= 2;
+	v2TRIG->triggers.get(308)->actions[3].Flags |= 2;
+	v2TRIG->triggers.get(309)->actions[3].Flags |= 2;
+	v2TRIG->triggers.get(311)->actions[2].Flags |= 2;
+	v2TRIG->triggers.get(312)->actions[2].Flags |= 2;
+	v2TRIG->triggers.get(313)->actions[0].Flags |= 2;
+	v2TRIG->triggers.get(313)->actions[1].Flags |= 2;
+	v2TRIG->triggers.get(314)->actions[0].Flags |= 2;
+	v2TRIG->triggers.get(314)->actions[1].Flags |= 2;
+	v2TRIG->triggers.get(315)->actions[0].Flags |= 2;
+	v2TRIG->triggers.get(315)->actions[1].Flags |= 2;
+	v2TRIG->triggers.get(316)->actions[0].Flags |= 2;
+	v2TRIG->triggers.get(316)->actions[3].Flags |= 2;
+	v2TRIG->triggers.get(321)->actions[0].Flags |= 2;
+	v2TRIG->triggers.get(321)->actions[2].Flags |= 2;
+	*/
+	//v2TRIG->triggers.get(163)->actions[0].Group += 1;
 
 	// Remap those strings
 	for (unsigned int i = 0; i < stringsToRelocate.getSize(); i++) {
 		char* string = stringsToRelocate.get(i);
 		Action* action = actionsUsingThoseStrings.get(i);
-		action->TriggerText = v2STR->getNewStringIndex(string);
+		if (!error) {
+			action->TriggerText = v2STR->getNewStringIndex(string, &error);
+		}
 		free(string);
 	}
+	if (error) { return false; }
 	return true;
 }
 
@@ -430,9 +539,13 @@ bool fix5_AddTimeLockTriggers(CHK* v2, CHK* v3, EUDSettings* settings) {
 		free(userString);
 		return false;
 	}
-	unsigned short string = v2STR->getNewStringIndex(userString);
+	unsigned short string = v3STR->getNewStringIndex(userString, &error);
 
 	free(userString);
+
+	if (error) {
+		return false;
+	}
 
 	unsigned char AT_LEAST = 0;
 	unsigned char AT_MOST = 1;
@@ -470,9 +583,11 @@ bool fix6_CopyForceNames(CHK* v2, CHK* v3, EUDSettings* settings) {
 	GET_SECT(Section_STR_, v2STR, v2, "STR ");
 	GET_SECT(Section_STR_, v3STR, v3, "STR ");
 
+	bool error = false;
 	for (unsigned int i = 0; i < 4; i++) {
 		if (v3FORC->data->str_names[i] != 0) {
-			v3FORC->data->str_names[i] = v2STR->getNewStringIndex(v3STR->getRawString(v3FORC->data->str_names[i]));
+			v3FORC->data->str_names[i] = v2STR->getNewStringIndex(v3STR->getRawString(v3FORC->data->str_names[i]), &error);
+			if (error) { return false; }
 		}
 	}
 	return true;
@@ -609,7 +724,7 @@ bool fix8_DisableBarrier(CHK* v2, CHK* v3, EUDSettings* settings) {
 	GET_SECT(Section_STR_, v2STR, v2, "STR ");
 	GET_SECT(Section_TRIG, v2TRIG, v2, "TRIG");
 
-	v2STR->data[176244] = 51; // For some reason this disables the healing ability
+	//v2STR->data[176244] = 51; // For some reason this disables the healing ability
 
 	v2TRIG->triggers.get(249)->actions[1].Flags |= 2; // Disable barrier availability sound
 	v2TRIG->triggers.get(249)->actions[3].Flags |= 2; // Disable barrier availability message
@@ -1340,11 +1455,13 @@ bool fix15_CopyScenarionNameAndDescription(CHK* v2, CHK* v3, EUDSettings* settin
 	GET_SECT(Section_SPRP, v2SPRP, v2, "SPRP");
 	GET_SECT(Section_SPRP, v3SPRP, v3, "SPRP");
 
-
-	char* scenarioName = v3STR->getRawString(v3SPRP->str_scenarioName);
-	char* scenarioDescription = v3STR->getRawString(v3SPRP->str_scenarioDescription);
-	v2SPRP->str_scenarioName = v2STR->getNewStringIndex(scenarioName);
-	v2SPRP->str_scenarioDescription = v2STR->getNewStringIndex(scenarioDescription);
+	bool error = false;
+	char* scenarioName = (char*) settings->mapName;
+	char* scenarioDescription = (char*) settings->mapDescription;
+	v2SPRP->str_scenarioName = v2STR->getNewStringIndex(scenarioName, &error);
+	if (error) { return false; }
+	v2SPRP->str_scenarioDescription = v2STR->getNewStringIndex(scenarioDescription, &error);
+	if (error) { return false; }
 	LOG("SCENARIO", "Set scenario name to %s", v2STR->getRawString(v2SPRP->str_scenarioName));
 	LOG("SCENARIO", "Set scenario description to %s", v2STR->getRawString(v2SPRP->str_scenarioDescription));
 	return true;
@@ -1359,6 +1476,36 @@ bool fix16_CopyTriggersAndBriefing(CHK* v2, CHK* v3, EUDSettings* settings) {
 
 	GET_SECT(Section_MBRF, v2MBRF, v2, "MBRF");
 	GET_SECT(Section_MBRF, v3MBRF, v3, "MBRF");
+
+	
+	// Disable whatever used STR
+	/*
+	for (unsigned int triggerIndex = 0; triggerIndex < v2TRIG->triggers.getSize(); triggerIndex++) {
+		Trigger* trigger = v2TRIG->triggers[triggerIndex];
+		for (unsigned int actionIndex = 0; actionIndex < 64; actionIndex++) {
+			Action* action = &(trigger->actions[actionIndex]);
+			if (action->ActionType == 8 || action->ActionType == 7 || action->ActionType == 9 || action->ActionType == 12 ||
+				action->ActionType == 17 || action->ActionType == 18 || action->ActionType == 19 || action->ActionType == 20 || action->ActionType == 21 ||
+				action->ActionType == 33 || action->ActionType == 34 || action->ActionType == 35 || action->ActionType == 36 || action->ActionType == 37 ||
+				action->ActionType == 41 || action->ActionType == 47) {
+				LOG_ERROR("TRIGGER COPY", "Disabling action %d in trigger %d", actionIndex, triggerIndex);
+				action->Flags |= 2;
+
+				unsigned short stringIndex = action->TriggerText;
+				if (stringIndex > v2STR->getLastStringIndex()) {
+					action->TriggerText = 0;
+				}
+			}
+			if (action->ActionType == 8 || action->ActionType == 7) {
+				unsigned short wavIndex = action->WAVStringNumber;
+				if (wavIndex > v2STR->getLastStringIndex()) {
+					action->WAVStringNumber = 0;
+				}
+			}
+		}
+	}
+	*/
+
 
 	for (unsigned int type = 0; type < 2; type++) {
 		Section_TRIG* SRC = type == 0 ? v3TRIG : v3MBRF;
@@ -1376,13 +1523,19 @@ bool fix16_CopyTriggersAndBriefing(CHK* v2, CHK* v3, EUDSettings* settings) {
 						char* triggerText = v3STR->getRawString(action->TriggerText);
 						if (strlen(triggerText) == 0) {
 							action->TriggerText = 0;
-						} else{
-							action->TriggerText = v2STR->getNewStringIndex(triggerText); 
+						} else {
+							bool error = false;
+							action->TriggerText = v2STR->getNewStringIndex(triggerText, &error); 
+							if (error) {
+								free(trigger);
+								return false;
+							}
 						}
 					}
 				}
 			}
 			if (!DST->triggers.append(trigger)) {
+				free(trigger);
 				return false;
 			}
 		}
@@ -1398,12 +1551,13 @@ bool fix17_CopyUnitSettings(CHK* v2, CHK* v3, EUDSettings* settings) {
 	GET_SECT(Section_STR_, v3STR, v3, "STR ");
 
 	memcpy(v2UNIX->data, v3UNIX->data, sizeof(UnitSettings));
-
+	bool error = false;
 	for (unsigned int unitIndex = 0; unitIndex < 228; unitIndex++) {
 		unsigned short unitNameIndex = v3UNIX->data->str_unit_name[unitIndex];
 		if (unitNameIndex != 0) {
 			char* unitName = v3STR->getRawString(unitNameIndex);
-			v2UNIX->data->str_unit_name[unitIndex] = v2STR->getNewStringIndex(unitName);
+			v2UNIX->data->str_unit_name[unitIndex] = v2STR->getNewStringIndex(unitName, &error);
+			if (error) { return false; }
 			LOG("UNITS", "Copying \"%s\" as units %d name", unitName, unitIndex);
 		}
 	}
@@ -1411,10 +1565,42 @@ bool fix17_CopyUnitSettings(CHK* v2, CHK* v3, EUDSettings* settings) {
 }
 
 bool fix18_RelocateSTREUDSection(CHK * v2, CHK * v3, EUDSettings * settings) {
+	GET_SECT(Section_STR_, v2STR, v2, "STR ");
+
+	/*
+	FILE* f;
+
+	if (!fopen_s(&f, "str.bin", "wb")) {
+		unsigned char* data;
+		unsigned int len;
+		WriteBuffer wbB;
+		v2STR->write(&wbB);
+		wbB.getWrittenData(&data, &len);
+		fwrite(data, sizeof(char), len, f);
+		fclose(f);
+	}
+
+	bool error = false;
+	char buffer[4096];
+	WriteBuffer wbT;
+	for (unsigned int i = 1; i < 100; i++) {
+		char* str = v2STR->getRawString(i);
+		
+		sprintf_s(buffer, "String (%d) \"%s\"\r\n\r\n", i, str);
+		wbT.writeFixedLengthString((unsigned char*)buffer, &error);
+	}
+
+	if (!fopen_s(&f, "str.txt", "wb")) {
+		unsigned char* data;
+		unsigned int len;
+		wbT.getWrittenData(&data, &len);
+		fwrite(data, sizeof(char), len, f);
+		fclose(f);
+	}
+	*/
 
 	/* Experiments 
-	Section_STR_* STR = (Section_STR_*)v2->getSection("STR ");
-
+	
 	WriteBuffer wb;
 	v2->write(&wb);
 
@@ -1513,3 +1699,34 @@ bool fix18_RelocateSTREUDSection(CHK * v2, CHK * v3, EUDSettings * settings) {
 #endif
 }
 
+bool fix19_AddInitialObjectives(CHK* v2, CHK* v3, EUDSettings* settings) {
+	if (!settings->useObjectives) {
+		return true;
+	}
+	
+	GET_SECT(Section_STR_, v3STR, v3, "STR ");
+	GET_SECT(Section_TRIG, v3TRIG, v3, "TRIG");
+
+	MALLOC_N(newTrig, Trigger, 1, { return false; });
+
+	memset(newTrig, 0, sizeof(Trigger));
+	newTrig->flags = 0;
+	newTrig->players[17] = 1; // All players
+
+	newTrig->conditions[0].ConditionType = 22; // Always
+
+	newTrig->actions[0].ActionType = 12; // Set mission objectives
+	newTrig->actions[0].Flags = 4;
+	bool error = false;
+	newTrig->actions[0].TriggerText = v3STR->getNewStringIndex((char*)settings->objectives, &error); // New objectives
+	if (error) {
+		free(newTrig);
+		return false;
+	}
+
+	if (!v3TRIG->triggers.append(newTrig)) {
+		free(newTrig);
+		return false;
+	}
+	return true;
+}

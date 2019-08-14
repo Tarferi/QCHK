@@ -77,8 +77,12 @@ unsigned short SoundCollection::addOrRewriteSound(Section_STR_ * STR, char * fil
 		file->fileName = newFilename;
 		char buffer[1024];
 		sprintf_s(buffer, "snd_%d.%s", this->files.getSize(), isOgg ? "ogg" : "wav");
-		file->v2Index = STR->getNewStringIndex(buffer);
-		if (!this->files.append(file)) {
+		file->v2Index = STR->getNewStringIndex(buffer, error);
+		if (*error) {
+			free(file->fileName);
+			free(file->contents);
+			free(file);
+		} else if (!this->files.append(file)) {
 			free(file->fileName);
 			free(file->contents);
 			free(file);

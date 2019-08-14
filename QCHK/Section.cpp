@@ -1,6 +1,6 @@
 #include "Section.h"
 
-Section::Section(unsigned char * name, unsigned int size, ReadBuffer * buffer)
+Section::Section(unsigned char * name, unsigned int size, ReadBuffer * buffer, bool isSanc)
 {
 	this->name = (char*) name;
 	this->size = size;
@@ -8,6 +8,7 @@ Section::Section(unsigned char * name, unsigned int size, ReadBuffer * buffer)
 	this->buffer = buffer;
 	this->bufferBeginPosition = buffer->getPosition();
 	this->buffer->setPosition(this->bufferBeginPosition + this->size);
+	this->isSanc = isSanc;
 }
 
 Section::~Section()

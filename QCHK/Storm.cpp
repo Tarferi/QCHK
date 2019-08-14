@@ -54,8 +54,7 @@ Storm::~Storm() {
 	LOG("STORM", "Storm library uninitiated");
 }
 
-MapFile * Storm::readSCX(char * filePath, bool* error)
-{
+MapFile * Storm::readSCX(char * filePath, bool* error) {
 
 	HANDLE mapFile;
 	void* scx = SFileOpenArchive(filePath, 0, 0x00000100, &mapFile);
@@ -103,6 +102,16 @@ MapFile * Storm::readSCX(char * filePath, bool* error)
 		}
 		SFileCloseFile(fileH);
 
+#ifdef STORM_DUMP_FILES
+		FILE* f;
+		char buffer[1024];
+		sprintf_s(buffer, "storm/%s", fileName);
+		if (!fopen_s(&f, buffer, "wb")) {
+			fwrite(fileContents, sizeof(char), data.dwFileSize, f);
+			fclose(f);
+		}
+#endif
+
 		memset(file, 0, sizeof(MapFileStr));
 		file->contentsLength = data.dwFileSize;
 		file->fileName = fileName;
@@ -122,7 +131,7 @@ MapFile * Storm::readSCX(char * filePath, bool* error)
 	SFileFindClose(searchHandle);
 	SFileCloseArchive(mapFile);
 	LOG("STORM", "Closed file %s", filePath);
-	MapFile* mf = new MapFile(files, error);
+	MapFile* mf = new MapFile(files, error, false);
 	return mf;
 }
 
@@ -180,7 +189,7 @@ MapFile * Storm::readSanc(bool* error) {
 		return nullptr;
 	}
 
-	MapFile* mf = new MapFile(files, error);
+	MapFile* mf = new MapFile(files, error, true);
 	LOG("STORM", "Finished reading sanc data");
 	return mf;
 }

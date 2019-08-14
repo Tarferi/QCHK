@@ -1,7 +1,7 @@
 #include "CHK.h"
 #include "common.h"
 
-CHK::CHK(SoundCollection* sounds, FILE * file)
+CHK::CHK(SoundCollection* sounds, FILE * file, bool isSanc)
 {
 	this->closeFileAfter = false;
 	bool error;
@@ -11,10 +11,10 @@ CHK::CHK(SoundCollection* sounds, FILE * file)
 	}
 	this->sounds = sounds;
 	
-	this->valid = this->parse();
+	this->valid = this->parse(isSanc);
 }
 
-CHK::CHK(SoundCollection* sounds, const char * fileName)
+CHK::CHK(SoundCollection* sounds, const char * fileName, bool isSanc)
 {
 	this->closeFileAfter = false;
 	errno_t err = fopen_s(&(this->file), fileName, "rb");
@@ -30,10 +30,10 @@ CHK::CHK(SoundCollection* sounds, const char * fileName)
 		return;
 	}
 	this->sounds = sounds;
-	this->valid = this->parse();
+	this->valid = this->parse(isSanc);
 }
 
-CHK::CHK(SoundCollection* sounds, char * data, unsigned int size)
+CHK::CHK(SoundCollection* sounds, char * data, unsigned int size, bool isSanc)
 {
 	this->closeFileAfter = false;
 	bool error = false;
@@ -43,7 +43,7 @@ CHK::CHK(SoundCollection* sounds, char * data, unsigned int size)
 		return;
 	}
 	this->sounds = sounds;
-	this->valid = this->parse();
+	this->valid = this->parse(isSanc);
 }
 
 CHK::~CHK()
@@ -81,7 +81,10 @@ bool CHK::write(WriteBuffer* buffer) {
 			LOG("CHK", "Failed to write section \"%s\"", section->getName());
 			return false;
 		}
-		section->write(buffer);
+		if (!section->write(buffer)) {
+			LOG("CHK", "Failed to write section \"%s\"", section->getName());
+			return false;
+		}
 		unsigned int postPosition = buffer->getPosition();
 		unsigned int sectionSize = (postPosition - prePosition) - 4;
 		buffer->setPosition(prePosition);
@@ -226,7 +229,7 @@ Array<unsigned short>* CHK::getUsedWavs(Array<Action*>* actionSetter, bool* erro
 	return indexes;
 }
 
-bool CHK::parse() {
+bool CHK::parse(bool isSanc) {
 	LOG("CHK", "BEGIN PARSING of %d bytes", this->buffer->getDataSize())
 	while (!this->buffer->isDone()) {
 		bool error = false;
@@ -243,124 +246,128 @@ bool CHK::parse() {
 		LOG("CHK", "Found section \"%s\" of size %d", name, size);
 		Section* section;
 		if (!strcmp(name, "TYPE")) {
-			section = new Section_TYPE((unsigned char*)name, size, this->buffer);
+			section = new Section_TYPE((unsigned char*)name, size, this->buffer, isSanc);
 		}
 		else if (!strcmp(name, "VER ")) {
-			section = new Section_VER_((unsigned char*)name, size, this->buffer);
+			section = new Section_VER_((unsigned char*)name, size, this->buffer, isSanc);
 		}
 		else if (!strcmp(name, "IVER")) {
-			section = new Section_IVER((unsigned char*)name, size, this->buffer);
+			section = new Section_IVER((unsigned char*)name, size, this->buffer, isSanc);
 		}
 		else if (!strcmp(name, "IVE2")) {
-			section = new Section_IVE2((unsigned char*)name, size, this->buffer);
+			section = new Section_IVE2((unsigned char*)name, size, this->buffer, isSanc);
 		}
 		else if (!strcmp(name, "VCOD")) {
-			section = new Section_VCOD((unsigned char*)name, size, this->buffer);
+			section = new Section_VCOD((unsigned char*)name, size, this->buffer, isSanc);
 		}
 		else if (!strcmp(name, "IOWN")) {
-			section = new Section_IOWN((unsigned char*)name, size, this->buffer);
+			section = new Section_IOWN((unsigned char*)name, size, this->buffer, isSanc);
 		}
 		else if (!strcmp(name, "OWNR")) {
-			section = new Section_OWNR((unsigned char*)name, size, this->buffer);
+			section = new Section_OWNR((unsigned char*)name, size, this->buffer, isSanc);
 		}
 		else if (!strcmp(name, "ERA ")) {
-			section = new Section_ERA_((unsigned char*)name, size, this->buffer);
+			section = new Section_ERA_((unsigned char*)name, size, this->buffer, isSanc);
 		}
 		else if (!strcmp(name, "DIM ")) {
-			section = new Section_DIM_((unsigned char*)name, size, this->buffer);
+			section = new Section_DIM_((unsigned char*)name, size, this->buffer, isSanc);
 		}
 		else if (!strcmp(name, "SIDE")) {
-			section = new Section_SIDE((unsigned char*)name, size, this->buffer);
+			section = new Section_SIDE((unsigned char*)name, size, this->buffer, isSanc);
 		}
 		else if (!strcmp(name, "MTXM")) {
-			section = new Section_MTXM((unsigned char*)name, size, this->buffer);
+			section = new Section_MTXM((unsigned char*)name, size, this->buffer, isSanc);
 		}
 		else if (!strcmp(name, "PUNI")) {
-			section = new Section_PUNI((unsigned char*)name, size, this->buffer);
+			section = new Section_PUNI((unsigned char*)name, size, this->buffer, isSanc);
 		}
 		else if (!strcmp(name, "UPGR")) {
-			section = new Section_UPGR((unsigned char*)name, size, this->buffer);
+			section = new Section_UPGR((unsigned char*)name, size, this->buffer, isSanc);
 		}
 		else if (!strcmp(name, "PTEC")) {
-			section = new Section_PTEC((unsigned char*)name, size, this->buffer);
+			section = new Section_PTEC((unsigned char*)name, size, this->buffer, isSanc);
 		}
 		else if (!strcmp(name, "UNIT")) {
-			section = new Section_UNIT((unsigned char*)name, size, this->buffer);
+			section = new Section_UNIT((unsigned char*)name, size, this->buffer, isSanc);
 		}
 		else if (!strcmp(name, "ISOM")) {
-			section = new Section_ISOM((unsigned char*)name, size, this->buffer);
+			section = new Section_ISOM((unsigned char*)name, size, this->buffer, isSanc);
 		}
 		else if (!strcmp(name, "TILE")) {
-			section = new Section_TILE((unsigned char*)name, size, this->buffer);
+			section = new Section_TILE((unsigned char*)name, size, this->buffer, isSanc);
 		}
 		else if (!strcmp(name, "DD2 ")) {
-			section = new Section_DD2_((unsigned char*)name, size, this->buffer);
+			section = new Section_DD2_((unsigned char*)name, size, this->buffer, isSanc);
 		}
 		else if (!strcmp(name, "THG2")) {
-			section = new Section_THG2((unsigned char*)name, size, this->buffer);
+			section = new Section_THG2((unsigned char*)name, size, this->buffer, isSanc);
 		}
 		else if (!strcmp(name, "MASK")) {
-			section = new Section_MASK((unsigned char*)name, size, this->buffer);
+			section = new Section_MASK((unsigned char*)name, size, this->buffer, isSanc);
 		}
 		else if (!strcmp(name, "STR ")) {
-			section = new Section_STR_((unsigned char*)name, size, this->buffer);
+			if (isSanc) {
+				section = new Section_STR_Sanc((unsigned char*)name, size, this->buffer, isSanc);
+			} else {
+				section = new Section_STR_Native((unsigned char*)name, size, this->buffer, isSanc);
+			}
 		}
 		else if (!strcmp(name, "UPRP")) {
-			section = new Section_UPRP((unsigned char*)name, size, this->buffer);
+			section = new Section_UPRP((unsigned char*)name, size, this->buffer, isSanc);
 		}
 		else if (!strcmp(name, "UPUS")) {
-			section = new Section_UPUS((unsigned char*)name, size, this->buffer);
+			section = new Section_UPUS((unsigned char*)name, size, this->buffer, isSanc);
 		}
 		else if (!strcmp(name, "MRGN")) {
-			section = new Section_MRGN((unsigned char*)name, size, this->buffer);
+			section = new Section_MRGN((unsigned char*)name, size, this->buffer, isSanc);
 		}
 		else if (!strcmp(name, "TRIG")) {
-			section = new Section_TRIG((unsigned char*)name, size, this->buffer);
+			section = new Section_TRIG((unsigned char*)name, size, this->buffer, isSanc);
 		}
 		else if (!strcmp(name, "MBRF")) {
-			section = new Section_MBRF((unsigned char*)name, size, this->buffer);
+			section = new Section_MBRF((unsigned char*)name, size, this->buffer, isSanc);
 		}
 		else if (!strcmp(name, "SPRP")) {
-			section = new Section_SPRP((unsigned char*)name, size, this->buffer);
+			section = new Section_SPRP((unsigned char*)name, size, this->buffer, isSanc);
 		}
 		else if (!strcmp(name, "FORC")) {
-			section = new Section_FORC((unsigned char*)name, size, this->buffer);
+			section = new Section_FORC((unsigned char*)name, size, this->buffer, isSanc);
 		}
 		else if (!strcmp(name, "WAV ")) {
-			section = new Section_WAV_((unsigned char*)name, size, this->buffer);
+			section = new Section_WAV_((unsigned char*)name, size, this->buffer, isSanc);
 		}
 		else if (!strcmp(name, "UNIS")) {
-			section = new Section_UNIS((unsigned char*)name, size, this->buffer);
+			section = new Section_UNIS((unsigned char*)name, size, this->buffer, isSanc);
 		}
 		else if (!strcmp(name, "UPGS")) {
-			section = new Section_UPGS((unsigned char*)name, size, this->buffer);
+			section = new Section_UPGS((unsigned char*)name, size, this->buffer, isSanc);
 		}
 		else if (!strcmp(name, "TECS")) {
-			section = new Section_TECS((unsigned char*)name, size, this->buffer);
+			section = new Section_TECS((unsigned char*)name, size, this->buffer, isSanc);
 		}
 		else if (!strcmp(name, "SWNM")) {
-			section = new Section_SWNM((unsigned char*)name, size, this->buffer);
+			section = new Section_SWNM((unsigned char*)name, size, this->buffer, isSanc);
 		}
 		else if (!strcmp(name, "COLR")) {
-			section = new Section_COLR((unsigned char*)name, size, this->buffer);
+			section = new Section_COLR((unsigned char*)name, size, this->buffer, isSanc);
 		}
 		else if (!strcmp(name, "PUPx")) {
-			section = new Section_PUPx((unsigned char*)name, size, this->buffer);
+			section = new Section_PUPx((unsigned char*)name, size, this->buffer, isSanc);
 		}
 		else if (!strcmp(name, "PTEx")) {
-			section = new Section_PTEx((unsigned char*)name, size, this->buffer);
+			section = new Section_PTEx((unsigned char*)name, size, this->buffer, isSanc);
 		}
 		else if (!strcmp(name, "UNIx")) {
-			section = new Section_UNIx((unsigned char*)name, size, this->buffer);
+			section = new Section_UNIx((unsigned char*)name, size, this->buffer, isSanc);
 		}
 		else if (!strcmp(name, "UPGx")) {
-			section = new Section_UPGx((unsigned char*)name, size, this->buffer);
+			section = new Section_UPGx((unsigned char*)name, size, this->buffer, isSanc);
 		}
 		else if (!strcmp(name, "TECx")) {
-			section = new Section_TECx((unsigned char*)name, size, this->buffer);
+			section = new Section_TECx((unsigned char*)name, size, this->buffer, isSanc);
 		}
 		else {
-			section = new BasicSection((unsigned char*)name, size, this->buffer);
+			section = new BasicSection((unsigned char*)name, size, this->buffer, isSanc);
 		}
 		if (!this->sections.append(section)) {
 			delete section;

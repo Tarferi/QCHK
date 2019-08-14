@@ -39,7 +39,8 @@ void processMap(EUDSettings* settings) {
 		delete storm;
 		return;
 	}
-
+	
+	error |= !fix0_disableHyperTriggers(v2, v3, settings);
 	error |= !fix0_disableDefaultAlliances(v2, v3, settings);
 	error |= !fix0_relocateStrings(v2, v3, settings);
 
@@ -67,7 +68,7 @@ void processMap(EUDSettings* settings) {
 	if (!settings->addTouchRevive) {
 		error |= !fix4_DisableTouchRevive(v2, v3, settings);
 	}
-
+	
 	if (settings->addTimeLock) {
 		error |= !fix5_AddTimeLockTriggers(v2, v3, settings);
 	}
@@ -75,7 +76,8 @@ void processMap(EUDSettings* settings) {
 	if (settings->recalculateHPAndDamage) {
 		error |= !fix13_RecalculateHPAndDamage(v2, v3, settings);
 	}
-
+	
+	error |= !fix19_AddInitialObjectives(v2, v3, settings);
 	error |= !fix6_CopyForceNames(v2, v3, settings);
 	error |= !fix7_CopyUnitProperties(v2, v3, settings);
 	error |= !fix9_RemapLocations(v2, v3, settings);
@@ -83,9 +85,13 @@ void processMap(EUDSettings* settings) {
 	error |= !fix11_ImportWav(v2, v3, settings);
 	error |= !fix14_CopySections(v2, v3, settings);
 	error |= !fix15_CopyScenarionNameAndDescription(v2, v3, settings);
+	
 	error |= !fix16_CopyTriggersAndBriefing(v2, v3, settings);
+	
 	error |= !fix17_CopyUnitSettings(v2, v3, settings);
 	error |= !fix18_RelocateSTREUDSection(v2, v3, settings);
+	
+
 
 	v2F->writeToFile(storm, (char*)settings->outputFilePath, &error);
 	
@@ -96,6 +102,7 @@ void processMap(EUDSettings* settings) {
 #ifdef TRIG_PRINT
 	Section_TRIG* T = (Section_TRIG*)v2->getSection("TRIG");
 	Section_STR_* S = (Section_STR_*)v2->getSection("STR ");
+
 	WriteBuffer wb;
 	if (T->print(S, &wb)) {
 		wb.writeByte(0, &error);
@@ -397,6 +404,63 @@ void getRecalculatedData(EUDSettings* settings) {
 
 }
 
+void getMapNameAndDescription(EUDSettings* settings) {
+
+	bool error = false;
+	Storm* storm = new Storm(&error);
+
+	SET_NO_ERROR
+	settings->outputFilePath = nullptr;
+
+	MapFile* v3F = storm->readSCX((char*)settings->inputFilePath, &error);
+	if (error) {
+		SET_ERROR_LOAD_FILE
+		delete v3F;
+		delete storm;
+		return;
+	}
+
+	CHK* v3 = v3F->getCHK();
+	if (v3 == nullptr) {
+		SET_ERROR_LOAD_FILE
+		LOG("QCHK", "Failed to load CHK from file \"%s\"", (char*)settings->inputFilePath);
+		delete v3F;
+		delete storm;
+		return;
+	}
+	Section_SPRP* sprp = (Section_SPRP*)v3->getSection("SPRP");
+	Section_STR_* str = (Section_STR_*)v3->getSection("STR ");
+	if (sprp == nullptr || str == nullptr) {
+		SET_ERROR_LOAD_SECTION
+		LOG("QCHK", "Failed to load CHK from file \"%s\"", (char*)settings->inputFilePath);
+		delete v3F;
+		delete storm;
+		return;
+	}
+	char* mapName = str->getRawString(sprp->str_scenarioName);
+	char* mapDescription = str->getRawString(sprp->str_scenarioDescription);
+
+	WriteBuffer wb;
+	wb.writeInt(strlen(mapName), &error);
+	wb.writeFixedLengthString((unsigned char*) mapName, &error);
+	wb.writeInt(strlen(mapName), &error);
+	wb.writeFixedLengthString((unsigned char*)mapDescription, &error);
+	delete v3F;
+	delete storm;
+
+
+	unsigned char* result;
+	unsigned int resultLength;
+	wb.getWrittenData(&result, &resultLength);
+	GET_CLONED_DATA(newResult, char, result, resultLength, { error = true; });
+
+	if (!error) {
+		settings->outputFilePath = newResult;
+	}
+
+	settings->TimeLockMessage = nullptr;
+}
+
 LIBRARY_API void __cdecl realize(EUDSettings* settings) {
 	fprintf(stderr, "QCHK Entry\n");
 	LOG("QCHK", "Received request to perform action %d", settings->action);
@@ -417,6 +481,9 @@ LIBRARY_API void __cdecl realize(EUDSettings* settings) {
 	}
 	else if (settings->action == 6) { // Get recalculated data
 		getRecalculatedData(settings);
+	}
+	else if (settings->action == 7) { // Get map name and description
+		getMapNameAndDescription(settings);
 	}
 #ifdef _DEBUG
 	_CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);

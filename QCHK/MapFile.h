@@ -7,7 +7,7 @@ class Storm;
 class MapFile {
 
 public:
-	MapFile(Array<MapFileStr*>* files, bool* error);
+	MapFile(Array<MapFileStr*>* files, bool* error, bool isSanc);
 	~MapFile();
 
 	CHK* getCHK();
@@ -18,6 +18,7 @@ public:
 private:
 	CHK* chk;
 	SoundCollection* sounds = nullptr;
+	bool isSanc;
 
 };
 

@@ -10,9 +10,9 @@ class MapFile;
 class CHK
 {
 public:
-	CHK(SoundCollection* sounds, FILE* file);
-	CHK(SoundCollection* sounds, const char* fileName);
-	CHK(SoundCollection* sounds, char* data, unsigned int size);
+	CHK(SoundCollection* sounds, FILE* file, bool isSanc);
+	CHK(SoundCollection* sounds, const char* fileName, bool isSanc);
+	CHK(SoundCollection* sounds, char* data, unsigned int size, bool isSanc);
 	~CHK();
 	bool write(WriteBuffer* buffer);
 	bool write(const char* file);
@@ -37,6 +37,6 @@ private:
 	FILE* file;
 	SoundCollection* sounds = nullptr;
 	bool valid;
-	bool parse();
+	bool parse(bool isSanc);
 };
 

@@ -47,6 +47,11 @@ namespace WpfApplication1 {
         public unsafe int result;
         public unsafe byte* preferredUnitSettings;
         public unsafe byte* ignoreArmors;
+
+        public unsafe byte* mapName;
+        public unsafe byte* description;
+        public unsafe byte* objectives;
+        public unsafe bool useObjectives;
     }
 
     public struct UnitSettings {
@@ -213,6 +218,11 @@ namespace WpfApplication1 {
                 wb.writeBytePtr(settings->preferredUnitSettings);
                 wb.writeBytePtr(settings->ignoreArmors);
 
+                wb.writeBytePtr(settings->mapName);
+                wb.writeBytePtr(settings->description);
+                wb.writeBytePtr(settings->objectives);
+                wb.writeBool(settings->useObjectives);
+
                 // Process
                 IntPtr ms = (IntPtr)data;
                 Process(ms);
@@ -243,6 +253,12 @@ namespace WpfApplication1 {
                 settings->result = rb.readInt();
                 settings->preferredUnitSettings = rb.readBytePtr();
                 settings->ignoreArmors = rb.readBytePtr();
+
+                settings->mapName = rb.readBytePtr();
+                settings->description = rb.readBytePtr();
+                settings->objectives = rb.readBytePtr();
+                settings->useObjectives = rb.readBool();
+
                 Marshal.FreeHGlobal(ptr);
             }
         }
@@ -385,7 +401,7 @@ namespace WpfApplication1 {
             Marshal.FreeHGlobal(ptr);
         }
 
-        public unsafe static void process(Settings settings) {
+        public unsafe static bool process(Settings settings) {
             EUDSettings es = new EUDSettings();
             es.action = (byte)1;
             
@@ -415,6 +431,11 @@ namespace WpfApplication1 {
             es.preferredUnitSettings = toByteArray(settings.preferredSettings);
             es.EMPDamage = (short) settings.EMPDamage;
             es.ignoreArmors = toByteArray(settings.ignoreArmors);
+
+            es.mapName = toByteArray(settings.mapName);
+            es.description = toByteArray(settings.mapDescription);
+            es.objectives = toByteArray(settings.mapObjectives);
+            es.useObjectives = settings.useObjectives;
             
             run(&es);
             
@@ -432,7 +453,12 @@ namespace WpfApplication1 {
 
             killByteArray(es.preferredUnitSettings);
             killByteArray(es.ignoreArmors);
-            
+
+            killByteArray(es.mapName);
+            killByteArray(es.description);
+            killByteArray(es.objectives);
+
+            return es.result == 0;
         }
 
         public unsafe static int getFileDurationInMs(String filePath) {
@@ -508,6 +534,26 @@ namespace WpfApplication1 {
 
             }
             return null;
+        }
+
+        public static unsafe String[] getMapNameAndDescription(String filePath) {
+            String mapName = "";
+            String mapDescription = "";
+            EUDSettings es = new EUDSettings();
+            es.action = (byte)7;
+            es.outputFilePath = (byte*)0;
+            es.inputFilePath = toByteArray(filePath);
+            try {
+                run(&es); // Run extraction
+                UnsafeReadBuffer rb = new UnsafeReadBuffer(es.outputFilePath);
+                mapName = rb.readString();
+                mapDescription = rb.readString();
+                es.action = (byte)3;
+                run(&es); // Free the array data string
+            } catch (Exception) {
+
+            }
+            return new String[] { mapName, mapDescription };
         }
     }
 }

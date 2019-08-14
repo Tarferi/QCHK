@@ -39,6 +39,8 @@ namespace WpfApplication1 {
         private AppState state = AppState.START;
         private Settings settings = null;
         ObservableCollection<UniSetting> unitSettingsLst = new ObservableCollection<UniSetting>();
+        String originalMapName = "";
+        String originalMapDescription = "";
 
         private void setState(AppState state) {
             this.state = state;
@@ -116,6 +118,13 @@ namespace WpfApplication1 {
                 btnUSUseRecalcSel.IsEnabled = true;
                 lstUnitSettings.IsEnabled = true;
                 checkUSShowUnavailable.IsEnabled = true;
+
+                txtObjectives.IsEnabled = true;
+                txtMapName.IsEnabled = true;
+                txtDescription.IsEnabled = true;
+                chckUseObjectives.IsEnabled = true;
+                btnResetDescription.IsEnabled = true;
+                btnResetMapName.IsEnabled = true;
             }
         }
 
@@ -182,6 +191,13 @@ namespace WpfApplication1 {
             btnUSUseRecalcSel.IsEnabled = false;
             lstUnitSettings.IsEnabled = false;
             checkUSShowUnavailable.IsEnabled = false;
+
+            txtObjectives.IsEnabled = false;
+            txtMapName.IsEnabled = false;
+            txtDescription.IsEnabled = false;
+            chckUseObjectives.IsEnabled = false;
+            btnResetDescription.IsEnabled = false;
+            btnResetMapName.IsEnabled = false;
         }
 
         private int __getSoundIndex(String name) {
@@ -277,6 +293,11 @@ namespace WpfApplication1 {
             setSelectedFile(lstBackgroundSound, checkBackground, settings.useDefaultBackgroundSound, settings.backgroundSound);
             setSelectedFile(lstVisorSound, checkVisor1, settings.useDefaultVisorSound, settings.visorSound);
             setSelectedFile(lstGunSound, checkGunfire, settings.useDefaultGunfireSound, settings.gunforeSoundPath);
+
+            txtMapName.Text = settings.mapName;
+            txtDescription.Text = settings.mapDescription;
+            chckUseObjectives.IsChecked = settings.useObjectives;
+            txtObjectives.Text = settings.mapObjectives;
         }
 
         private static int getInt(String str) {
@@ -310,6 +331,11 @@ namespace WpfApplication1 {
             settings.timeLockMessage = txtTimeLockMessage.Text;
             settings.timeLockRangeFrom = txtFromY.Text + ":" + txtFromM.Text + ":" + txtFromD.Text + ":" + txtFromH.Text + ":" + txtFromm.Text + ":" + txtFromS.Text;
             settings.timeLockRangeTo = txtToY.Text + ":" + txtToM.Text + ":" + txtToD.Text + ":" + txtToH.Text + ":" + txtTom.Text + ":" + txtToS.Text;
+
+            settings.mapName = txtMapName.Text;
+            settings.mapDescription = txtDescription.Text;
+            settings.mapObjectives = txtObjectives.Text;
+            settings.useObjectives = (bool) chckUseObjectives.IsChecked;
             return settings;
         }
 
@@ -435,6 +461,11 @@ namespace WpfApplication1 {
                     lstVisorSound.SelectedIndex = getSoundIndex(set.visorSound);
                 }
             }
+
+            // Load map name and description
+            String[] mapData = TheLib.getMapNameAndDescription(set.inpuPath);
+            originalMapName = mapData[0];
+            originalMapDescription = mapData[1];
 
             setState(AppState.READY);
             setSettings(set);
@@ -679,8 +710,11 @@ namespace WpfApplication1 {
 
         private void btnRun1_Click(object sender, RoutedEventArgs e) {
             Settings set = getSettings();
-            TheLib.process(set);
-            MessageBox.Show("Finished", "Snipers Power Tool", MessageBoxButton.OK, MessageBoxImage.Information);
+            if (TheLib.process(set)) {
+                MessageBox.Show("Finished", "Snipers Power Tool", MessageBoxButton.OK, MessageBoxImage.Information);
+            } else {
+                MessageBox.Show("Process failed.", "Snipers Power Tool", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
         }
 
         private void setUnitSettings(UnitSettings[] us, Settings set) {
@@ -837,6 +871,14 @@ namespace WpfApplication1 {
 
         private void checkUSShowUnavailable_Checked(object sender, RoutedEventArgs e) {
             updateUnitSetingsFilter();
+        }
+
+        private void btnResetMapName_Click(object sender, RoutedEventArgs e) {
+            txtMapName.Text = originalMapName;
+        }
+
+        private void btnResetDescription_Click(object sender, RoutedEventArgs e) {
+            txtDescription.Text = originalMapDescription;
         }
     }
 

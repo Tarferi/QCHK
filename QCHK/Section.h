@@ -4,10 +4,12 @@
 #include "WriteBuffer.h"
 #include "common.h"
 
-class Section
-{
+//#define USE_DEFUC_SANC
+//#define TRIM_STR
+
+class Section {
 public:
-	Section(unsigned char* name, unsigned int size, ReadBuffer* buffer);
+	Section(unsigned char* name, unsigned int size, ReadBuffer* buffer, bool isSanc);
 	virtual ~Section();
 	bool process();
 
@@ -25,6 +27,7 @@ protected:
 	
 	virtual bool parse() = 0;
 
+	bool isSanc = false;
 
 private:
 	bool processed = false;
@@ -104,6 +107,157 @@ public:
 
 class Section_STR_ : public Section {
 
+public:
+
+	COMMON_CONSTR_SEC(Section_STR_)
+
+	virtual ~Section_STR_() {}
+
+	virtual unsigned int getNewStringIndex(char* string, bool* error) = 0;
+
+	virtual char* getRawString(unsigned int index) = 0;
+
+	virtual void setRawString(unsigned int index, char* string) = 0;
+
+	virtual unsigned int getLastStringIndex() = 0;
+};
+
+class Section_STR_Native : public Section_STR_ {
+
+public:
+	COMMON_CONSTR_SEC_DER(Section_STR_Native, Section_STR_)
+
+public:
+
+	virtual unsigned int getLastStringIndex() {
+		return strings.getSize();
+	}
+
+	unsigned int getNewStringIndex(char* string, bool* error) {
+		for (unsigned int i = 0; i < this->strings.getSize(); i++) {
+			char* str = strings[i];
+			if (!strcmp(string, str)) {
+				return i + 1;
+			}
+		}
+		GET_CLONED_STRING(newString, string, { *error = true; return 0; });
+		if (!strings.append(newString)) {
+			*error = true;
+			return false;
+		}
+		return strings.getSize();
+	}
+
+	virtual ~Section_STR_Native() {
+		for (unsigned int i = 0; i < strings.getSize(); i++) {
+			char* str = strings[i];
+			free(str);
+		}
+	}
+
+	bool parse() {
+		
+		bool error = false;
+		unsigned int totalStrings = this->buffer->readShort(&error);
+		if (!isSanc) { // Sanc must be trusted, this is critical
+			totalStrings = 0xffff; // Don't trust the above
+		}
+		if (error) {
+			return false;
+		}
+
+		unsigned int plannedEnd = 2 + (totalStrings * 2); // Where the offsets should end and data begin
+		Array<unsigned short> offsets;
+
+		for (unsigned int i = 0; i < totalStrings; i++) {
+			unsigned short offset = this->buffer->readShort(&error);
+			if (error) {
+				return false;
+			}
+			
+			if (offset < plannedEnd && !isSanc) { // Total strings was a lie, recalculate
+				unsigned int maxStrings = (offset - 2) / 2;
+				if (totalStrings > maxStrings) {
+					totalStrings = maxStrings;
+					plannedEnd = 2 + (totalStrings * 2);
+				}
+			}
+			
+			if (!offsets.append(offset)) {
+				return false;
+			}
+
+		}
+
+		totalStrings = offsets.getSize();
+		unsigned int dataLength = this->size - (2 + (2 * totalStrings));
+		unsigned char* data = this->buffer->readArray(dataLength, &error);
+		unsigned int off = 2 + (2 * totalStrings);
+		for (unsigned int i = 0; i < totalStrings; i++) {
+			unsigned short offset = offsets.get(i);
+			unsigned char* str = (data + (offset - off));
+			if (offset < off || offset - off > dataLength) {
+				continue;
+			}
+			
+			GET_CLONED_STRING(newStr, (char*) str, { free(data); return false; });
+			if (!strings.append(newStr)) {
+				free(data);
+				return false;
+			}
+		}
+		free(data);
+		return !error;
+	}
+
+	virtual bool write(WriteBuffer* buffer) {
+		unsigned int totalStrings = strings.getSize();
+		bool error = false;
+		buffer->writeShort(totalStrings, &error);
+		if (error) {
+			return false;
+		}
+		unsigned short offset = 2 + (2 * totalStrings);
+		for (unsigned int i = 0; i < totalStrings; i++) {
+			char* str = strings[i];
+			buffer->writeShort(offset, &error);
+			if (error) { return false; }
+			offset += (unsigned short) (strlen(str) + 1);
+		}
+		for (unsigned int i = 0; i < totalStrings; i++) {
+			char* str = strings[i];
+			buffer->writeZeroDelimitedString((unsigned char*) str, &error);
+			if (error) { return false; }
+		}
+		return !error;
+	}
+
+	virtual char* getRawString(unsigned int index) {
+		if (index <= strings.getSize() && index > 0) {
+			return strings.get(index - 1);
+		}
+		return "(null)";
+	}
+
+	virtual void setRawString(unsigned int index, char* string) {
+		if (index <= strings.getSize() && index > 0) {
+			char* current = strings.get(index - 1);
+			GET_CLONED_STRING(newStr, string, { return; });
+			free(current);
+			strings.set(index - 1, newStr);
+
+		}
+	}
+
+
+private:
+	Array<char*> strings;
+
+};
+
+#ifdef USE_DEFUC_SANC
+class Section_STR_Sanc : public Section_STR_ {
+
 	struct Section_STR_Offset {
 		unsigned short offset;
 		unsigned short index;
@@ -111,12 +265,19 @@ class Section_STR_ : public Section {
 
 public:
 
-	unsigned int getNewStringIndex(char* string) {
+	unsigned int getNewStringIndex(char* string, bool* error) {
 		unsigned int off = 2 + (2 * this->totalStrings); // Offset list
 		unsigned int freePosition = this->lastUsedOffset;
 		unsigned int stringLength = strlen(string);
 		this->offsets[this->lastUsedOffsetIndex] = freePosition + off;
 		memcpy(&(data[freePosition]), string, stringLength + 1);
+
+		if (freePosition + off + stringLength >= 0x1BA3) {
+			*error = true;
+			LOG_ERROR("STR", "Failed to insert new string, too many strings");
+			return 0;
+		}
+
 		this->lastUsedOffsetIndex++;
 		this->lastUsedOffset += stringLength + 1; // After \0 delimiter
 		LOG("STR", "Allocating new index %d for string \"%s\"", this->lastUsedOffsetIndex, string);
@@ -124,9 +285,9 @@ public:
 	}
 
 	char* getRawString(unsigned int index) {
-		unsigned int off = 2 + (2 * this->totalStrings);
+		unsigned int off = 2 + (2 * this->offsets.getSize());
 		unsigned short offset = this->offsets[index - 1];
-		return (char*) (&(this->data[offset - off]));
+		return (char*)(&(this->data[offset - off]));
 	}
 
 	void setRawString(unsigned int index, char* string) {
@@ -136,11 +297,12 @@ public:
 		for (unsigned int i = 0; i <= len; i++) {
 			this->data[offset + 1 + i] = string[i];
 		}
+		this->data[offset + 1 + len] = 0;
 	}
 
-	COMMON_CONSTR_SEC(Section_STR_)
+	COMMON_CONSTR_SEC_DER(Section_STR_Sanc, Section_STR_)
 
-	virtual ~Section_STR_() {
+	virtual ~Section_STR_Sanc() {
 		if (this->sortedOffsets != nullptr) {
 			delete[] this->sortedOffsets;
 			this->sortedOffsets = nullptr;
@@ -156,8 +318,7 @@ public:
 
 protected:
 	bool parse() {
-		this->free_space_begin = 0x0CF8;
-		this->free_space_end = 0x19CF;
+		isSanc = true;
 		this->lastUsedOffset = 0;
 		this->lastUsedOffsetIndex = 0;
 		this->lastUsedIndex = 0;
@@ -168,7 +329,6 @@ protected:
 		if (error) {
 			return false;
 		}
-		
 		for (unsigned int i = 0; i < this->totalStrings; i++) {
 			unsigned short offset = this->buffer->readShort(&error);
 			if (error) {
@@ -177,6 +337,7 @@ protected:
 			if (!offsets.append(offset)) {
 				return false;
 			}
+
 		}
 		unsigned int totalStrings = this->offsets.getSize();
 		this->sortedOffsets = new Section_STR_Offset[totalStrings];
@@ -204,13 +365,16 @@ protected:
 				}
 			}
 		} while (changed);
-		this->data = this->buffer->readArray(this->size - (2 + (2 * this->totalStrings)), &error);
+		this->dataLength = this->size - (2 + (2 * this->totalStrings));
+		this->data = this->buffer->readArray(dataLength, &error);
 		return !error;
 	}
 
-	bool write(WriteBuffer* buffer) {
+public:
+
+	virtual bool write(WriteBuffer* buffer) {
 		bool error = false;
-		buffer->writeShort(this->totalStrings,&error);
+		buffer->writeShort(this->totalStrings, &error);
 		if (error) {
 			return false;
 		}
@@ -220,7 +384,6 @@ protected:
 				return false;
 			}
 		};
-		unsigned int off = 2 + (2 * this->totalStrings);
 		unsigned int rawDataLength = this->size - (2 + (2 * this->totalStrings));
 		buffer->writeArray(this->data, rawDataLength, &error);
 		return !error;
@@ -228,17 +391,70 @@ protected:
 
 private:
 
+	unsigned int dataLength;
 	Array<unsigned short> offsets;
 	Section_STR_Offset* sortedOffsets = nullptr;
 
-
-
-	unsigned int free_space_begin;
-	unsigned int free_space_end;
 	unsigned int lastUsedIndex;
 	unsigned int lastUsedOffset;
 	unsigned int lastUsedOffsetIndex;
 };
+
+#else
+
+class Section_STR_Sanc : public Section_STR_Native {
+
+public:
+
+	COMMON_CONSTR_SEC_DER(Section_STR_Sanc, Section_STR_Native)
+
+	virtual bool parse() {
+		bool error = false;
+		this->dataSize = this->size;
+		this->data = (char*) this->buffer->readArray(this->dataSize, &error);
+		return !error;
+	}
+
+	virtual bool write(WriteBuffer* wb) {
+		WriteBuffer twb;
+		if (!Section_STR_Native::write(&twb)) {
+			return false;
+		}
+		unsigned char* rawData;
+		unsigned int writtenLength;
+		bool error = false;
+		twb.getWrittenData(&rawData, &writtenLength);
+#ifdef TRIM_STR
+		if (writtenLength >= 0x1bb2) {
+			writtenLength = 0x1bb0;
+			rawData[0x1bb0] = 0;
+			rawData[0x1bb1] = 0;
+		}
+#else		
+		if (writtenLength >= 0x1bb2) {
+			return false;
+		}
+#endif
+		wb->writeArray(rawData, writtenLength, &error);
+		if (error) { return false; }
+		wb->writeArray((unsigned char*) (data + writtenLength), dataSize - writtenLength, &error);
+		if (error) {return false;}
+		return true;
+	}
+
+	virtual char* getRawSancString(unsigned int index) {
+		unsigned short* offsetPtr = (unsigned short*) (data + 2);
+		unsigned short offset = offsetPtr[index - 1];
+		char* str = (char*)(data + offset);
+		return str;
+	}
+
+
+private:
+	char* data;
+	unsigned int dataSize;
+};
+#endif
 
 class Section_IOWN : public BasicSection {
 
@@ -677,7 +893,7 @@ protected:
 
 #ifdef TRIG_PRINT
 
-#define PRINT_R(ignore, format, ...) {char buffer[1024]; sprintf_s(buffer, format, __VA_ARGS__); wb->writeFixedLengthString((unsigned char*) buffer, error); if(*error) {return;}}
+#define PRINT_R(ignore, format, ...) {char buffer[2048]; sprintf_s(buffer, format, __VA_ARGS__); wb->writeFixedLengthString((unsigned char*) buffer, error); if(*error) {return;}}
 
 	void printAction(Action* action, Section_STR_* STR, WriteBuffer* wb, bool* error);
 
@@ -730,7 +946,7 @@ protected:
 
 class Section_MBRF : public Section_TRIG {
 public:
-	Section_MBRF(unsigned char* name, unsigned int size, ReadBuffer* buffer) : Section_TRIG(name, size, buffer) { }
+	Section_MBRF(unsigned char* name, unsigned int size, ReadBuffer* buffer, bool isSanc) : Section_TRIG(name, size, buffer, isSanc) { }
 
 };
 
@@ -1467,7 +1683,8 @@ public:
 			PRINT_R("TRIGGERS", "Anywhere");
 		}
 		else {
-			PRINT_R("TRIGGERS", "Location %d \"%s\"", this->value, STR->getRawString(this->value));
+			char* str = STR->getRawString(this->value);
+			PRINT_R("TRIGGERS", "Location %d \"%s\"", this->value, str);
 		}
 	}
 };

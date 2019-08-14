@@ -9,6 +9,8 @@
 #include "SoundCollection.h"
 #include "SancData.h"
 
+// #define STORM_DUMP_FILES
+
 typedef void* (WINAPI *SFileOpenArchiveF)(const char* szMpqName, DWORD, DWORD, HANDLE);
 
 typedef void(*FNPTR)(char*);
