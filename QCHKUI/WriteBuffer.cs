@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using System.Text;
 
 namespace WpfApplication1 {
     class WriteBuffer {
@@ -26,10 +27,11 @@ namespace WpfApplication1 {
 
         public void writeString(String value) {
             value = value == null ? "" : value;
-            writeInt(value.Length);
-            for (int i = 0; i < value.Length; i++) {
-                char chr = value[i];
-                writeByte((byte)chr);
+            byte[] str = Encoding.GetEncoding("EUC-KR").GetBytes(value);
+            writeInt(str.Length);
+            for (int i = 0; i < str.Length; i++) {
+                byte chr = str[i];
+                writeByte(chr);
             }
         }
 

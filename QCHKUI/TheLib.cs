@@ -356,11 +356,12 @@ namespace WpfApplication1 {
             return new SoundFiles(insides, maps);
         }
 
-        private static unsafe byte* toByteArray(String str) {
+        private static unsafe byte* toByteArray(String strStr) {
+            byte[] str = Encoding.GetEncoding("EUC-KR").GetBytes(strStr);
             if (str == null) {
                 return (byte*)0;
             }
-            if (str == "") {
+            if (str.Length == 0) {
                 return (byte*)0;
             }
             IntPtr ptr = Marshal.AllocHGlobal(str.Length + 1);

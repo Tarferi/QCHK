@@ -505,11 +505,34 @@ public:
 
 };
 
-class Section_DIM_ : public BasicSection {
+class Section_DIM_ : public Section {
 
 public:
 
-	COMMON_CONSTR_SEC_BS(Section_DIM_)
+	COMMON_CONSTR_SEC(Section_DIM_)
+
+	bool parse() {
+		bool error = false;
+		width = this->buffer->readShort(&error);
+		if (error) {
+			return false;
+		}
+		height = this->buffer->readShort(&error);
+		return !error;
+	}
+
+	bool write(WriteBuffer* buffer) {
+		bool error = false;
+		buffer->writeShort(this->width, &error);
+		if (error) {
+			return false;
+		}
+		buffer->writeShort(this->height, &error);
+		return !error;
+	}
+
+	unsigned short width;
+	unsigned short height;
 
 };
 
@@ -656,11 +679,32 @@ public:
 
 };
 
-class Section_MASK : public BasicSection {
+class Section_MASK : public Section {
 
 public:
 
-	COMMON_CONSTR_SEC_BS(Section_MASK)
+	COMMON_CONSTR_SEC(Section_MASK)
+
+	~Section_MASK() {
+		if (data != nullptr) {
+			free(data);
+			data = nullptr;
+		}
+	}
+
+	bool parse() {
+		bool error = false;
+		data = this->buffer->readArray(this->size, &error);
+		return !error;
+	}
+
+	bool write(WriteBuffer* buffer) {
+		bool error = false;
+		buffer->writeArray(this->data, this->size, &error);
+		return !error;
+	}
+
+	unsigned char* data = nullptr;
 
 };
 

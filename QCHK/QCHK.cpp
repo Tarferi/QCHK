@@ -40,56 +40,57 @@ void processMap(EUDSettings* settings) {
 		return;
 	}
 	
+	error |= !fix0_fixFog(v2, v3, settings);
 	error |= !fix0_disableHyperTriggers(v2, v3, settings);
 	error |= !fix0_disableDefaultAlliances(v2, v3, settings);
-	error |= !fix0_relocateStrings(v2, v3, settings);
+	error |= !fix2_relocateStrings(v2, v3, settings);
 
 	if (!settings->useSanctuaryColors) {
 		error |= !fix0_fixColors(v2, v3, settings);
 	}
 
 	if (settings->addLeaderboard) {
-		error |= !fix1_FixDeathsLabel(v2, v3, settings);
+		error |= !fix3_FixDeathsLabel(v2, v3, settings);
 	}
 	else {
-		error |= !fix1_DisableLeaderboard(v2, v3, settings);
+		error |= !fix5_DisableLeaderboard(v2, v3, settings);
 	}
 	if (settings->muteUnits) {
-		error |= !fix0_muteSounds(v2, v3, settings);
+		error |= !fix1_muteSounds(v2, v3, settings);
 	}
-	error |= !fix2_FixCenteringViewAtBeginning(v2, v3, settings);
+	error |= !fix6_FixCenteringViewAtBeginning(v2, v3, settings);
 	if (!settings->enableVisor) {
-		error |= !fix3_DisableVisor(v2, v3, settings);
+		error |= !fix7_DisableVisor(v2, v3, settings);
 	}
 	if (!settings->enableBarrier) {
-		error |= !fix8_DisableBarrier(v2, v3, settings);
+		error |= !fix12_DisableBarrier(v2, v3, settings);
 	}
-	error |= !fix12_DisableEndGames(v2, v3, settings);
+	error |= !fix16_DisableEndGames(v2, v3, settings);
 	if (!settings->addTouchRevive) {
-		error |= !fix4_DisableTouchRevive(v2, v3, settings);
+		error |= !fix8_DisableTouchRevive(v2, v3, settings);
 	}
 	
 	if (settings->addTimeLock) {
-		error |= !fix5_AddTimeLockTriggers(v2, v3, settings);
+		error |= !fix9_AddTimeLockTriggers(v2, v3, settings);
 	}
 
 	if (settings->recalculateHPAndDamage) {
-		error |= !fix13_RecalculateHPAndDamage(v2, v3, settings);
+		error |= !fix17_RecalculateHPAndDamage(v2, v3, settings);
 	}
 	
-	error |= !fix19_AddInitialObjectives(v2, v3, settings);
-	error |= !fix6_CopyForceNames(v2, v3, settings);
-	error |= !fix7_CopyUnitProperties(v2, v3, settings);
-	error |= !fix9_RemapLocations(v2, v3, settings);
-	error |= !fix10_AddElapsedTimeToAllConditions(v2, v3, settings);
-	error |= !fix11_ImportWav(v2, v3, settings);
-	error |= !fix14_CopySections(v2, v3, settings);
-	error |= !fix15_CopyScenarionNameAndDescription(v2, v3, settings);
+	error |= !fix4_AddInitialObjectives(v2, v3, settings);
+	error |= !fix10_CopyForceNames(v2, v3, settings);
+	error |= !fix11_CopyUnitProperties(v2, v3, settings);
+	error |= !fix13_RemapLocations(v2, v3, settings);
+	error |= !fix14_AddElapsedTimeToAllConditions(v2, v3, settings);
+	error |= !fix15_ImportWav(v2, v3, settings);
+	error |= !fix18_CopySections(v2, v3, settings);
+	error |= !fix19_CopyScenarionNameAndDescription(v2, v3, settings);
 	
-	error |= !fix16_CopyTriggersAndBriefing(v2, v3, settings);
+	error |= !fix20_CopyTriggersAndBriefing(v2, v3, settings);
 	
-	error |= !fix17_CopyUnitSettings(v2, v3, settings);
-	error |= !fix18_RelocateSTREUDSection(v2, v3, settings);
+	error |= !fix21_CopyUnitSettings(v2, v3, settings);
+	error |= !fix22_RelocateSTREUDSection(v2, v3, settings);
 	
 
 
@@ -374,7 +375,7 @@ void getRecalculatedData(EUDSettings* settings) {
 	GET_CLONED_DATA(pre, UnitSettings, v3UNIx->data, 1, { SET_ERROR_PROCESS error = true; delete v3F; delete storm; return; });
 	wb.writeArray((unsigned char*)pre, sizeof(UnitSettings), &error);
 	delete pre;
-	if (!fix13_RecalculateHPAndDamage(nullptr, v3, settings)) {
+	if (!fix17_RecalculateHPAndDamage(nullptr, v3, settings)) {
 		SET_ERROR_PROCESS
 		delete v3F;
 		delete storm;

@@ -27,11 +27,12 @@ namespace WpfApplication1 {
 
         public String readString() {
             int length = readInt();
-            StringBuilder sb = new StringBuilder();
+            byte[] bytes = new byte[length];
             for (int i = 0; i < length; i++) {
-                sb.Append((char)readByte());
+                bytes[i] = (byte) readByte();
             }
-            return sb.ToString();
+            String str = Encoding.GetEncoding("EUC-KR").GetString(bytes);
+            return str;
         }
 
         public UnsafeReadBuffer(byte* data) {
